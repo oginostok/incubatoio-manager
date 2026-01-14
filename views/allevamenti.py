@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utils.helpers import carica_dati_v20, pulisci_percentuale, formatta_numero
+from database import add_lotto, get_lotti, update_lotto, delete_lotto
 
 def page_allevamenti():
     with st.sidebar:
@@ -39,8 +40,6 @@ def page_allevamenti():
                     st.session_state['allevamenti'][nuovo_all] = []
                     st.success("OK")
                     st.rerun()
-
-from database import add_lotto, get_lotti, update_lotto, delete_lotto
 
     # --- MAIN ---
     st.subheader("📝 Gestione Lotti - Inserimento Accasamento")
