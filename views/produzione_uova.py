@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import datetime
 from utils.helpers import carica_dati_v20, pulisci_percentuale, formatta_numero
+from database import get_lotti
 
 def get_start_date_from_year_week(year, week):
     """Restituisce il lunedì della settimana specificata"""
@@ -104,8 +105,6 @@ def page_produzioni_uova():
     # Date effettive per i filtri
     d_start = st.session_state['prod_start_date']
     d_end = st.session_state['prod_end_date']
-    
-from database import get_lotti
 
     if 'lotti' not in st.session_state:
         # Compatibility (though we should strictly use DB)
