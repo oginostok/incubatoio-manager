@@ -10,17 +10,7 @@ def page_allevamenti():
     
     st.title("🐓 ALLEVAMENTI")
     
-    # --- 2. DATABASE STRUTTURE ---
-    DB_ALLEVAMENTI_DEFAULT = {
-        "Cortefranca": ["1", "2", "1A", "1B", "2A", "2B"],
-        "Tonengo": ["1", "2", "3", "4", "5", "6"],
-        "Tarantasca": ["1", "2", "1A", "1B"],
-        "Villafranca": ["1", "2", "3", "4"],
-        "Passirano": ["1", "2", "3"],
-        "Mussano": ["1", "2", "1A", "1B"]
-    }
-
-    # --- 3. CARICAMENTO DATI ---
+    # --- CARICAMENTO DATI ---
     dati = carica_dati_v20()
     if isinstance(dati, str):
         st.error(f"Errore CSV: {dati}")
@@ -30,7 +20,7 @@ def page_allevamenti():
 
     colonne_escluse = ['W', 'Unnamed', 'SELEZIONA', 'NUM GALLINE', 'UOVA SETTIMANALI']
     colonne_razze = [c for c in df_curve.columns if not any(x in str(c) for x in colonne_escluse)]
-
+    
     RAZZA_DEMO_DETECTED = None
     for col in colonne_razze:
         if "JA87" in col:
@@ -39,42 +29,7 @@ def page_allevamenti():
     if not RAZZA_DEMO_DETECTED and len(colonne_razze) > 0:
         RAZZA_DEMO_DETECTED = colonne_razze[0]
 
-    # --- 4. INIZIALIZZAZIONE MEMORIA ---
-    if 'allevamenti' not in st.session_state:
-        st.session_state['allevamenti'] = DB_ALLEVAMENTI_DEFAULT.copy()
-
-    # Impostazioni di default (vita produttiva)
-    if 'settings_lifecycle' not in st.session_state:
-        st.session_state['settings_lifecycle'] = {'min': 25, 'max': 64}
-
-    if 'lotti' not in st.session_state or not st.session_state['lotti']:
-        if RAZZA_DEMO_DETECTED:
-            st.session_state['lotti'] = [
-                # 2025
-                {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Cortefranca', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 7448, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 3328, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 3328, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '5', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 9680, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '6', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 5920, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Passirano', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 6800, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Passirano', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 6200, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Passirano', 'Capannone': '3', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 8000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                
-                # 2026
-                {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 3500, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 3500, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Cortefranca', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 7000, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '5', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 9000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '6', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 6000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
-                {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True}
-            ]
-        else:
-            st.session_state['lotti'] = []
-
-    # --- 5. SIDEBAR ---
+    # --- SIDEBAR ---
     with st.sidebar:
         st.header("⚙️ Strutture")
         with st.expander("➕ Nuovo Allevamento"):
@@ -85,8 +40,7 @@ def page_allevamenti():
                     st.success("OK")
                     st.rerun()
 
-    # --- 6. MAIN ---
-    # Non più tabs, ma direttamente la gestione
+    # --- MAIN ---
     st.subheader("📝 Gestione Lotti - Inserimento Accasamento")
     with st.form("form_lotto", clear_on_submit=False):
         c1, c2, c3, c4 = st.columns(4)
@@ -117,6 +71,24 @@ def page_allevamenti():
             if 'editor_lotti' in st.session_state: del st.session_state['editor_lotti']
             st.success("Aggiunto!")
             st.rerun()
+
+    # --- settings expander ---
+    with st.expander("⚙️ Impostazioni Carriera Produttiva"):
+        st.info("Queste impostazioni limitano la produzione anche se il file dati contiene settimane successive.")
+        col_set1, col_set2 = st.columns(2)
+        with col_set1:
+            st.session_state['settings_lifecycle']['min'] = st.number_input(
+                "Età Minima Deposizione (Settimane)", 
+                min_value=18, max_value=30, 
+                value=st.session_state['settings_lifecycle']['min']
+            )
+        with col_set2:
+            st.session_state['settings_lifecycle']['max'] = st.number_input(
+                "Fine Carriera / Macellazione (Settimane)", 
+                min_value=40, max_value=100, 
+                value=st.session_state['settings_lifecycle']['max']
+            )
+        st.caption(f"**Risultato:** Le galline produrranno uova solo tra la settimana **{st.session_state['settings_lifecycle']['min']}** e la settimana **{st.session_state['settings_lifecycle']['max']}** di vita.")
 
     st.divider()
     st.subheader("📋 Lotti Attivi")

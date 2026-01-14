@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from utils.helpers import init_session_state
 
 # Import Views
 from views.login import login_page
@@ -26,6 +27,7 @@ def load_css():
         st.warning(f"Errore caricamento CSS: {e}")
 
 load_css()
+init_session_state()
 
 # Gestione Session State
 if 'authenticated' not in st.session_state:

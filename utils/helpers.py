@@ -40,3 +40,67 @@ def carica_dati_v20():
         return df
     except Exception as e:
         return str(e)
+
+def init_session_state():
+    """Inizializza lo stato dell'applicazione con dati di default se necessario."""
+    
+    # 1. DATABASE STRUTTURE DEFAULT
+    if 'allevamenti' not in st.session_state:
+        st.session_state['allevamenti'] = {
+            "Cortefranca": ["1", "2", "1A", "1B", "2A", "2B"],
+            "Tonengo": ["1", "2", "3", "4", "5", "6"],
+            "Tarantasca": ["1", "2", "1A", "1B"],
+            "Villafranca": ["1", "2", "3", "4"],
+            "Passirano": ["1", "2", "3"],
+            "Mussano": ["1", "2", "1A", "1B"]
+        }
+
+    # 2. IMPOSTAZIONI VITA PRODUTTIVA
+    if 'settings_lifecycle' not in st.session_state:
+        st.session_state['settings_lifecycle'] = {'min': 25, 'max': 64}
+
+    # 3. LOTTI (DEMO DATA)
+    # Se la lista lotti non esiste o è vuota, proviamo a caricarla
+    # Nota: se è vuota VOLUTAMENTE (utente ha cancellato tutto), questo la ricaricherebbe. 
+    # Ma per ora assumiamo comportamento demo: se vuoto -> carica demo.
+    if 'lotti' not in st.session_state:
+        st.session_state['lotti'] = []
+        
+        # Carichiamo i dati solo se dobbiamo popolare i lotti di default
+        dati = carica_dati_v20()
+        if not isinstance(dati, str): # Se non è errore
+            df_curve = dati
+            colonne_escluse = ['W', 'Unnamed', 'SELEZIONA', 'NUM GALLINE', 'UOVA SETTIMANALI']
+            colonne_razze = [c for c in df_curve.columns if not any(x in str(c) for x in colonne_escluse)]
+            
+            RAZZA_DEMO_DETECTED = None
+            for col in colonne_razze:
+                if "JA87" in col:
+                    RAZZA_DEMO_DETECTED = col
+                    break
+            if not RAZZA_DEMO_DETECTED and len(colonne_razze) > 0:
+                RAZZA_DEMO_DETECTED = colonne_razze[0]
+            
+            if RAZZA_DEMO_DETECTED:
+                 st.session_state['lotti'] = [
+                    # 2025
+                    {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Cortefranca', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 7448, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 3328, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 3328, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '5', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 9680, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '6', 'Anno_Start': 2025, 'Sett_Start': 39, 'Capi': 5920, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Passirano', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 6800, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Passirano', 'Capannone': '2', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 6200, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Passirano', 'Capannone': '3', 'Anno_Start': 2025, 'Sett_Start': 52, 'Capi': 8000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    
+                    # 2026
+                    {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 3500, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 3500, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Cortefranca', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 27, 'Capi': 7000, 'Prodotto': 'Ross', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '5', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 9000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '6', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 6000, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
+                    {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True}
+                ]

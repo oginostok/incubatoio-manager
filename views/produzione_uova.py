@@ -1,17 +1,45 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import datetime
 from utils.helpers import carica_dati_v20, pulisci_percentuale, formatta_numero
 
+def get_start_date_from_year_week(year, week):
+    """Restituisce il lunedì della settimana specificata"""
+    return datetime.date.fromisocalendar(year, week, 1)
+
+def aggio_date_preset():
+    """Callback per aggiornare la data di fine in base al preset selezionato"""
+    preset = st.session_state.get('preset_periodo')
+    start = st.session_state.get('prod_start_date')
+    
+    if not start or not preset: return
+
+    if preset == "1 Mese":
+        st.session_state['prod_end_date'] = start + datetime.timedelta(days=30)
+    elif preset == "2 Mesi":
+        st.session_state['prod_end_date'] = start + datetime.timedelta(days=60)
+    elif preset == "6 Mesi":
+        st.session_state['prod_end_date'] = start + datetime.timedelta(days=180)
+    elif preset == "Fino fine anno":
+        st.session_state['prod_end_date'] = datetime.date(start.year, 12, 31)
+
+def reset_filtri():
+    """Callback per resettare i filtri"""
+    today = datetime.date.today()
+    st.session_state['prod_start_date'] = today
+    
+    # Calcolo fine massima teorica (approx) based on active lots
+    # Una stima sicura è fine del prossimo anno o +18 mesi, 
+    # dato che non possiamo accedere facilmente a df_tot qui senza ricalcolarlo.
+    # Useremo + 2 anni per essere sicuri di prendere tutto.
+    st.session_state['prod_end_date'] = today + datetime.timedelta(days=730)
+    
+    # Reset preset to None or specific value if needed
+    # st.session_state['preset_periodo'] = "Personalizzato" # Streamlit handles this tricky sometimes
+
 def page_produzioni_uova():
-    with st.sidebar:
-        if st.button("⬅️ Torna alla Home"):
-            st.session_state['current_page'] = 'home'
-            st.rerun()
-
-    st.title("🥚 PRODUZIONE UOVA")
-
-    # --- CARICAMENTO DATI ---
+    # --- CARICAMENTO DATI E SETUP ---
     dati = carica_dati_v20()
     if isinstance(dati, str):
         st.error(f"Errore CSV: {dati}")
@@ -19,34 +47,63 @@ def page_produzioni_uova():
     else:
         df_curve = dati
 
-    # --- INIZIALIZZAZIONE ---
+    # Defaults
     if 'settings_lifecycle' not in st.session_state:
         st.session_state['settings_lifecycle'] = {'min': 25, 'max': 64}
     
-    # Recuperiamo le impostazioni di vita produttiva
     LIMITE_MIN_ETA = st.session_state['settings_lifecycle']['min']
     LIMITE_MAX_ETA = st.session_state['settings_lifecycle']['max']
+    
+    today = datetime.date.today()
+    
+    # Init Date Session State
+    if 'prod_start_date' not in st.session_state:
+        st.session_state['prod_start_date'] = today
+    if 'prod_end_date' not in st.session_state:
+        st.session_state['prod_end_date'] = today + datetime.timedelta(days=365)
 
-    # --- 1. SETTINGS (COLLAPSED) ---
-    with st.expander("⚙️ Impostazioni Carriera Produttiva"):
-        st.info("Queste impostazioni limitano la produzione anche se il file dati contiene settimane successive.")
-        col_set1, col_set2 = st.columns(2)
-        with col_set1:
-            st.session_state['settings_lifecycle']['min'] = st.number_input(
-                "Età Minima Deposizione (Settimane)", 
-                min_value=18, max_value=30, 
-                value=st.session_state['settings_lifecycle']['min']
-            )
-        with col_set2:
-            st.session_state['settings_lifecycle']['max'] = st.number_input(
-                "Fine Carriera / Macellazione (Settimane)", 
-                min_value=40, max_value=100, 
-                value=st.session_state['settings_lifecycle']['max']
-            )
-        st.caption(f"**Risultato:** Le galline produrranno uova solo tra la settimana **{st.session_state['settings_lifecycle']['min']}** e la settimana **{st.session_state['settings_lifecycle']['max']}** di vita.")
+    # --- SIDEBAR ---
+    with st.sidebar:
+        if st.button("⬅️ Torna alla Home"):
+            st.session_state['current_page'] = 'home'
+            st.rerun()
+        
+        st.divider()
+        st.header("📅 Filtri Analisi")
+        
+        st.date_input(
+            "Data Inizio", 
+            key="prod_start_date",
+            format="DD/MM/YYYY"
+        )
+        
+        st.date_input(
+            "Data Fine",
+            key="prod_end_date",
+            format="DD/MM/YYYY"
+        )
+        
+        st.selectbox(
+            "Periodo Rapido",
+            ["Personalizzato", "1 Mese", "2 Mesi", "6 Mesi", "Fino fine anno"],
+            key="preset_periodo",
+            on_change=aggio_date_preset
+        )
+        
+        st.button(
+            "🔄 Reset Filtri", 
+            key="btn_reset_filtri",
+            on_click=reset_filtri,
+            use_container_width=True
+        )
 
-    # --- 2. ANALISI PRODUZIONE ---
+    # --- MAIN CONTENT ---
+    st.title("🥚 PRODUZIONE UOVA")
     st.subheader("📈 Analisi Previsionale")
+    
+    # Date effettive per i filtri
+    d_start = st.session_state['prod_start_date']
+    d_end = st.session_state['prod_end_date']
     
     if 'lotti' not in st.session_state:
         st.session_state['lotti'] = []
@@ -70,7 +127,6 @@ def page_produzioni_uova():
                     if not val_w.replace('.', '', 1).isdigit(): continue
                     eta_gallina = float(val_w)
                     
-                    # --- FILTRO IMPOSTAZIONI (VITA PRODUTTIVA) ---
                     if eta_gallina < LIMITE_MIN_ETA or eta_gallina > LIMITE_MAX_ETA:
                         continue
                     
@@ -84,13 +140,20 @@ def page_produzioni_uova():
                             sett_reale -= 52
                             anno_curr += 1
                         
+                        date_obj = get_start_date_from_year_week(int(anno_curr), int(sett_reale))
+
+                        # --- FILTRO DATA ---
+                        if date_obj < d_start or date_obj > d_end:
+                            continue
+
                         if anno_curr >= 2025:
                             uova_esatte = qta * perc * 7
-                            periodo = f"{anno_curr}-{int(sett_reale):02d}"
+                            periodo_label = f"{int(anno_curr)} - {int(sett_reale)}"
                             nome_fonte = f"{lotto['Allevamento']} {lotto['Capannone']}"
                             
                             lista_dati.append({
-                                "Periodo": periodo,
+                                "Periodo": periodo_label, 
+                                "SortDate": date_obj, 
                                 "Anno": anno_curr,
                                 "Settimana": int(sett_reale),
                                 "Prodotto": lotto['Prodotto'],
@@ -102,47 +165,80 @@ def page_produzioni_uova():
         
         if lista_dati:
             df_tot = pd.DataFrame(lista_dati)
-            df_tot = df_tot.sort_values(by=["Periodo"])
+            df_tot = df_tot.sort_values(by=["SortDate"])
 
             LISTA_PRODOTTI_DISPONIBILI = ["Panoramica Totale"] + sorted(list(set(df_tot["Prodotto"])))
             
-            col_sel, _ = st.columns([1, 2])
-            with col_sel:
-                view_mode = st.selectbox("🔍 Analizza Dettaglio:", LISTA_PRODOTTI_DISPONIBILI)
+            # Sposto il selettore dettaglio sopra il grafico
+            view_mode = st.selectbox("🔍 Dettaglio Prodotto:", LISTA_PRODOTTI_DISPONIBILI)
             
+            # --- GRAFICO ---
             if view_mode == "Panoramica Totale":
-                df_chart = df_tot.pivot_table(index="Periodo", columns="Prodotto", values="Uova", aggfunc="sum").fillna(0)
-                prodotti_target = ["Granpollo", "Pollo70", "Color Yeald", "Ross"]
-                for p in prodotti_target:
-                    if p not in df_chart.columns: df_chart[p] = 0
-                df_chart = df_chart[prodotti_target]
+                df_chart = df_tot.groupby(["Periodo", "Prodotto", "SortDate"])["Uova"].sum().reset_index()
+                df_chart = df_chart.sort_values(by="SortDate")
+
+                base = alt.Chart(df_chart).encode(
+                    x=alt.X('Periodo', sort=None, title="Periodo (Anno - Settimana)", axis=alt.Axis(labelFontWeight='bold')),
+                    y=alt.Y('Uova'),
+                    color='Prodotto'
+                )
+
+                nearest = alt.selection_point(nearest=True, on='mouseover', fields=['Periodo'], empty=False)
+                
+                line = base.mark_line(interpolate='monotone')
+                
+                selectors = alt.Chart(df_chart).mark_point().encode(
+                    x='Periodo',
+                    opacity=alt.value(0),
+                ).add_params(nearest)
+                
+                points = line.mark_point().encode(
+                    opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+                )
+                
+                text = line.mark_text(align='left', dx=5, dy=-5).encode(
+                    text=alt.condition(nearest, 'Uova', alt.value(' '))
+                )
+                
+                rules = alt.Chart(df_chart).mark_rule(color='gray').encode(
+                    x='Periodo',
+                ).transform_filter(nearest)
+
+                chart_final = alt.layer(line, selectors, points, rules, text).properties(
+                    width=800, height=400
+                ).interactive()
                 
                 st.write("### Produzione Totale per Prodotto")
-                st.line_chart(df_chart.round(-2).astype(int))
-                
-                st.write("### Totali Complessivi")
-                cols = st.columns(4)
-                totali = df_chart.sum()
-                for i, p in enumerate(prodotti_target):
-                    with cols[i]: st.metric(p, formatta_numero(totali.get(p, 0)))
+                st.altair_chart(chart_final, use_container_width=True)
 
             else:
                 st.write(f"### Dettaglio: {view_mode}")
                 df_filtered = df_tot[df_tot["Prodotto"] == view_mode].copy()
-                df_filtered["Uova"] = df_filtered["Uova"].round(-2).astype(int)
+                df_filtered = df_filtered.sort_values(by="SortDate")
                 
-                chart = alt.Chart(df_filtered).mark_area().encode(
-                    x=alt.X('Periodo', title='Anno-Settimana'),
-                    y=alt.Y('Uova', title='Produzione Uova (Impilata)'),
-                    color=alt.Color('Fonte', title='Allevamento'),
-                    tooltip=[
-                        alt.Tooltip('Periodo', title='🗓️ Periodo'),
-                        alt.Tooltip('Fonte', title='🏭 Allevamento'),
-                        alt.Tooltip('Uova', title='🥚 Uova', format=",.0f"),
-                        alt.Tooltip('Età', title='🐔 Età Galline (Sett)')
-                    ]
-                ).interactive()
-                st.altair_chart(chart, use_container_width=True)
+                base = alt.Chart(df_filtered).encode(
+                    x=alt.X('Periodo', sort=None, title="Periodo (Anno - Settimana)", axis=alt.Axis(labelFontWeight='bold')),
+                    y=alt.Y('Uova', stack=True),
+                    color='Fonte',
+                    tooltip=['Periodo', 'Fonte', 'Uova', 'Età']
+                )
+                
+                nearest = alt.selection_point(nearest=True, on='mouseover', fields=['Periodo'], empty=False)
+                
+                area = base.mark_area()
+                
+                selectors = alt.Chart(df_filtered).mark_point().encode(
+                    x='Periodo',
+                    opacity=alt.value(0),
+                ).add_params(nearest)
+                
+                rules = alt.Chart(df_filtered).mark_rule(color='gray').encode(
+                    x='Periodo',
+                ).transform_filter(nearest)
+
+                chart_final = alt.layer(area, selectors, rules).interactive()
+                
+                st.altair_chart(chart_final, use_container_width=True)
                 
                 st.divider()
                 st.write(f"### Totali per Allevamento ({view_mode})")
@@ -151,10 +247,18 @@ def page_produzioni_uova():
                 for i, (fonte, val) in enumerate(totali_fonte.items()):
                     with cols[i % 4]: st.metric(fonte, formatta_numero(val))
 
-            with st.expander("🔎 Dati Tabellari"):
-                if view_mode == "Panoramica Totale":
-                    st.dataframe(df_chart, use_container_width=True)
-                else:
-                    st.dataframe(df_filtered[["Periodo", "Fonte", "Età", "Uova"]], use_container_width=True)
+            # --- TOTALI COMPLESSIVI ---
+            st.divider()
+            st.write("### Totali Complessivi (Periodo Selezionato)")
+            
+            prodotti_target = ["Granpollo", "Pollo70", "Color Yeald", "Ross"]
+            totali = df_tot.groupby("Prodotto")["Uova"].sum()
+
+            cols = st.columns(4)
+            for i, p in enumerate(prodotti_target):
+                val = totali.get(p, 0)
+                with cols[i]: 
+                    st.metric(p, formatta_numero(val))
+
         else:
-            st.warning("Nessun dato generato. Controlla che le impostazioni di vita produttiva non siano troppo restrittive.")
+            st.warning("Nessun dato nel periodo selezionato.")
