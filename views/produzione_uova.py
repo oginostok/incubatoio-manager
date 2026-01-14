@@ -232,12 +232,12 @@ def page_produzioni_uova():
                 area = base.mark_area()
                 
                 selectors = alt.Chart(df_filtered).mark_point().encode(
-                    x='Periodo',
+                    x=alt.X('Periodo', sort=alt.EncodingSortField(field="SortDate", order="ascending")),
                     opacity=alt.value(0),
                 ).add_params(nearest)
                 
                 rules = alt.Chart(df_filtered).mark_rule(color='gray').encode(
-                    x='Periodo',
+                    x=alt.X('Periodo', sort=alt.EncodingSortField(field="SortDate", order="ascending")),
                 ).transform_filter(nearest)
 
                 chart_final = alt.layer(area, selectors, rules).interactive()
