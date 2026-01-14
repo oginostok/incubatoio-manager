@@ -105,10 +105,15 @@ def page_produzioni_uova():
     d_start = st.session_state['prod_start_date']
     d_end = st.session_state['prod_end_date']
     
+from database import get_lotti
+
     if 'lotti' not in st.session_state:
+        # Compatibility (though we should strictly use DB)
         st.session_state['lotti'] = []
 
-    lotti_attivi = [l for l in st.session_state['lotti'] if l.get('Attivo', True)]
+    # Use DB source of truth
+    lotti_db = get_lotti()
+    lotti_attivi = [l for l in lotti_db if l.get('Attivo', True)]
     
     if not lotti_attivi:
         st.warning("Nessun lotto attivo. Vai su 'ALLEVAMENTI' per inserire i lotti.")
@@ -148,7 +153,7 @@ def page_produzioni_uova():
 
                         if anno_curr >= 2025:
                             uova_esatte = qta * perc * 7
-                            periodo_label = f"{int(anno_curr)} - {int(sett_reale)}"
+                            periodo_label = f"{int(anno_curr)} - {int(sett_reale):02d}"
                             nome_fonte = f"{lotto['Allevamento']} {lotto['Capannone']}"
                             
                             lista_dati.append({
@@ -178,7 +183,7 @@ def page_produzioni_uova():
                 df_chart = df_chart.sort_values(by="SortDate")
 
                 base = alt.Chart(df_chart).encode(
-                    x=alt.X('Periodo', sort=None, title="Periodo (Anno - Settimana)", axis=alt.Axis(labelFontWeight='bold')),
+                    x=alt.X('Periodo', sort=alt.EncodingSortField(field="SortDate", order="ascending"), title="Periodo (Anno - Settimana)", axis=alt.Axis(labelFontWeight='bold')),
                     y=alt.Y('Uova'),
                     color='Prodotto'
                 )
@@ -188,7 +193,7 @@ def page_produzioni_uova():
                 line = base.mark_line(interpolate='monotone')
                 
                 selectors = alt.Chart(df_chart).mark_point().encode(
-                    x='Periodo',
+                    x=alt.X('Periodo', sort=alt.EncodingSortField(field="SortDate", order="ascending")),
                     opacity=alt.value(0),
                 ).add_params(nearest)
                 
@@ -201,7 +206,7 @@ def page_produzioni_uova():
                 )
                 
                 rules = alt.Chart(df_chart).mark_rule(color='gray').encode(
-                    x='Periodo',
+                    x=alt.X('Periodo', sort=alt.EncodingSortField(field="SortDate", order="ascending")),
                 ).transform_filter(nearest)
 
                 chart_final = alt.layer(line, selectors, points, rules, text).properties(

@@ -41,9 +41,17 @@ def carica_dati_v20():
     except Exception as e:
         return str(e)
 
+from database import init_db, get_lotti, add_lotto
+
 def init_session_state():
     """Inizializza lo stato dell'applicazione con dati di default se necessario."""
     
+    # 0. INIT DB
+    try:
+        init_db()
+    except Exception as e:
+        print(f"DB Init Error: {e}")
+
     # 1. DATABASE STRUTTURE DEFAULT
     if 'allevamenti' not in st.session_state:
         st.session_state['allevamenti'] = {
@@ -59,14 +67,14 @@ def init_session_state():
     if 'settings_lifecycle' not in st.session_state:
         st.session_state['settings_lifecycle'] = {'min': 25, 'max': 64}
 
-    # 3. LOTTI (DEMO DATA)
-    # Se la lista lotti non esiste o è vuota, proviamo a caricarla
-    # Nota: se è vuota VOLUTAMENTE (utente ha cancellato tutto), questo la ricaricherebbe. 
-    # Ma per ora assumiamo comportamento demo: se vuoto -> carica demo.
-    if 'lotti' not in st.session_state:
-        st.session_state['lotti'] = []
-        
-        # Carichiamo i dati solo se dobbiamo popolare i lotti di default
+    # 3. LOTTI (FROM DB)
+    # Non salviamo più i lotti in session_state come master record. 
+    # Li caricheremo "live" dalle funzioni del DB quando serve.
+    # Tuttavia, per compatibilità temporanea con la visualizzazione:
+    st.session_state['lotti'] = get_lotti()
+    
+    # SEEDING INIZIALE DEMO SOLO SE DB VUOTO
+    if not st.session_state['lotti']:
         dati = carica_dati_v20()
         if not isinstance(dati, str): # Se non è errore
             df_curve = dati
@@ -82,7 +90,7 @@ def init_session_state():
                 RAZZA_DEMO_DETECTED = colonne_razze[0]
             
             if RAZZA_DEMO_DETECTED:
-                 st.session_state['lotti'] = [
+                    demo_lotti = [
                     # 2025
                     {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
                     {'Allevamento': 'Cortefranca', 'Capannone': '1', 'Anno_Start': 2025, 'Sett_Start': 27, 'Capi': 3600, 'Prodotto': 'Granpollo', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
@@ -104,3 +112,6 @@ def init_session_state():
                     {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Pollo70', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True},
                     {'Allevamento': 'Tonengo', 'Capannone': '2', 'Anno_Start': 2026, 'Sett_Start': 39, 'Capi': 3300, 'Prodotto': 'Color Yeald', 'Razza': RAZZA_DEMO_DETECTED, 'Attivo': True}
                 ]
+                    for l in demo_lotti:
+                        add_lotto(l)
+                    st.session_state['lotti'] = get_lotti()

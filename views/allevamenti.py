@@ -40,6 +40,8 @@ def page_allevamenti():
                     st.success("OK")
                     st.rerun()
 
+from database import add_lotto, get_lotti, update_lotto, delete_lotto
+
     # --- MAIN ---
     st.subheader("📝 Gestione Lotti - Inserimento Accasamento")
     with st.form("form_lotto", clear_on_submit=False):
@@ -62,13 +64,13 @@ def page_allevamenti():
             sett_start = st.number_input("Anno Acc.", 1, 52, 27)
 
         if st.form_submit_button("Aggiungi", type="primary"):
-            st.session_state['lotti'].append({
+            new_lotto_data = {
                 "Allevamento": sel_all, "Capannone": sel_cap,
                 "Razza": sel_razza, "Prodotto": sel_prod,
                 "Capi": num_capi, "Anno_Start": anno_start,
                 "Sett_Start": sett_start, "Attivo": True
-            })
-            if 'editor_lotti' in st.session_state: del st.session_state['editor_lotti']
+            }
+            add_lotto(new_lotto_data)
             st.success("Aggiunto!")
             st.rerun()
 
@@ -92,9 +94,21 @@ def page_allevamenti():
 
     st.divider()
     st.subheader("📋 Lotti Attivi")
-    if st.session_state['lotti']:
-        df_lotti = pd.DataFrame(st.session_state['lotti'])
+    
+    # LOAD FROM DB
+    lotti_db = get_lotti()
+    
+    if lotti_db:
+        df_lotti = pd.DataFrame(lotti_db)
+        
+        # Ensure 'id' is present for tracking
+        if 'id' not in df_lotti.columns:
+            # Should not happen if DB is working, but safe fallback
+            st.error("Errore caricamento ID dal DB")
+            st.stop()
+
         column_config = {
+            "id": None, # Hide ID
             "Allevamento": st.column_config.SelectboxColumn("All.", options=list(st.session_state['allevamenti'].keys()), required=True),
             "Razza": st.column_config.SelectboxColumn("Genetica", options=colonne_razze, required=True),
             "Prodotto": st.column_config.SelectboxColumn("Prod.", options=LISTA_PRODOTTI, required=True),
@@ -103,9 +117,79 @@ def page_allevamenti():
             "Sett_Start": st.column_config.NumberColumn("Sett."),
             "Attivo": st.column_config.CheckboxColumn("On")
         }
+        
         edited_df = st.data_editor(
-            df_lotti, column_config=column_config, num_rows="dynamic", use_container_width=True, hide_index=True, key="editor_lotti"
+            df_lotti, 
+            column_config=column_config, 
+            num_rows="dynamic", 
+            use_container_width=True, 
+            hide_index=True, 
+            key="editor_lotti"
         )
-        st.session_state['lotti'] = edited_df.to_dict('records')
+        
+        # SYNC LOGIC (Simple check for diffs)
+        # This is run on every rerun. 
+        # Identify changes by comparing original 'lotti_db' with 'edited_df'
+        # BUT: modifying DB inside render loop might be tricky if we don't manage state distinctness.
+        # Streamlit's data_editor output is the "new state".
+        
+        # To handle updates:
+        # We can iterate over edited_df and update DB for each row. 
+        # Or better: use st.session_state to track if editing happened?
+        # Creating a diff is safer.
+        
+        # Check for deleted rows
+        current_ids = set(edited_df['id'].dropna().astype(int))
+        original_ids = set(l['id'] for l in lotti_db)
+        
+        # 1. DELETE
+        ids_to_delete = original_ids - current_ids
+        for mid in ids_to_delete:
+            delete_lotto(int(mid))
+            st.rerun()
+
+        # 2. UPDATE / ADD (Add via editor handles new rows with NaN ID usually, or we disable adding rows via editor?)
+        # Let's see: num_rows="dynamic" allows adding.
+        # If user adds a row in editor, it has no ID.
+        # But our custom "Add" form is better. Let's set num_rows="fixed" to force usage of form for creation, 
+        # avoiding complexity of handling "new" rows from editor without proper defaults.
+        # Wait, user might want to delete. So let's allow delete but maybe not add?
+        # For this refactor, let's update modified rows.
+        
+        # Optimization: convert to dicts keyed by ID
+        original_dict = {l['id']: l for l in lotti_db}
+        
+        changes_made = False
+        for index, row in edited_df.iterrows():
+            if pd.isna(row.get('id')): 
+                # New row added via editor? Ignore or handle?
+                # If we changed to num_rows="fixed", this won't happen.
+                continue
+                
+            mid = int(row['id'])
+            if mid in original_dict:
+                orig = original_dict[mid]
+                # Check fields
+                # We only check fields that matter
+                diff = {}
+                for k in ["Allevamento", "Capannone", "Razza", "Prodotto", "Capi", "Anno_Start", "Sett_Start", "Attivo"]:
+                    val_new = row[k]
+                    val_old = orig.get(k)
+                    
+                    # Casting types for comparison safety
+                    if k == "Capi" or k == "Anno_Start" or k == "Sett_Start":
+                        try: val_new = int(val_new); val_old = int(val_old)
+                        except: pass
+                    
+                    if val_new != val_old:
+                        diff[k] = val_new
+                
+                if diff:
+                    update_lotto(mid, diff)
+                    changes_made = True
+        
+        if changes_made:
+             st.rerun()
+
     else:
         st.info("Nessun lotto.")
