@@ -1,0 +1,153 @@
+import datetime
+from typing import List, Dict, Optional
+from datetime import date
+from utils.helpers import carica_dati_v20, pulisci_percentuale
+from database import get_lotti, get_trading_data
+
+class ProductionService:
+    @staticmethod
+    def get_start_date_from_year_week(year, week):
+        return datetime.date.fromisocalendar(year, week, 1)
+
+    @staticmethod
+    def calculate_weekly_summary(product_filter: Optional[str] = None):
+        """
+        Calculates the weekly summary for a specific product (or all if None).
+        Returns a list of dictionaries with production, purchases, sales, and details.
+        """
+        
+        # 1. LOAD DATA
+        df_curve = carica_dati_v20()
+        if df_curve.empty:
+            return []
+            
+        lotti_db = get_lotti()
+        lotti_attivi = [l for l in lotti_db if l.get('Attivo', True)]
+        
+        # Filter lots by product if specified
+        if product_filter:
+            lotti_attivi = [l for l in lotti_attivi if l.get('Prodotto') == product_filter]
+
+        # 2. CALCULATE PRODUCTION
+        production_data = {} # Key: (Anno, Settimana) -> List of details
+        
+        lifecycle_min = 25
+        lifecycle_max = 64
+        
+        for lotto in lotti_attivi:
+            qta = lotto['Capi']
+            
+            # Only include lotto if Curva_Produzione is explicitly set
+            curva_da_usare = lotto.get('Curva_Produzione')
+            
+            # Skip lotti without explicit Curva_Produzione
+            if not curva_da_usare or curva_da_usare not in df_curve.columns:
+                continue
+            
+            # Using the raw curve dataframe, iterating is safer/simpler port from current logic
+            subset = df_curve[['W', curva_da_usare]].dropna()
+            
+            for _, row in subset.iterrows():
+                try:
+                    val_w = str(row['W']).replace(',', '.').strip()
+                    if not val_w.replace('.', '', 1).isdigit(): continue
+                    eta_gallina = float(val_w)
+                    
+                    if eta_gallina < lifecycle_min or eta_gallina > lifecycle_max:
+                        continue
+                        
+                    perc = pulisci_percentuale(row[curva_da_usare])
+                    
+                    if perc > 0:
+                        sett_offset = lotto['Sett_Start'] + eta_gallina
+                        anno_curr = lotto['Anno_Start']
+                        sett_reale = sett_offset
+                        
+                        # Normalize year/week overflow
+                        # Simple logic: while week > 52, increment year
+                        while sett_reale > 52:
+                            sett_reale -= 52
+                            anno_curr += 1
+                        
+                        year = int(anno_curr)
+                        week = int(sett_reale)
+                        
+                        # Check "Data Fine Prevista"
+                        fine_prod = lotto.get('Data_Fine_Prevista')
+                        if fine_prod and '/' in str(fine_prod):
+                             try:
+                                 fy, fw = map(int, str(fine_prod).strip().split('/'))
+                                 if year > fy or (year == fy and week > fw):
+                                     continue
+                             except: pass
+
+                        # Calculate Quantity
+                        uova_esatte = round((qta * perc * 7) / 100) * 100
+                        
+                        key = (year, week)
+                        if key not in production_data:
+                            production_data[key] = []
+                            
+                        production_data[key].append({
+                            "allevamento": f"{lotto['Allevamento']} {lotto['Capannone']}",
+                            "quantita": int(uova_esatte),
+                            "eta": int(eta_gallina)
+                        })
+                except Exception as e:
+                    continue
+
+        # 3. GET TRADING DATA (Purchases & Sales)
+        purchases_map = {} # (Anno, Settimana) -> List of details
+        sales_map = {}     # (Anno, Settimana) -> Total Quantity (or details)
+        
+        trading_acq = get_trading_data("acquisto")
+        for row in trading_acq:
+            if row.quantita > 0 and (not product_filter or row.prodotto == product_filter):
+                k = (row.anno, row.settimana)
+                if k not in purchases_map: purchases_map[k] = []
+                purchases_map[k].append({
+                    "azienda": row.azienda,
+                    "quantita": row.quantita
+                })
+
+        trading_ven = get_trading_data("vendita")
+        for row in trading_ven:
+             if row.quantita > 0 and (not product_filter or row.prodotto == product_filter):
+                k = (row.anno, row.settimana)
+                if k not in sales_map: sales_map[k] = 0
+                sales_map[k] += row.quantita
+
+        # 4. AGGREGATE SUMMARY
+        # Find all unique weeks involved
+        all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys())
+        sorted_keys = sorted(list(all_keys))
+        
+        summary = []
+        for year, week in sorted_keys:
+            # Filter by date range? For now return all valid weeks, frontend can paginate/filter
+            # Or limit to current year + 1?
+            # Let's keep it simple: return all valid calculated data. HTML table handles 50 rows easily.
+            
+            prod_details = production_data.get((year, week), [])
+            prod_total = sum(d['quantita'] for d in prod_details)
+            
+            acq_details = purchases_map.get((year, week), [])
+            acq_total = sum(d['quantita'] for d in acq_details)
+            
+            ven_total = sales_map.get((year, week), 0)
+            
+            net_total = prod_total + acq_total - ven_total
+            
+            summary.append({
+                "periodo": f"{year} - {week:02d}",
+                "anno": year,
+                "settimana": week,
+                "produzione_totale": prod_total,
+                "acquisti_totale": acq_total,
+                "vendite_totale": ven_total,
+                "totale_netto": net_total,
+                "dettagli_produzione": prod_details,
+                "dettagli_acquisti": acq_details
+            })
+            
+        return summary

@@ -1,0 +1,3662 @@
+﻿{
+    "value":  [
+                  {
+                      "periodo":  "2025 - 25",
+                      "anno":  2025,
+                      "settimana":  25,
+                      "produzione_totale":  14800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  14800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  14800,
+                                                      "eta":  25
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 26",
+                      "anno":  2025,
+                      "settimana":  26,
+                      "produzione_totale":  21600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  21600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  21600,
+                                                      "eta":  26
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 27",
+                      "anno":  2025,
+                      "settimana":  27,
+                      "produzione_totale":  24000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  24000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  24000,
+                                                      "eta":  27
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 28",
+                      "anno":  2025,
+                      "settimana":  28,
+                      "produzione_totale":  25100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  25100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  25100,
+                                                      "eta":  28
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 29",
+                      "anno":  2025,
+                      "settimana":  29,
+                      "produzione_totale":  25300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  25300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  25300,
+                                                      "eta":  29
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 30",
+                      "anno":  2025,
+                      "settimana":  30,
+                      "produzione_totale":  25400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  25400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  25400,
+                                                      "eta":  30
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 31",
+                      "anno":  2025,
+                      "settimana":  31,
+                      "produzione_totale":  25200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  25200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  25200,
+                                                      "eta":  31
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 32",
+                      "anno":  2025,
+                      "settimana":  32,
+                      "produzione_totale":  25000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  25000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  25000,
+                                                      "eta":  32
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 33",
+                      "anno":  2025,
+                      "settimana":  33,
+                      "produzione_totale":  24700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  24700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  24700,
+                                                      "eta":  33
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 34",
+                      "anno":  2025,
+                      "settimana":  34,
+                      "produzione_totale":  24500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  24500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  24500,
+                                                      "eta":  34
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 35",
+                      "anno":  2025,
+                      "settimana":  35,
+                      "produzione_totale":  24300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  24300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  24300,
+                                                      "eta":  35
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 36",
+                      "anno":  2025,
+                      "settimana":  36,
+                      "produzione_totale":  24100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  24100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  24100,
+                                                      "eta":  36
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 37",
+                      "anno":  2025,
+                      "settimana":  37,
+                      "produzione_totale":  23900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  23900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  23900,
+                                                      "eta":  37
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 38",
+                      "anno":  2025,
+                      "settimana":  38,
+                      "produzione_totale":  23600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  23600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  23600,
+                                                      "eta":  38
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 39",
+                      "anno":  2025,
+                      "settimana":  39,
+                      "produzione_totale":  23400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  23400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  23400,
+                                                      "eta":  39
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 40",
+                      "anno":  2025,
+                      "settimana":  40,
+                      "produzione_totale":  23200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  23200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  23200,
+                                                      "eta":  40
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 41",
+                      "anno":  2025,
+                      "settimana":  41,
+                      "produzione_totale":  23000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  23000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  23000,
+                                                      "eta":  41
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 42",
+                      "anno":  2025,
+                      "settimana":  42,
+                      "produzione_totale":  22800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  22800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  22800,
+                                                      "eta":  42
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 43",
+                      "anno":  2025,
+                      "settimana":  43,
+                      "produzione_totale":  22500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  22500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  22500,
+                                                      "eta":  43
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 44",
+                      "anno":  2025,
+                      "settimana":  44,
+                      "produzione_totale":  22300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  22300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  22300,
+                                                      "eta":  44
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 45",
+                      "anno":  2025,
+                      "settimana":  45,
+                      "produzione_totale":  22100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  22100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  22100,
+                                                      "eta":  45
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 46",
+                      "anno":  2025,
+                      "settimana":  46,
+                      "produzione_totale":  21800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  21800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  21800,
+                                                      "eta":  46
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 47",
+                      "anno":  2025,
+                      "settimana":  47,
+                      "produzione_totale":  21600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  21600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  21600,
+                                                      "eta":  47
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 48",
+                      "anno":  2025,
+                      "settimana":  48,
+                      "produzione_totale":  21400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  21400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  21400,
+                                                      "eta":  48
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 49",
+                      "anno":  2025,
+                      "settimana":  49,
+                      "produzione_totale":  21100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  21100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  21100,
+                                                      "eta":  49
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 50",
+                      "anno":  2025,
+                      "settimana":  50,
+                      "produzione_totale":  20900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  20900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  20900,
+                                                      "eta":  50
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 51",
+                      "anno":  2025,
+                      "settimana":  51,
+                      "produzione_totale":  20700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  20700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  20700,
+                                                      "eta":  51
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2025 - 52",
+                      "anno":  2025,
+                      "settimana":  52,
+                      "produzione_totale":  39400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  39400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18900,
+                                                      "eta":  25
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  20500,
+                                                      "eta":  52
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 01",
+                      "anno":  2026,
+                      "settimana":  1,
+                      "produzione_totale":  41900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  41900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21700,
+                                                      "eta":  26
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  20200,
+                                                      "eta":  53
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 02",
+                      "anno":  2026,
+                      "settimana":  2,
+                      "produzione_totale":  43100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  43100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23100,
+                                                      "eta":  27
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  20000,
+                                                      "eta":  54
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 03",
+                      "anno":  2026,
+                      "settimana":  3,
+                      "produzione_totale":  43100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  43100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23300,
+                                                      "eta":  28
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  19800,
+                                                      "eta":  55
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 04",
+                      "anno":  2026,
+                      "settimana":  4,
+                      "produzione_totale":  42800,
+                      "acquisti_totale":  63360,
+                      "vendite_totale":  0,
+                      "totale_netto":  106160,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23300,
+                                                      "eta":  29
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  19500,
+                                                      "eta":  56
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  20160
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 05",
+                      "anno":  2026,
+                      "settimana":  5,
+                      "produzione_totale":  42600,
+                      "acquisti_totale":  53280,
+                      "vendite_totale":  0,
+                      "totale_netto":  95880,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23300,
+                                                      "eta":  30
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  19300,
+                                                      "eta":  57
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  10080
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 06",
+                      "anno":  2026,
+                      "settimana":  6,
+                      "produzione_totale":  42100,
+                      "acquisti_totale":  53280,
+                      "vendite_totale":  0,
+                      "totale_netto":  95380,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23100,
+                                                      "eta":  31
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  19000,
+                                                      "eta":  58
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  10080
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 07",
+                      "anno":  2026,
+                      "settimana":  7,
+                      "produzione_totale":  41800,
+                      "acquisti_totale":  63360,
+                      "vendite_totale":  0,
+                      "totale_netto":  105160,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  23000,
+                                                      "eta":  32
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  18800,
+                                                      "eta":  59
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  20160
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 08",
+                      "anno":  2026,
+                      "settimana":  8,
+                      "produzione_totale":  41400,
+                      "acquisti_totale":  63360,
+                      "vendite_totale":  0,
+                      "totale_netto":  104760,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22800,
+                                                      "eta":  33
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  18600,
+                                                      "eta":  60
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  20160
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 09",
+                      "anno":  2026,
+                      "settimana":  9,
+                      "produzione_totale":  41000,
+                      "acquisti_totale":  73440,
+                      "vendite_totale":  0,
+                      "totale_netto":  114440,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22700,
+                                                      "eta":  34
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  18300,
+                                                      "eta":  61
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  43200
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  30240
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 10",
+                      "anno":  2026,
+                      "settimana":  10,
+                      "produzione_totale":  40600,
+                      "acquisti_totale":  74160,
+                      "vendite_totale":  0,
+                      "totale_netto":  114760,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22500,
+                                                      "eta":  35
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  18100,
+                                                      "eta":  62
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  54000
+                                                },
+                                                {
+                                                    "azienda":  "Fileni",
+                                                    "quantita":  20160
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 11",
+                      "anno":  2026,
+                      "settimana":  11,
+                      "produzione_totale":  39900,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  61500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22300,
+                                                      "eta":  36
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 1",
+                                                      "quantita":  17600,
+                                                      "eta":  63
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 12",
+                      "anno":  2026,
+                      "settimana":  12,
+                      "produzione_totale":  77100,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  98700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22200,
+                                                      "eta":  37
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  34100,
+                                                      "eta":  25
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  20800,
+                                                      "eta":  25
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 13",
+                      "anno":  2026,
+                      "settimana":  13,
+                      "produzione_totale":  102300,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  123900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21900,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  49900,
+                                                      "eta":  26
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30500,
+                                                      "eta":  26
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 14",
+                      "anno":  2026,
+                      "settimana":  14,
+                      "produzione_totale":  111000,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  132600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21700,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55400,
+                                                      "eta":  27
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33900,
+                                                      "eta":  27
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 15",
+                      "anno":  2026,
+                      "settimana":  15,
+                      "produzione_totale":  114800,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  136400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21500,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  57900,
+                                                      "eta":  28
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35400,
+                                                      "eta":  28
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 16",
+                      "anno":  2026,
+                      "settimana":  16,
+                      "produzione_totale":  115400,
+                      "acquisti_totale":  21600,
+                      "vendite_totale":  0,
+                      "totale_netto":  137000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21300,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  58400,
+                                                      "eta":  29
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35700,
+                                                      "eta":  29
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+                                                {
+                                                    "azienda":  "Amadori",
+                                                    "quantita":  21600
+                                                }
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 17",
+                      "anno":  2026,
+                      "settimana":  17,
+                      "produzione_totale":  115400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  115400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21100,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  58500,
+                                                      "eta":  30
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35800,
+                                                      "eta":  30
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 18",
+                      "anno":  2026,
+                      "settimana":  18,
+                      "produzione_totale":  114400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  114400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20900,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  58000,
+                                                      "eta":  31
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35500,
+                                                      "eta":  31
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 19",
+                      "anno":  2026,
+                      "settimana":  19,
+                      "produzione_totale":  113400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  113400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20700,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  57500,
+                                                      "eta":  32
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35200,
+                                                      "eta":  32
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 20",
+                      "anno":  2026,
+                      "settimana":  20,
+                      "produzione_totale":  112400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  112400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20500,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  57000,
+                                                      "eta":  33
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34900,
+                                                      "eta":  33
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 21",
+                      "anno":  2026,
+                      "settimana":  21,
+                      "produzione_totale":  111400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  111400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20300,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56500,
+                                                      "eta":  34
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34600,
+                                                      "eta":  34
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 22",
+                      "anno":  2026,
+                      "settimana":  22,
+                      "produzione_totale":  110400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  110400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20100,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56000,
+                                                      "eta":  35
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34300,
+                                                      "eta":  35
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 23",
+                      "anno":  2026,
+                      "settimana":  23,
+                      "produzione_totale":  109300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  109300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19900,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55500,
+                                                      "eta":  36
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33900,
+                                                      "eta":  36
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 24",
+                      "anno":  2026,
+                      "settimana":  24,
+                      "produzione_totale":  108300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  108300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19700,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55000,
+                                                      "eta":  37
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33600,
+                                                      "eta":  37
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 25",
+                      "anno":  2026,
+                      "settimana":  25,
+                      "produzione_totale":  149300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  149300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19500,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  54500,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33300,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  42000,
+                                                      "eta":  25
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 26",
+                      "anno":  2026,
+                      "settimana":  26,
+                      "produzione_totale":  154700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  154700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19300,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  54000,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33000,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  48400,
+                                                      "eta":  26
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 27",
+                      "anno":  2026,
+                      "settimana":  27,
+                      "produzione_totale":  154900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  154900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19100,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  53500,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32700,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  49600,
+                                                      "eta":  27
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 28",
+                      "anno":  2026,
+                      "settimana":  28,
+                      "produzione_totale":  154000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  154000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18900,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  52900,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32400,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  49800,
+                                                      "eta":  28
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 29",
+                      "anno":  2026,
+                      "settimana":  29,
+                      "produzione_totale":  153300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  153300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18700,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  52400,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32100,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  50100,
+                                                      "eta":  29
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 30",
+                      "anno":  2026,
+                      "settimana":  30,
+                      "produzione_totale":  152500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  152500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18500,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  51900,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31700,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  50400,
+                                                      "eta":  30
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 31",
+                      "anno":  2026,
+                      "settimana":  31,
+                      "produzione_totale":  151500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  151500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18300,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  51400,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31400,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  50400,
+                                                      "eta":  31
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 32",
+                      "anno":  2026,
+                      "settimana":  32,
+                      "produzione_totale":  150200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  150200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18100,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  50900,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31100,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  50100,
+                                                      "eta":  32
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 33",
+                      "anno":  2026,
+                      "settimana":  33,
+                      "produzione_totale":  148700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  148700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17900,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  50300,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30800,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  49700,
+                                                      "eta":  33
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 34",
+                      "anno":  2026,
+                      "settimana":  34,
+                      "produzione_totale":  147300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  147300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17700,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  49800,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30500,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  49300,
+                                                      "eta":  34
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 35",
+                      "anno":  2026,
+                      "settimana":  35,
+                      "produzione_totale":  145700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  145700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17500,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  49300,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30100,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  48800,
+                                                      "eta":  35
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 36",
+                      "anno":  2026,
+                      "settimana":  36,
+                      "produzione_totale":  143700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  143700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17300,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  48700,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29800,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  47900,
+                                                      "eta":  36
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 37",
+                      "anno":  2026,
+                      "settimana":  37,
+                      "produzione_totale":  142600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  142600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17100,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  48200,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29500,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  47800,
+                                                      "eta":  37
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 38",
+                      "anno":  2026,
+                      "settimana":  38,
+                      "produzione_totale":  140800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  140800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16900,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  47700,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29200,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  47000,
+                                                      "eta":  38
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 39",
+                      "anno":  2026,
+                      "settimana":  39,
+                      "produzione_totale":  139200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  139200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16700,
+                                                      "eta":  64
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  47200,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28800,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  46500,
+                                                      "eta":  39
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 40",
+                      "anno":  2026,
+                      "settimana":  40,
+                      "produzione_totale":  152600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  152600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  46600,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28500,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  46000,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  31500,
+                                                      "eta":  25
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 41",
+                      "anno":  2026,
+                      "settimana":  41,
+                      "produzione_totale":  156100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  156100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  46100,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28200,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  45500,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  36300,
+                                                      "eta":  26
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 42",
+                      "anno":  2026,
+                      "settimana":  42,
+                      "produzione_totale":  155400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  155400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  45500,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  27800,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  44900,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37200,
+                                                      "eta":  27
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 43",
+                      "anno":  2026,
+                      "settimana":  43,
+                      "produzione_totale":  154200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  154200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  44900,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  27500,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  44400,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37400,
+                                                      "eta":  28
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 44",
+                      "anno":  2026,
+                      "settimana":  44,
+                      "produzione_totale":  152900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  152900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  44400,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  27100,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  43800,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37600,
+                                                      "eta":  29
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 45",
+                      "anno":  2026,
+                      "settimana":  45,
+                      "produzione_totale":  151700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  151700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  43800,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26800,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  43300,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37800,
+                                                      "eta":  30
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 46",
+                      "anno":  2026,
+                      "settimana":  46,
+                      "produzione_totale":  150400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  150400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  43300,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26500,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  42800,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37800,
+                                                      "eta":  31
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 47",
+                      "anno":  2026,
+                      "settimana":  47,
+                      "produzione_totale":  148800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  148800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  42800,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26100,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  42300,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37600,
+                                                      "eta":  32
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 48",
+                      "anno":  2026,
+                      "settimana":  48,
+                      "produzione_totale":  146900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  146900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  42100,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  25800,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  41700,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37300,
+                                                      "eta":  33
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 49",
+                      "anno":  2026,
+                      "settimana":  49,
+                      "produzione_totale":  145200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  145200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  41600,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  25400,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  41200,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  37000,
+                                                      "eta":  34
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 50",
+                      "anno":  2026,
+                      "settimana":  50,
+                      "produzione_totale":  142900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  142900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  40700,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  24900,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  40700,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  36600,
+                                                      "eta":  35
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 51",
+                      "anno":  2026,
+                      "settimana":  51,
+                      "produzione_totale":  140200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  140200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  40000,
+                                                      "eta":  64
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  24400,
+                                                      "eta":  64
+                                                  },
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  39800,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  36000,
+                                                      "eta":  36
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2026 - 52",
+                      "anno":  2026,
+                      "settimana":  52,
+                      "produzione_totale":  93900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  93900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  39600,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18400,
+                                                      "eta":  25
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  35900,
+                                                      "eta":  37
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 01",
+                      "anno":  2027,
+                      "settimana":  1,
+                      "produzione_totale":  95600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  95600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  39100,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21200,
+                                                      "eta":  26
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  35300,
+                                                      "eta":  38
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 02",
+                      "anno":  2027,
+                      "settimana":  2,
+                      "produzione_totale":  95100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  95100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  38500,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21700,
+                                                      "eta":  27
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  34900,
+                                                      "eta":  39
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 03",
+                      "anno":  2027,
+                      "settimana":  3,
+                      "produzione_totale":  94300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  94300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  38000,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21800,
+                                                      "eta":  28
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  34500,
+                                                      "eta":  40
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 04",
+                      "anno":  2027,
+                      "settimana":  4,
+                      "produzione_totale":  93500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  93500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  37500,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21900,
+                                                      "eta":  29
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  34100,
+                                                      "eta":  41
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 05",
+                      "anno":  2027,
+                      "settimana":  5,
+                      "produzione_totale":  92700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  92700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  37000,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22000,
+                                                      "eta":  30
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  33700,
+                                                      "eta":  42
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 06",
+                      "anno":  2027,
+                      "settimana":  6,
+                      "produzione_totale":  91700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  91700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  36400,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  22000,
+                                                      "eta":  31
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  33300,
+                                                      "eta":  43
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 07",
+                      "anno":  2027,
+                      "settimana":  7,
+                      "produzione_totale":  90700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  90700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  35900,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21900,
+                                                      "eta":  32
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  32900,
+                                                      "eta":  44
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 08",
+                      "anno":  2027,
+                      "settimana":  8,
+                      "produzione_totale":  89600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  89600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  35300,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21800,
+                                                      "eta":  33
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  32500,
+                                                      "eta":  45
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 09",
+                      "anno":  2027,
+                      "settimana":  9,
+                      "produzione_totale":  88500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  88500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  34800,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21600,
+                                                      "eta":  34
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  32100,
+                                                      "eta":  46
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 10",
+                      "anno":  2027,
+                      "settimana":  10,
+                      "produzione_totale":  87400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  87400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  34300,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21400,
+                                                      "eta":  35
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  31700,
+                                                      "eta":  47
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 11",
+                      "anno":  2027,
+                      "settimana":  11,
+                      "produzione_totale":  86000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  86000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Passirano 2B",
+                                                      "quantita":  33700,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  21000,
+                                                      "eta":  36
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  31300,
+                                                      "eta":  48
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 12",
+                      "anno":  2027,
+                      "settimana":  12,
+                      "produzione_totale":  130500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  130500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20900,
+                                                      "eta":  37
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  47200,
+                                                      "eta":  25
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31500,
+                                                      "eta":  25
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  30900,
+                                                      "eta":  49
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 13",
+                      "anno":  2027,
+                      "settimana":  13,
+                      "produzione_totale":  141900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  141900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20600,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  54500,
+                                                      "eta":  26
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  36300,
+                                                      "eta":  26
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  30500,
+                                                      "eta":  50
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 14",
+                      "anno":  2027,
+                      "settimana":  14,
+                      "produzione_totale":  143300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  143300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20400,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55800,
+                                                      "eta":  27
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37200,
+                                                      "eta":  27
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  29900,
+                                                      "eta":  51
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 15",
+                      "anno":  2027,
+                      "settimana":  15,
+                      "produzione_totale":  143300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  143300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  20100,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56100,
+                                                      "eta":  28
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37400,
+                                                      "eta":  28
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  29700,
+                                                      "eta":  52
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 16",
+                      "anno":  2027,
+                      "settimana":  16,
+                      "produzione_totale":  143200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  143200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19900,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56400,
+                                                      "eta":  29
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37600,
+                                                      "eta":  29
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  29300,
+                                                      "eta":  53
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 17",
+                      "anno":  2027,
+                      "settimana":  17,
+                      "produzione_totale":  143000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  143000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19600,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56700,
+                                                      "eta":  30
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37800,
+                                                      "eta":  30
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  28900,
+                                                      "eta":  54
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 18",
+                      "anno":  2027,
+                      "settimana":  18,
+                      "produzione_totale":  142400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  142400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19400,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56700,
+                                                      "eta":  31
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37800,
+                                                      "eta":  31
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  28500,
+                                                      "eta":  55
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 19",
+                      "anno":  2027,
+                      "settimana":  19,
+                      "produzione_totale":  141300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  141300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19200,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  56400,
+                                                      "eta":  32
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37600,
+                                                      "eta":  32
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  28100,
+                                                      "eta":  56
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 20",
+                      "anno":  2027,
+                      "settimana":  20,
+                      "produzione_totale":  139900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  139900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  19000,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55900,
+                                                      "eta":  33
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37300,
+                                                      "eta":  33
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  27700,
+                                                      "eta":  57
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 21",
+                      "anno":  2027,
+                      "settimana":  21,
+                      "produzione_totale":  138400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  138400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18700,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  55400,
+                                                      "eta":  34
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  37000,
+                                                      "eta":  34
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  27300,
+                                                      "eta":  58
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 22",
+                      "anno":  2027,
+                      "settimana":  22,
+                      "produzione_totale":  136900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  136900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18500,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  54900,
+                                                      "eta":  35
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  36600,
+                                                      "eta":  35
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  26900,
+                                                      "eta":  59
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 23",
+                      "anno":  2027,
+                      "settimana":  23,
+                      "produzione_totale":  134700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  134700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18300,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  53900,
+                                                      "eta":  36
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  36000,
+                                                      "eta":  36
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  26500,
+                                                      "eta":  60
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 24",
+                      "anno":  2027,
+                      "settimana":  24,
+                      "produzione_totale":  133800,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  133800,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  18000,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  53800,
+                                                      "eta":  37
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35900,
+                                                      "eta":  37
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  26100,
+                                                      "eta":  61
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 25",
+                      "anno":  2027,
+                      "settimana":  25,
+                      "produzione_totale":  131700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  131700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17800,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  52900,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  35300,
+                                                      "eta":  38
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  25700,
+                                                      "eta":  62
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 26",
+                      "anno":  2027,
+                      "settimana":  26,
+                      "produzione_totale":  130000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  130000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17400,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  52400,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34900,
+                                                      "eta":  39
+                                                  },
+                                                  {
+                                                      "allevamento":  "Villafranca 1",
+                                                      "quantita":  25300,
+                                                      "eta":  63
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 27",
+                      "anno":  2027,
+                      "settimana":  27,
+                      "produzione_totale":  103500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  103500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17300,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  51700,
+                                                      "eta":  40
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34500,
+                                                      "eta":  40
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 28",
+                      "anno":  2027,
+                      "settimana":  28,
+                      "produzione_totale":  102400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  102400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  17100,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  51200,
+                                                      "eta":  41
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  34100,
+                                                      "eta":  41
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 29",
+                      "anno":  2027,
+                      "settimana":  29,
+                      "produzione_totale":  101100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  101100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16900,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  50500,
+                                                      "eta":  42
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33700,
+                                                      "eta":  42
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 30",
+                      "anno":  2027,
+                      "settimana":  30,
+                      "produzione_totale":  99900,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  99900,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16600,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  50000,
+                                                      "eta":  43
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  33300,
+                                                      "eta":  43
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 31",
+                      "anno":  2027,
+                      "settimana":  31,
+                      "produzione_totale":  98600,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  98600,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16400,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  49300,
+                                                      "eta":  44
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32900,
+                                                      "eta":  44
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 32",
+                      "anno":  2027,
+                      "settimana":  32,
+                      "produzione_totale":  97500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  97500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  16200,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  48800,
+                                                      "eta":  45
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32500,
+                                                      "eta":  45
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 33",
+                      "anno":  2027,
+                      "settimana":  33,
+                      "produzione_totale":  96100,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  96100,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  15900,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  48100,
+                                                      "eta":  46
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  32100,
+                                                      "eta":  46
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 34",
+                      "anno":  2027,
+                      "settimana":  34,
+                      "produzione_totale":  95000,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  95000,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  15700,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  47600,
+                                                      "eta":  47
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31700,
+                                                      "eta":  47
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 35",
+                      "anno":  2027,
+                      "settimana":  35,
+                      "produzione_totale":  93700,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  93700,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  15500,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  46900,
+                                                      "eta":  48
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  31300,
+                                                      "eta":  48
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 36",
+                      "anno":  2027,
+                      "settimana":  36,
+                      "produzione_totale":  92500,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  92500,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  15200,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  46400,
+                                                      "eta":  49
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30900,
+                                                      "eta":  49
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 37",
+                      "anno":  2027,
+                      "settimana":  37,
+                      "produzione_totale":  91200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  91200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  15000,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  45700,
+                                                      "eta":  50
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  30500,
+                                                      "eta":  50
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 38",
+                      "anno":  2027,
+                      "settimana":  38,
+                      "produzione_totale":  89400,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  89400,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Cortefranca 1B",
+                                                      "quantita":  14700,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  44800,
+                                                      "eta":  51
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29900,
+                                                      "eta":  51
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 39",
+                      "anno":  2027,
+                      "settimana":  39,
+                      "produzione_totale":  74200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  74200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  44500,
+                                                      "eta":  52
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29700,
+                                                      "eta":  52
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 40",
+                      "anno":  2027,
+                      "settimana":  40,
+                      "produzione_totale":  73300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  73300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  44000,
+                                                      "eta":  53
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  29300,
+                                                      "eta":  53
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 41",
+                      "anno":  2027,
+                      "settimana":  41,
+                      "produzione_totale":  72200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  72200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  43300,
+                                                      "eta":  54
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28900,
+                                                      "eta":  54
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 42",
+                      "anno":  2027,
+                      "settimana":  42,
+                      "produzione_totale":  71300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  71300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  42800,
+                                                      "eta":  55
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28500,
+                                                      "eta":  55
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 43",
+                      "anno":  2027,
+                      "settimana":  43,
+                      "produzione_totale":  70200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  70200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  42100,
+                                                      "eta":  56
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  28100,
+                                                      "eta":  56
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 44",
+                      "anno":  2027,
+                      "settimana":  44,
+                      "produzione_totale":  69300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  69300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  41600,
+                                                      "eta":  57
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  27700,
+                                                      "eta":  57
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 45",
+                      "anno":  2027,
+                      "settimana":  45,
+                      "produzione_totale":  68300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  68300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  41000,
+                                                      "eta":  58
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  27300,
+                                                      "eta":  58
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 46",
+                      "anno":  2027,
+                      "settimana":  46,
+                      "produzione_totale":  67300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  67300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  40400,
+                                                      "eta":  59
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26900,
+                                                      "eta":  59
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 47",
+                      "anno":  2027,
+                      "settimana":  47,
+                      "produzione_totale":  66300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  66300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  39800,
+                                                      "eta":  60
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26500,
+                                                      "eta":  60
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 48",
+                      "anno":  2027,
+                      "settimana":  48,
+                      "produzione_totale":  65200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  65200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  39100,
+                                                      "eta":  61
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  26100,
+                                                      "eta":  61
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 49",
+                      "anno":  2027,
+                      "settimana":  49,
+                      "produzione_totale":  64300,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  64300,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  38600,
+                                                      "eta":  62
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  25700,
+                                                      "eta":  62
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  },
+                  {
+                      "periodo":  "2027 - 50",
+                      "anno":  2027,
+                      "settimana":  50,
+                      "produzione_totale":  63200,
+                      "acquisti_totale":  0,
+                      "vendite_totale":  0,
+                      "totale_netto":  63200,
+                      "dettagli_produzione":  [
+                                                  {
+                                                      "allevamento":  "Tonengo 5",
+                                                      "quantita":  37900,
+                                                      "eta":  63
+                                                  },
+                                                  {
+                                                      "allevamento":  "Tonengo 6",
+                                                      "quantita":  25300,
+                                                      "eta":  63
+                                                  }
+                                              ],
+                      "dettagli_acquisti":  [
+
+                                            ]
+                  }
+              ],
+    "Count":  130
+}
