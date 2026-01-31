@@ -37,7 +37,8 @@ import sqlalchemy
 def carica_dati_v20():
     """Carica dati da DB (standard_curves). Non usa più dati.csv."""
     try:
-        df = pd.read_sql("standard_curves", engine)
+        with engine.connect() as conn:
+            df = pd.read_sql("SELECT * FROM standard_curves", conn)
         if not df.empty:
             # Normalizza spazi nei nomi colonne
             df.columns = df.columns.str.replace(r'\s+', ' ', regex=True).str.strip()
