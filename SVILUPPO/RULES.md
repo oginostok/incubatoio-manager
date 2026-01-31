@@ -391,3 +391,199 @@ Per mantenere il sito veloce, i calcoli vengono salvati in una tabella cache.
 ```
 
 ---
+
+## 🖥️ Configurazione Server VPS
+
+Questa sezione documenta la configurazione del server di produzione per futuri deploy o migrazioni.
+
+### Informazioni Server
+
+| Campo | Valore |
+|-------|--------|
+| Provider | Hetzner |
+| IP | `162.55.184.122` |
+| OS | Ubuntu 24.04 |
+| Percorso App | `/opt/incubatoio-manager` |
+| Database | `/opt/incubatoio-manager/backend/incubatoio.db` (SQLite) |
+
+---
+
+### Struttura Directory
+
+```
+/opt/incubatoio-manager/
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── routers/
+│   ├── services/
+│   └── incubatoio.db         # DATABASE (backup importante!)
+├── frontend/
+│   └── dist/                 # Build produzione
+├── deploy/
+│   └── deploy.sh            # Script deploy automatico
+└── requirements.txt
+```
+
+---
+
+### Servizio Systemd
+
+**File:** `/etc/systemd/system/incubatoio.service`
+
+```ini
+[Unit]
+Description=Incubatoio Manager Backend
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/incubatoio-manager/backend
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Comandi utili:**
+```bash
+# Stato servizio
+systemctl status incubatoio
+
+# Riavvia servizio
+systemctl restart incubatoio
+
+# Log in tempo reale
+journalctl -u incubatoio -f
+
+# Log ultimi 50 messaggi
+journalctl -u incubatoio -n 50 --no-pager
+```
+
+---
+
+### Configurazione Nginx
+
+**File:** `/etc/nginx/sites-available/incubatoio`
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    # Frontend statico (React/Vite build)
+    location / {
+        root /opt/incubatoio-manager/frontend/dist;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Backend API (FastAPI)
+    location /api {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Webhook per GitHub auto-deploy
+    location /webhook {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+**Comandi utili:**
+```bash
+# Testa configurazione
+nginx -t
+
+# Ricarica configurazione
+systemctl reload nginx
+```
+
+---
+
+### GitHub Webhook (Auto-Deploy)
+
+1. **GitHub Settings** → Repository → Settings → Webhooks
+2. **Payload URL:** `http://162.55.184.122/webhook/deploy`
+3. **Content type:** `application/json`
+4. **Events:** Just the `push` event
+5. **Secret:** (opzionale)
+
+**Cosa fa il webhook:**
+1. GitHub invia POST a `/webhook/deploy`
+2. Backend FastAPI riceve e lancia `deploy/deploy.sh`
+3. Script esegue: `git pull` → `npm run build` → `systemctl restart incubatoio`
+
+---
+
+### Deploy Manuale
+
+Se il webhook non funziona, esegui manualmente:
+
+```bash
+ssh root@162.55.184.122
+cd /opt/incubatoio-manager
+git pull origin main
+cd frontend && npm run build
+cd ..
+systemctl restart incubatoio
+```
+
+---
+
+### Backup Database
+
+Il database SQLite è in `/opt/incubatoio-manager/backend/incubatoio.db`.
+
+**Backup manuale:**
+```bash
+scp root@162.55.184.122:/opt/incubatoio-manager/backend/incubatoio.db ./backup_$(date +%Y%m%d).db
+```
+
+---
+
+### Migrazione a Nuovo Server
+
+1. **Prepara nuovo server Ubuntu**
+2. **Installa dipendenze:**
+   ```bash
+   apt update && apt install -y python3-pip nginx nodejs npm git
+   ```
+3. **Clona repository:**
+   ```bash
+   cd /opt && git clone https://github.com/oginostok/incubatoio-manager.git
+   ```
+4. **Installa Python deps:**
+   ```bash
+   cd /opt/incubatoio-manager && pip3 install -r requirements.txt
+   ```
+5. **Build frontend:**
+   ```bash
+   cd frontend && npm install && npm run build
+   ```
+6. **Copia database dal vecchio server:**
+   ```bash
+   scp old-server:/opt/incubatoio-manager/backend/incubatoio.db ./backend/
+   ```
+7. **Crea service systemd** (copia configurazione sopra)
+8. **Configura Nginx** (copia configurazione sopra)
+9. **Abilita servizi:**
+   ```bash
+   systemctl enable incubatoio
+   systemctl start incubatoio
+   ln -s /etc/nginx/sites-available/incubatoio /etc/nginx/sites-enabled/
+   systemctl restart nginx
+   ```
+10. **Aggiorna webhook GitHub** con nuovo IP
+
+---
+

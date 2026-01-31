@@ -29,7 +29,7 @@ def run_deploy():
     """Run the deploy script."""
     try:
         result = subprocess.run(
-            ["/bin/bash", "/opt/incubatoio-manager/deploy.sh"],
+            ["/bin/bash", "/opt/incubatoio-manager/deploy/deploy.sh"],
             capture_output=True,
             text=True,
             timeout=300  # 5 minute timeout
