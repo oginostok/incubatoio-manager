@@ -25,6 +25,11 @@ function App() {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    setIsAuthenticated(false);
+  };
+
   // Se non autenticato, mostra la pagina di login
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
@@ -33,7 +38,7 @@ function App() {
   // Router per utenti autenticati
   switch (currentPage) {
     case "home":
-      return <HomePage onNavigate={handleNavigate} />;
+      return <HomePage onNavigate={handleNavigate} onLogout={handleLogout} />;
     case "incubatoio":
       return <IncubatoioPage onNavigate={handleNavigate} />;
     case "allevamenti":
@@ -45,7 +50,7 @@ function App() {
     case "lettura_codice":
       return <LetturaCodicePage onNavigate={handleNavigate} />;
     default:
-      return <HomePage onNavigate={handleNavigate} />;
+      return <HomePage onNavigate={handleNavigate} onLogout={handleLogout} />;
   }
 }
 
