@@ -4,6 +4,9 @@
 
 set -e  # Exit on error
 
+# Ensure PATH includes common binary locations (needed when run from systemd)
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 echo "🚀 Starting deployment..."
 
 cd /opt/incubatoio-manager
