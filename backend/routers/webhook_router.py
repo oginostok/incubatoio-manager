@@ -26,19 +26,21 @@ def verify_github_signature(payload: bytes, signature: str) -> bool:
     return hmac.compare_digest(signature, expected)
 
 def run_deploy():
-    """Run the deploy script."""
+    """Run the deploy script in a fully detached process."""
     try:
-        result = subprocess.run(
+        # Use Popen with start_new_session to fully detach the process.
+        # This is necessary because the deploy script restarts this very service,
+        # so we need the script to continue running independently.
+        subprocess.Popen(
             ["/bin/bash", "/opt/incubatoio-manager/deploy/deploy.sh"],
-            capture_output=True,
-            text=True,
-            timeout=300  # 5 minute timeout
+            stdout=open("/tmp/deploy.log", "w"),
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+            cwd="/opt/incubatoio-manager"
         )
-        print(f"Deploy output: {result.stdout}")
-        if result.returncode != 0:
-            print(f"Deploy error: {result.stderr}")
+        print("Deploy script started in detached process")
     except Exception as e:
-        print(f"Deploy failed: {e}")
+        print(f"Deploy failed to start: {e}")
 
 @router.post("/webhook/deploy")
 async def github_webhook(request: Request, background_tasks: BackgroundTasks):
