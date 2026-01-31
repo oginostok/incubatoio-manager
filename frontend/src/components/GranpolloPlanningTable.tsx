@@ -299,7 +299,7 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                             {clients.map((client) => (
                                 <th
                                     key={client.id}
-                                    className="px-3 py-2 text-center text-xs font-medium border-b bg-green-50 w-28"
+                                    className="px-3 py-2 text-center text-xs font-medium border-b bg-yellow-50 w-28"
                                 >
                                     <div className="flex items-center justify-center gap-1">
                                         <span className={getSexTypeColor(client.sex_type)}>
@@ -428,7 +428,7 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                                     return (
                                         <td
                                             key={client.id}
-                                            className="px-1 py-1 bg-green-50 cursor-pointer hover:bg-green-100 h-9"
+                                            className="px-1 py-1 bg-yellow-50 cursor-pointer hover:bg-yellow-100 h-9"
                                             onDoubleClick={() => handleDoubleClick(row.anno, row.settimana, client.id, value)}
                                         >
                                             {isEditing ? (
@@ -438,7 +438,7 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     onBlur={handleCellSave}
                                                     onKeyDown={handleKeyDown}
-                                                    className="w-full h-full px-2 text-right font-mono text-sm bg-white border border-green-400 rounded focus:outline-none focus:ring-1 focus:ring-green-500 box-border"
+                                                    className="w-full h-full px-2 text-right font-mono text-sm bg-white border border-yellow-400 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500 box-border"
                                                     autoFocus
                                                 />
                                             ) : (
