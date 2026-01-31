@@ -36,9 +36,14 @@ import sqlalchemy
 # Carica dati SOLO dal database (no fallback CSV)
 def carica_dati_v20():
     """Carica dati da DB (standard_curves). Non usa più dati.csv."""
+    import sqlite3
+    import os
     try:
-        # Use read_sql_table for SQLAlchemy 2.x compatibility
-        df = pd.read_sql_table("standard_curves", engine)
+        # Use direct sqlite3 connection for Pandas 3.x compatibility
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'incubatoio.db')
+        conn = sqlite3.connect(db_path)
+        df = pd.read_sql("SELECT * FROM standard_curves", conn)
+        conn.close()
         if not df.empty:
             # Normalizza spazi nei nomi colonne
             df.columns = df.columns.str.replace(r'\s+', ' ', regex=True).str.strip()
