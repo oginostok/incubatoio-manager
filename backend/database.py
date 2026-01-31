@@ -1367,3 +1367,118 @@ def update_pollo70_client_data(anno: int, settimana: int, cliente_id: int, quant
         return record.to_dict()
     finally:
         db.close()
+
+
+# --- GRANPOLLO CLIENT MODELS (T010) ---
+class GranpolloClientConfig(Base):
+    """Client configuration for Granpollo planning (T010)."""
+    __tablename__ = "granpollo_client_config"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nome_cliente = Column(String, nullable=False)
+    sex_type = Column(String, default="entrambi")  # maschi, femmine, entrambi
+    active = Column(Boolean, default=True)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nome_cliente": self.nome_cliente,
+            "sex_type": self.sex_type,
+            "active": self.active
+        }
+
+class GranpolloClientData(Base):
+    """Weekly client data for Granpollo planning (T010)."""
+    __tablename__ = "granpollo_client_data"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    anno = Column(Integer, index=True)
+    settimana = Column(Integer, index=True)
+    cliente_id = Column(Integer, index=True)
+    quantita = Column(Integer, default=0)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "anno": self.anno,
+            "settimana": self.settimana,
+            "cliente_id": self.cliente_id,
+            "quantita": self.quantita
+        }
+
+# --- GRANPOLLO CLIENT HELPERS ---
+def get_granpollo_clients():
+    """Returns all active Granpollo clients."""
+    db = SessionLocal()
+    try:
+        clients = db.query(GranpolloClientConfig).filter(GranpolloClientConfig.active == True).all()
+        return [c.to_dict() for c in clients]
+    finally:
+        db.close()
+
+def add_granpollo_client(nome_cliente: str, sex_type: str):
+    """Adds a new Granpollo client."""
+    db = SessionLocal()
+    try:
+        new_client = GranpolloClientConfig(
+            nome_cliente=nome_cliente,
+            sex_type=sex_type,
+            active=True
+        )
+        db.add(new_client)
+        db.commit()
+        db.refresh(new_client)
+        return new_client.to_dict()
+    finally:
+        db.close()
+
+def delete_granpollo_client(client_id: int):
+    """Soft deletes a Granpollo client and removes associated data."""
+    db = SessionLocal()
+    try:
+        client = db.query(GranpolloClientConfig).filter(GranpolloClientConfig.id == client_id).first()
+        if client:
+            db.query(GranpolloClientData).filter(GranpolloClientData.cliente_id == client_id).delete()
+            client.active = False
+            db.commit()
+            return True
+        return False
+    finally:
+        db.close()
+
+def get_granpollo_client_data():
+    """Returns all Granpollo client data as a dict {(anno, settimana, cliente_id): quantita}."""
+    db = SessionLocal()
+    try:
+        records = db.query(GranpolloClientData).all()
+        return {(r.anno, r.settimana, r.cliente_id): r.quantita for r in records}
+    finally:
+        db.close()
+
+def update_granpollo_client_data(anno: int, settimana: int, cliente_id: int, quantita: int):
+    """Updates or creates a Granpollo client data entry."""
+    db = SessionLocal()
+    try:
+        record = db.query(GranpolloClientData).filter(
+            GranpolloClientData.anno == anno,
+            GranpolloClientData.settimana == settimana,
+            GranpolloClientData.cliente_id == cliente_id
+        ).first()
+        
+        if record:
+            record.quantita = quantita
+        else:
+            record = GranpolloClientData(
+                anno=anno,
+                settimana=settimana,
+                cliente_id=cliente_id,
+                quantita=quantita
+            )
+            db.add(record)
+        
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+

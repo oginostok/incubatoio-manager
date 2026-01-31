@@ -28,7 +28,12 @@ from database import (
     add_pollo70_client,
     delete_pollo70_client,
     get_pollo70_client_data,
-    update_pollo70_client_data
+    update_pollo70_client_data,
+    get_granpollo_clients,
+    add_granpollo_client,
+    delete_granpollo_client,
+    get_granpollo_client_data,
+    update_granpollo_client_data
 )
 from services.production_service import ProductionService
 from utils.helpers import carica_dati_v20
@@ -692,6 +697,237 @@ def remove_pollo70_client(client_id: int):
 def update_pollo70_data(data: RossClientDataUpdate):
     """Update Pollo70 client data for a specific week."""
     return update_pollo70_client_data(data.anno, data.settimana, data.cliente_id, data.quantita)
+
+
+# --- GRANPOLLO CLIENT ENDPOINTS (T010) ---
+
+@router.get("/granpollo-extended")
+def get_granpollo_extended():
+    """
+    Get Granpollo planning table with dynamic clients and M/F totals.
+    Returns data for T010 extended with client columns.
+    """
+    try:
+        db_product_name = "Granpollo"
+        product = "granpollo"
+        
+        production_summary = ProductionService.calculate_weekly_summary(db_product_name)
+        production_map = {(p['anno'], p['settimana']): p for p in production_summary}
+        
+        df_curve = carica_dati_v20()
+        lotti_db = get_lotti()
+        lotti_attivi = [l for l in lotti_db if l.get('Attivo', True) and l.get('Prodotto', '').lower() == db_product_name.lower()]
+        
+        lotto_details = {}
+        for lotto in lotti_attivi:
+            lotto_production = ProductionService._calculate_production_for_lotto(lotto, df_curve)
+            for entry in lotto_production:
+                key = (entry['anno'], entry['settimana'])
+                if key not in lotto_details:
+                    lotto_details[key] = []
+                lotto_details[key].append({
+                    "allevamento": entry.get('allevamento', f"Lotto {lotto.get('id')}"),
+                    "eta": entry.get('eta', 30),
+                    "uova": entry['uova']
+                })
+        
+        trading_acq = get_trading_data("acquisto")
+        trading_ven = get_trading_data("vendita")
+        
+        purchases_map = {}
+        purchases_details_map = {}
+        sales_map = {}
+        
+        for row in trading_acq:
+            if row.prodotto.lower() == db_product_name.lower() and row.quantita > 0:
+                key = (row.anno, row.settimana)
+                purchases_map[key] = purchases_map.get(key, 0) + row.quantita
+                if key not in purchases_details_map:
+                    purchases_details_map[key] = []
+                purchases_details_map[key].append({
+                    "azienda": row.azienda,
+                    "quantita": row.quantita
+                })
+        
+        for row in trading_ven:
+            if row.prodotto.lower() == db_product_name.lower() and row.quantita > 0:
+                key = (row.anno, row.settimana)
+                sales_map[key] = sales_map.get(key, 0) + row.quantita
+        
+        purchase_birth_rates = get_purchase_birth_rates()
+        purchase_rate = purchase_birth_rates.get(product, 84.0) / 100.0
+        purchase_rate_percent = purchase_birth_rates.get(product, 84.0)
+        
+        clients = get_granpollo_clients()
+        client_data = get_granpollo_client_data()
+        
+        weeks = generate_weeks(3, 52)
+        
+        has_vendite = False
+        has_acquisti = False
+        
+        result = []
+        for birth_year, birth_week in weeks:
+            source_year, source_week = normalize_year_week(birth_year, birth_week - 3)
+            source_key = (source_year, source_week)
+            
+            prod_data = production_map.get(source_key, {})
+            uova_prodotte = prod_data.get('produzione_totale', 0)
+            uova_acquistate = purchases_map.get(source_key, 0)
+            uova_vendute = sales_map.get(source_key, 0)
+            
+            if uova_vendute > 0:
+                has_vendite = True
+            if uova_acquistate > 0:
+                has_acquisti = True
+            
+            uova_totali = uova_prodotte + uova_acquistate - uova_vendute
+            
+            animali = 0
+            animali_calc_details = []
+            lotto_entries = lotto_details.get(source_key, [])
+            
+            if uova_vendute > 0 and lotto_entries:
+                sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
+                remaining_sales = uova_vendute
+                
+                for entry in sorted_entries:
+                    eta = entry['eta']
+                    uova_original = entry['uova']
+                    allevamento = entry['allevamento']
+                    
+                    if remaining_sales > 0:
+                        sell_from_this = min(uova_original, remaining_sales)
+                        uova_remaining = uova_original - sell_from_this
+                        remaining_sales -= sell_from_this
+                    else:
+                        uova_remaining = uova_original
+                    
+                    if uova_remaining > 0:
+                        rate_data = get_birth_rate(eta, product)
+                        rate_percent = rate_data['rate'] if rate_data else 82.0
+                        rate = rate_percent / 100.0
+                        result_value = int(uova_remaining * rate)
+                        animali += result_value
+                        animali_calc_details.append({
+                            "source": allevamento,
+                            "uova": uova_remaining,
+                            "eta": eta,
+                            "rate_percent": rate_percent,
+                            "animali": result_value
+                        })
+            else:
+                for entry in lotto_entries:
+                    eta = entry['eta']
+                    uova = entry['uova']
+                    allevamento = entry['allevamento']
+                    rate_data = get_birth_rate(eta, product)
+                    rate_percent = rate_data['rate'] if rate_data else 82.0
+                    rate = rate_percent / 100.0
+                    result_value = int(uova * rate)
+                    animali += result_value
+                    animali_calc_details.append({
+                        "source": allevamento,
+                        "uova": uova,
+                        "eta": eta,
+                        "rate_percent": rate_percent,
+                        "animali": result_value
+                    })
+            
+            if uova_acquistate > 0:
+                result_value = int(uova_acquistate * purchase_rate)
+                animali += result_value
+                animali_calc_details.append({
+                    "source": "Uova Acquistate",
+                    "uova": uova_acquistate,
+                    "eta": None,
+                    "rate_percent": purchase_rate_percent,
+                    "animali": result_value
+                })
+            
+            animali_possibili = round(animali / 100) * 100
+            
+            # Calculate 50/50 split
+            maschi_disponibili = animali_possibili // 2
+            femmine_disponibili = animali_possibili // 2
+            
+            # Build client data for this week
+            client_values = {}
+            richieste_maschi = 0
+            richieste_femmine = 0
+            
+            for client in clients:
+                client_id = client['id']
+                quantita = client_data.get((birth_year, birth_week, client_id), 0)
+                client_values[client_id] = quantita
+                
+                # Accumulate requests by sex type
+                if client['sex_type'] == 'maschi':
+                    richieste_maschi += quantita
+                elif client['sex_type'] == 'femmine':
+                    richieste_femmine += quantita
+                else:  # entrambi - 50/50 split
+                    richieste_maschi += quantita // 2
+                    richieste_femmine += quantita // 2
+            
+            # Calculate remaining
+            totale_maschi = maschi_disponibili - richieste_maschi
+            totale_femmine = femmine_disponibili - richieste_femmine
+            
+            # Get production details for tooltip
+            production_details = lotto_details.get(source_key, [])
+            purchase_details = purchases_details_map.get(source_key, [])
+            
+            result.append({
+                "settimana_nascita": f"{birth_year}/{birth_week:02d}",
+                "anno": birth_year,
+                "settimana": birth_week,
+                "uova_prodotte": uova_prodotte,
+                "uova_acquistate": uova_acquistate,
+                "uova_vendute": uova_vendute,
+                "uova_totali": uova_totali,
+                "animali_possibili": animali_possibili,
+                "client_values": client_values,
+                "totale_maschi": totale_maschi,
+                "totale_femmine": totale_femmine,
+                "production_details": production_details,
+                "purchase_details": purchase_details,
+                "animali_calc_details": animali_calc_details
+            })
+        
+        return {
+            "product": "granpollo",
+            "has_vendite": has_vendite,
+            "has_acquisti": has_acquisti,
+            "clients": clients,
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/granpollo/clients")
+def list_granpollo_clients():
+    """List all active Granpollo clients."""
+    return get_granpollo_clients()
+
+@router.post("/granpollo/clients")
+def create_granpollo_client(client: RossClientCreate):
+    """Create a new Granpollo client."""
+    if client.sex_type not in ['maschi', 'femmine', 'entrambi']:
+        raise HTTPException(status_code=400, detail="sex_type must be 'maschi', 'femmine', or 'entrambi'")
+    return add_granpollo_client(client.nome_cliente, client.sex_type)
+
+@router.delete("/granpollo/clients/{client_id}")
+def remove_granpollo_client(client_id: int):
+    """Delete a Granpollo client."""
+    if delete_granpollo_client(client_id):
+        return {"status": "deleted"}
+    raise HTTPException(status_code=404, detail="Client not found")
+
+@router.put("/granpollo/client-data")
+def update_granpollo_data(data: RossClientDataUpdate):
+    """Update Granpollo client data for a specific week."""
+    return update_granpollo_client_data(data.anno, data.settimana, data.cliente_id, data.quantita)
 
 
 @router.get("/{product}")
