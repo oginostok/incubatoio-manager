@@ -30,6 +30,9 @@ class Lotto(Base):
     data_fine_prevista = Column(String)
     curva_produzione = Column(String) # Production curve to use
     attivo = Column(Boolean, default=True)
+    # Concurrency protection fields
+    version = Column(Integer, default=1)  # Optimistic locking
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """Converts model instance to dictionary for Streamlit compatibility."""
@@ -45,7 +48,9 @@ class Lotto(Base):
             "Sett_Start": self.sett_start,
             "Data_Fine_Prevista": self.data_fine_prevista,
             "Curva_Produzione": self.curva_produzione,
-            "Attivo": self.attivo
+            "Attivo": self.attivo,
+            "version": self.version,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
 
 
@@ -182,6 +187,17 @@ def init_db():
              conn.commit()
         except Exception:
              pass
+        # Concurrency protection columns
+        try:
+             conn.execute(text("ALTER TABLE lotti ADD COLUMN version INTEGER DEFAULT 1"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE lotti ADD COLUMN updated_at DATETIME"))
+             conn.commit()
+        except Exception:
+             pass
 
 def get_db():
     """Yields a database session."""
@@ -222,24 +238,52 @@ def add_lotto(data):
     finally:
         db.close()
 
-def update_lotto(lotto_id, data):
-    """Updates an existing lotto."""
+def update_lotto(lotto_id, data, expected_version=None):
+    """Updates an existing lotto with optimistic locking.
+    
+    Args:
+        lotto_id: ID of the lotto to update
+        data: Dictionary with fields to update
+        expected_version: If provided, checks version before update (optimistic locking)
+    
+    Returns:
+        dict with 'success', 'conflict', and 'lotto' data
+    """
     db = SessionLocal()
     try:
         lotto = db.query(Lotto).filter(Lotto.id == lotto_id).first()
-        if lotto:
-            if "Allevamento" in data: lotto.allevamento = data["Allevamento"]
-            if "Capannone" in data: lotto.capannone = data["Capannone"]
-            if "Razza" in data: lotto.razza = data["Razza"]
-            if "Razza_Gallo" in data: lotto.razza_gallo = data["Razza_Gallo"]
-            if "Prodotto" in data: lotto.prodotto = data["Prodotto"]
-            if "Capi" in data: lotto.capi = data["Capi"]
-            if "Anno_Start" in data: lotto.anno_start = data["Anno_Start"]
-            if "Sett_Start" in data: lotto.sett_start = data["Sett_Start"]
-            if "Data_Fine_Prevista" in data: lotto.data_fine_prevista = data["Data_Fine_Prevista"]
-            if "Curva_Produzione" in data: lotto.curva_produzione = data["Curva_Produzione"]
-            if "Attivo" in data: lotto.attivo = data["Attivo"]
-            db.commit()
+        if not lotto:
+            return {"success": False, "error": "Lotto not found"}
+        
+        # Optimistic locking check
+        if expected_version is not None and lotto.version != expected_version:
+            return {
+                "success": False, 
+                "conflict": True,
+                "message": "Data was modified by another user. Please refresh.",
+                "current_version": lotto.version
+            }
+        
+        # Update fields
+        if "Allevamento" in data: lotto.allevamento = data["Allevamento"]
+        if "Capannone" in data: lotto.capannone = data["Capannone"]
+        if "Razza" in data: lotto.razza = data["Razza"]
+        if "Razza_Gallo" in data: lotto.razza_gallo = data["Razza_Gallo"]
+        if "Prodotto" in data: lotto.prodotto = data["Prodotto"]
+        if "Capi" in data: lotto.capi = data["Capi"]
+        if "Anno_Start" in data: lotto.anno_start = data["Anno_Start"]
+        if "Sett_Start" in data: lotto.sett_start = data["Sett_Start"]
+        if "Data_Fine_Prevista" in data: lotto.data_fine_prevista = data["Data_Fine_Prevista"]
+        if "Curva_Produzione" in data: lotto.curva_produzione = data["Curva_Produzione"]
+        if "Attivo" in data: lotto.attivo = data["Attivo"]
+        
+        # Increment version and update timestamp
+        lotto.version = (lotto.version or 0) + 1
+        lotto.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(lotto)
+        return {"success": True, "lotto": lotto.to_dict()}
     finally:
         db.close()
 

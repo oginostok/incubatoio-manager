@@ -38,6 +38,7 @@ class LottoUpdate(BaseModel):
     Data_Fine_Prevista: Optional[str] = None
     Curva_Produzione: Optional[str] = None
     Attivo: Optional[bool] = None
+    version: Optional[int] = None  # For optimistic locking
 
 @router.get("/lotti")
 def get_all_lotti():
@@ -52,14 +53,36 @@ def create_lotto(lotto: LottoCreate):
 
 @router.put("/lotti/{lotto_id}")
 def update_lotto_endpoint(lotto_id: int, lotto: LottoUpdate):
-    """Updates an existing lotto."""
-    # Filter out None values
-    updates = {k: v for k, v in lotto.model_dump().items() if v is not None}
+    """Updates an existing lotto with optimistic locking support."""
+    # Extract version for optimistic locking
+    expected_version = lotto.version
+    
+    # Filter out None values and version field
+    updates = {k: v for k, v in lotto.model_dump().items() if v is not None and k != 'version'}
+    
     if updates:
-        update_lotto(lotto_id, updates)
+        result = update_lotto(lotto_id, updates, expected_version)
+        
+        # Check for conflict
+        if result.get("conflict"):
+            raise HTTPException(
+                status_code=409, 
+                detail=result.get("message", "Data was modified by another user. Please refresh.")
+            )
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error", "Update failed"))
+        
         # Invalidate cache for this lotto (as per RULES.md)
         invalidate_cache_by_lotto(lotto_id)
-    return {"status": "ok", "message": "Lotto updated"}
+        
+        return {
+            "status": "ok", 
+            "message": "Lotto updated",
+            "lotto": result.get("lotto")
+        }
+    
+    return {"status": "ok", "message": "No changes"}
 
 @router.delete("/lotti/{lotto_id}")
 def delete_lotto_endpoint(lotto_id: int):
