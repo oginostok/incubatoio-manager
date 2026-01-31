@@ -31,7 +31,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold text-green-700">
-                        🐣 Incubatoio Manager
+                        AVICORE
                     </CardTitle>
                     <p className="text-muted-foreground">Accedi per continuare</p>
                 </CardHeader>
