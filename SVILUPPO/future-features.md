@@ -71,6 +71,36 @@ Sistema di gestione del magazzino dell'incubatoio.
 
 ---
 
+## 👥 Sistema Multi-Utente con Notifiche Real-Time
+
+**Descrizione:**  
+Implementazione di 4 utenti con login separato e notifiche in tempo reale quando qualcuno modifica i dati.
+
+**Utenti:**
+- 👤 **Carlo** - Gestione Allevamenti
+- 👤 **Roberto** - Gestione Allevamenti  
+- 👤 **Alessandra** - Gestione Incubatoio/Uova
+- 👤 **Marta** - Supervisore
+
+**Funzionalità:**
+- Login con username/password per ogni utente
+- Tracciamento "Modificato da [Utente] alle [HH:MM]" su ogni record
+- **Popup real-time**: Quando un utente modifica una pagina, gli altri vedono:
+  > ⚠️ "Alessandra ha modificato questa pagina adesso. Clicca per ricaricare."
+- Prevenzione conflitti: se due utenti modificano lo stesso record, il secondo riceve avviso
+- Log attività: storico di chi ha modificato cosa
+
+**Implementazione Tecnica:**
+- Backend: Tabella `users` con autenticazione JWT
+- Backend: WebSocket per notifiche real-time
+- Frontend: Context `AuthProvider` per gestione sessione
+- Frontend: Hook `useRealTimeUpdates` per ricevere notifiche
+- Database: Colonne `updated_by`, `updated_at` su tutte le tabelle principali
+
+**Stato:** 📋 Pianificato
+
+---
+
 ## Legenda Stati
 
 - 📋 **Pianificato** - Feature in backlog, da implementare
@@ -80,4 +110,4 @@ Sistema di gestione del magazzino dell'incubatoio.
 
 ---
 
-**Ultimo aggiornamento:** 2026-01-25
+**Ultimo aggiornamento:** 2026-01-31

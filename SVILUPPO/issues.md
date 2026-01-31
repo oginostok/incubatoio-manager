@@ -352,3 +352,27 @@ Possibili cause:
 2. Controllare nel DB: `SELECT * FROM lotti WHERE Allevamento = 'Passirano' AND Capannone = '1'`
 
 ---
+
+## 12. Configurare HTTPS/SSL per Server Produzione
+
+**Stato:** 🔴 Non Risolto  
+**Data:** 2026-01-31  
+**Componente:** Server VPS (Nginx + Let's Encrypt)
+
+### Descrizione del Problema
+Il server di produzione (`http://162.55.184.122`) usa HTTP senza certificato SSL. Questo causa:
+- Connessioni non criptate
+- Avvisi di sicurezza nel browser
+- GitHub Webhook richiede "Disable SSL verification"
+
+### Soluzione Proposta
+Configurare **Let's Encrypt** con Certbot per ottenere certificato SSL gratuito:
+1. Registrare un dominio (es. `incubatoio.example.com`)
+2. Installare Certbot sul server
+3. Configurare Nginx per HTTPS
+4. Aggiornare GitHub Webhook con URL https
+
+### Priorità
+🟡 Media - Funziona senza SSL, ma consigliato per sicurezza
+
+---
