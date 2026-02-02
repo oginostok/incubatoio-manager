@@ -1,4 +1,5 @@
 import { GiFactory, GiRooster, GiNestEggs, GiChicken } from "react-icons/gi";
+import { FaTruck } from "react-icons/fa";
 import { Barcode } from "lucide-react";
 
 interface HomePageProps {
@@ -74,6 +75,18 @@ export default function HomePage({ onNavigate, onLogout }: HomePageProps) {
                 >
                     <GiChicken className="w-12 h-12 text-orange-500 group-hover:scale-110 transition-transform" />
                     <span className="text-xl font-bold text-gray-700">PULCINI</span>
+                </button>
+
+                {/* TRASPORTI */}
+                <button
+                    onClick={() => onNavigate("trasporti")}
+                    className="flex flex-col items-center justify-center gap-4 p-8 h-40
+                               bg-white rounded-2xl shadow-lg border-2 border-transparent
+                               hover:border-teal-400 hover:shadow-xl hover:scale-[1.02]
+                               transition-all duration-200 group"
+                >
+                    <FaTruck className="w-12 h-12 text-teal-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-xl font-bold text-gray-700">TRASPORTI</span>
                 </button>
             </div>
 

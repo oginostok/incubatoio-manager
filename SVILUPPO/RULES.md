@@ -165,6 +165,15 @@ Quando si creano tabelle con celle editabili o input dinamici, usare sempre larg
 
 ---
 
+### INCUBATOIO
+
+| ID | Nome | Percorso UI | Componente |
+|----|------|-------------|------------|
+| **T014** | Magazzino Uova | Incubatoio → Magazzino Uova | `EggStorageTable.tsx` |
+| **T015** | Totali Uova in Magazzino | Incubatoio → Magazzino Uova | `EggStorageTotalsTable.tsx` |
+
+---
+
 ### Riferimento Rapido
 
 ```
@@ -186,6 +195,10 @@ PULCINI
 ├── T010: Pianificazione Nascite Granpollo
 ├── T009: Nascita Uova in Acquisto (% nascita uova acquistate)
 └── T008: Tabelle di Nascita (percentuali nascita W24-W64)
+
+INCUBATOIO
+├── T014: Magazzino Uova (partite uova in giacenza)
+└── T015: Totali Uova in Magazzino (riepilogo per prodotto)
 ```
 
 

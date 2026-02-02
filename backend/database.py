@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -164,6 +164,104 @@ class CycleWeeklyData(Base):
         }
 
 
+# --- EGG STORAGE MODEL (T014 - Magazzino Uova) ---
+class EggStorage(Base):
+    __tablename__ = "egg_storage"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    prodotto = Column(String, index=True)  # Granpollo, Pollo70, Color Yeald, Ross
+    nome = Column(String)  # BLA, Bla Plus, BR, etc.
+    origine = Column(String)  # "Acquisto" or allevamento name
+    numero = Column(Integer, default=0)  # Quantity of eggs
+    eta = Column(Integer, default=0)  # Age in weeks
+    arrivate_il = Column(String)  # Date of arrival (YYYY-MM-DD)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "prodotto": self.prodotto,
+            "nome": self.nome,
+            "origine": self.origine,
+            "numero": self.numero,
+            "eta": self.eta,
+            "arrivate_il": self.arrivate_il
+        }
+
+
+# --- INCUBATION MODEL (T016 - Incubazioni) ---
+class Incubation(Base):
+    __tablename__ = "incubations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    data_incubazione = Column(String)  # YYYY-MM-DD
+    data_schiusa = Column(String)  # YYYY-MM-DD (calculated: +21 days)
+    pre_incubazione_ore = Column(Integer, default=0)  # Pre-incubation hours
+    partenza_macchine = Column(String)  # HH:MM
+    operatore = Column(String)  # Mauro|Alessandro|Ivan|Alessandra
+    incubatrici = Column(String)  # Comma-separated: "1,3,5,7"
+    
+    # Animal requests per product
+    richiesta_granpollo = Column(Integer, default=0)
+    richiesta_pollo70 = Column(Integer, default=0)
+    richiesta_color_yeald = Column(Integer, default=0)
+    richiesta_ross = Column(Integer, default=0)
+    
+    # Status
+    stato = Column(String, default="in_corso")  # in_corso, completata, annullata
+    committed = Column(Boolean, default=False)  # True when storage is updated
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "data_incubazione": self.data_incubazione,
+            "data_schiusa": self.data_schiusa,
+            "pre_incubazione_ore": self.pre_incubazione_ore,
+            "partenza_macchine": self.partenza_macchine,
+            "operatore": self.operatore,
+            "incubatrici": self.incubatrici,
+            "richiesta_granpollo": self.richiesta_granpollo,
+            "richiesta_pollo70": self.richiesta_pollo70,
+            "richiesta_color_yeald": self.richiesta_color_yeald,
+            "richiesta_ross": self.richiesta_ross,
+            "stato": self.stato,
+            "committed": self.committed,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+# --- INCUBATION BATCH MODEL (partite uova per incubazione) ---
+class IncubationBatch(Base):
+    __tablename__ = "incubation_batches"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    incubation_id = Column(Integer, index=True)  # FK to incubations
+    egg_storage_id = Column(Integer)  # FK to egg_storage (T014)
+    prodotto = Column(String)
+    nome = Column(String)  # Name of the batch
+    origine = Column(String)  # Origin of the batch (from EggStorage)
+    uova_partita = Column(Integer, default=0)  # Total eggs in batch
+    uova_utilizzate = Column(Integer, default=0)  # Eggs used (editable)
+    eta = Column(Integer, default=0)  # Age in weeks (from EggStorage)
+    storico_override = Column(Float)  # User-overridden storico value (nullable)
+    quantita = Column(Integer)  # Deprecated, kept for backwards compatibility
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "incubation_id": self.incubation_id,
+            "egg_storage_id": self.egg_storage_id,
+            "prodotto": self.prodotto,
+            "nome": self.nome,
+            "origine": self.origine,
+            "uova_partita": self.uova_partita,
+            "uova_utilizzate": self.uova_utilizzate,
+            "eta": self.eta,
+            "storico_override": self.storico_override,
+            "quantita": self.quantita
+        }
+
+
 # --- HELPER FUNCTIONS ---
 def init_db():
     """Initializes the database tables and ensures schema updates."""
@@ -195,6 +293,38 @@ def init_db():
              pass
         try:
              conn.execute(text("ALTER TABLE lotti ADD COLUMN updated_at DATETIME"))
+             conn.commit()
+        except Exception:
+             pass
+        # Incubation batch new columns migration
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN origine VARCHAR"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN uova_partita INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN uova_utilizzate INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN eta INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN storico_override FLOAT"))
+             conn.commit()
+        except Exception:
+             pass
+        # Incubation committed field migration
+        try:
+             conn.execute(text("ALTER TABLE incubations ADD COLUMN committed BOOLEAN DEFAULT 0"))
              conn.commit()
         except Exception:
              pass
@@ -1482,3 +1612,70 @@ def update_granpollo_client_data(anno: int, settimana: int, cliente_id: int, qua
     finally:
         db.close()
 
+
+# --- EGG STORAGE HELPERS (T014 - Magazzino Uova) ---
+def get_egg_storage():
+    """Returns all egg storage entries."""
+    db = SessionLocal()
+    try:
+        entries = db.query(EggStorage).all()
+        return [e.to_dict() for e in entries]
+    finally:
+        db.close()
+
+def add_egg_storage(data):
+    """Adds a new egg storage entry."""
+    db = SessionLocal()
+    try:
+        new_entry = EggStorage(
+            prodotto=data.get("prodotto"),
+            nome=data.get("nome"),
+            origine=data.get("origine"),
+            numero=data.get("numero", 0),
+            eta=data.get("eta", 0),
+            arrivate_il=data.get("arrivate_il")
+        )
+        db.add(new_entry)
+        db.commit()
+        db.refresh(new_entry)
+        return new_entry.to_dict()
+    finally:
+        db.close()
+
+def update_egg_storage(entry_id, data):
+    """Updates an existing egg storage entry."""
+    db = SessionLocal()
+    try:
+        entry = db.query(EggStorage).filter(EggStorage.id == entry_id).first()
+        if entry:
+            if "prodotto" in data:
+                entry.prodotto = data["prodotto"]
+            if "nome" in data:
+                entry.nome = data["nome"]
+            if "origine" in data:
+                entry.origine = data["origine"]
+            if "numero" in data:
+                entry.numero = data["numero"]
+            if "eta" in data:
+                entry.eta = data["eta"]
+            if "arrivate_il" in data:
+                entry.arrivate_il = data["arrivate_il"]
+            db.commit()
+            db.refresh(entry)
+            return entry.to_dict()
+        return None
+    finally:
+        db.close()
+
+def delete_egg_storage(entry_id):
+    """Deletes an egg storage entry."""
+    db = SessionLocal()
+    try:
+        entry = db.query(EggStorage).filter(EggStorage.id == entry_id).first()
+        if entry:
+            db.delete(entry)
+            db.commit()
+            return True
+        return False
+    finally:
+        db.close()

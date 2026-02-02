@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Search, Loader2, Barcode } from "lucide-react";
+import { Search, Loader2, Barcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, BarChart, Bar, ComposedChart } from "recharts";
 import type { Lotto } from "@/types";
 import { API_BASE_URL } from "@/lib/config";
+import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
 interface LetturaCodicePageProps {
     onNavigate: (page: string) => void;
@@ -194,38 +195,19 @@ export default function LetturaCodicePage({ onNavigate }: LetturaCodicePageProps
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
             {/* SIDEBAR */}
-            <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 p-6 flex flex-col">
-                {/* Back Button */}
-                <Button
-                    variant="ghost"
-                    onClick={() => onNavigate("home")}
-                    className="mb-8 justify-start gap-2 text-gray-600 hover:text-gray-900"
+            <ResponsiveSidebar
+                title="Lettura Codice"
+                icon={<Barcode className="w-8 h-8 text-indigo-600" />}
+                onNavigateHome={() => onNavigate("home")}
+                footerText="Legge le informazioni del codice inserito"
+            >
+                <button
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all bg-indigo-100 text-indigo-700 font-medium"
                 >
-                    <ArrowLeft className="w-4 h-4" />
-                    Torna alla Home
-                </Button>
-
-                {/* Logo/Title */}
-                <div className="flex items-center gap-3 mb-8">
-                    <Barcode className="w-8 h-8 text-indigo-600" />
-                    <h1 className="text-xl font-bold text-gray-800">Lettura Codice</h1>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 space-y-2">
-                    <button
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all bg-indigo-100 text-indigo-700 font-medium"
-                    >
-                        <Search className="w-5 h-5" />
-                        Ricerca Codice
-                    </button>
-                </nav>
-
-                {/* Footer */}
-                <div className="text-xs text-gray-400 mt-auto pt-4 border-t">
-                    Legge le informazioni del codice inserito
-                </div>
-            </aside>
+                    <Search className="w-5 h-5" />
+                    Ricerca Codice
+                </button>
+            </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
             <main className="flex-1 p-8 overflow-auto">

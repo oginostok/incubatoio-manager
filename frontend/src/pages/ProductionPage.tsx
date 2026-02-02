@@ -1,12 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft } from "lucide-react";
 import { GiNestEggs } from "react-icons/gi";
 import { ProductionAPI, ProductionTablesAPI } from "@/lib/api";
 import { AllevamentiAPI } from "@/lib/api";
 import type { WeeklySummary, Lotto } from "@/types";
 import ProductionChart from "@/components/ProductionChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -17,6 +15,7 @@ import {
 import TradingTable from "@/components/TradingTable";
 import { WeeklySummaryTable } from "@/components/WeeklySummaryTable";
 import { API_BASE_URL } from "@/lib/config";
+import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
 interface ProductionPageProps {
     onNavigate: (page: string) => void;
@@ -347,63 +346,43 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                 .sort((a, b) => a.periodo.localeCompare(b.periodo));
         }
     }, [data, chartProductFilter, startPeriod, effectiveEndPeriod, allevamentoProductMap, includeTradingData, tradingDataAcquisti, tradingDataVendite]);
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
             {/* SIDEBAR */}
-            <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 p-6 flex flex-col">
-                {/* Back Button */}
-                <Button
-                    variant="ghost"
-                    onClick={() => onNavigate("home")}
-                    className="mb-8 justify-start gap-2 text-gray-600 hover:text-gray-900"
+            <ResponsiveSidebar
+                title="Produzione Uova"
+                icon={<GiNestEggs className="w-8 h-8 text-yellow-600" />}
+                onNavigateHome={() => onNavigate("home")}
+                footerText={`${data.length} settimane registrate`}
+            >
+                <button
+                    onClick={() => setSection("produzioni_totali")}
+                    className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "produzioni_totali"
+                        ? "bg-yellow-100 text-yellow-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
                 >
-                    <ArrowLeft className="w-4 h-4" />
-                    Torna alla Home
-                </Button>
-
-                {/* Logo/Title */}
-                <div className="flex items-center gap-3 mb-8">
-                    <GiNestEggs className="w-8 h-8 text-yellow-600" />
-                    <h1 className="text-xl font-bold text-gray-800">Produzione Uova</h1>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 space-y-2">
-                    <button
-                        onClick={() => setSection("produzioni_totali")}
-                        className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "produzioni_totali"
-                            ? "bg-yellow-100 text-yellow-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        Produzioni e Totali
-                    </button>
-                    <button
-                        onClick={() => setSection("acquisti_vendite")}
-                        className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "acquisti_vendite"
-                            ? "bg-yellow-100 text-yellow-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        Acquisti e Vendite
-                    </button>
-                    <button
-                        onClick={() => setSection("tabelle_produzioni")}
-                        className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "tabelle_produzioni"
-                            ? "bg-yellow-100 text-yellow-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        Tabelle Produzioni
-                    </button>
-                </nav>
-
-                {/* Footer */}
-                <div className="text-xs text-gray-400 mt-auto pt-4 border-t">
-                    {data.length} settimane registrate
-                </div>
-            </aside>
+                    Produzioni e Totali
+                </button>
+                <button
+                    onClick={() => setSection("acquisti_vendite")}
+                    className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "acquisti_vendite"
+                        ? "bg-yellow-100 text-yellow-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    Acquisti e Vendite
+                </button>
+                <button
+                    onClick={() => setSection("tabelle_produzioni")}
+                    className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "tabelle_produzioni"
+                        ? "bg-yellow-100 text-yellow-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    Tabelle Produzioni
+                </button>
+            </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
             <main className="flex-1 p-8 overflow-auto">

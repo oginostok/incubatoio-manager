@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { ArrowLeft, Table2 } from "lucide-react";
+import { Table2 } from "lucide-react";
 import { GiChicken } from "react-icons/gi";
-import { Button } from "@/components/ui/button";
 import BirthRatesTable from "@/components/BirthRatesTable";
 import PurchaseBirthRatesTable from "@/components/PurchaseBirthRatesTable";
 import GranpolloPlanningTable from "@/components/GranpolloPlanningTable";
 import Pollo70PlanningTable from "@/components/Pollo70PlanningTable";
 import ColorYealdPlanningTable from "@/components/ColorYealdPlanningTable";
 import RossPlanningTable from "@/components/RossPlanningTable";
+import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
 interface PulciniPageProps {
     onNavigate: (page: string) => void;
@@ -70,68 +70,53 @@ export default function PulciniPage({ onNavigate }: PulciniPageProps) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
             {/* SIDEBAR */}
-            <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 p-6 flex flex-col">
-                {/* Back Button */}
-                <Button
-                    variant="ghost"
-                    onClick={() => onNavigate("home")}
-                    className="mb-8 justify-start gap-2 text-gray-600 hover:text-gray-900"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Torna alla Home
-                </Button>
-
-                {/* Logo/Title */}
-                <div className="flex items-center gap-3 mb-8">
-                    <GiChicken className="w-8 h-8 text-orange-500" />
-                    <h1 className="text-xl font-bold text-gray-800">Pulcini</h1>
-                </div>
-
-                {/* Navigation - Product buttons */}
-                <nav className="flex-1 space-y-2">
-                    {PRODUCTS.map((product) => (
-                        <button
-                            key={product.id}
-                            onClick={() => setSection(product.id)}
-                            className={`w-full px-4 py-3 rounded-xl text-left font-medium transition-all ${product.bgColor} ${product.hoverBg} ${product.textColor} ${section === product.id
-                                ? "ring-2 ring-offset-2 ring-gray-400 shadow-lg"
-                                : "shadow-sm opacity-90 hover:opacity-100"
-                                }`}
-                        >
-                            {product.label}
-                        </button>
-                    ))}
-
-                    {/* Separator */}
-                    <div className="border-t border-gray-300 my-4"></div>
-
-                    {/* Tabelle di Nascita */}
+            <ResponsiveSidebar
+                title="Pulcini"
+                icon={<GiChicken className="w-8 h-8 text-orange-500" />}
+                onNavigateHome={() => onNavigate("home")}
+            >
+                {PRODUCTS.map((product) => (
                     <button
-                        onClick={() => setSection("tabelleNascita")}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "tabelleNascita"
-                            ? "bg-gray-700 text-white font-medium shadow-lg"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        key={product.id}
+                        onClick={() => setSection(product.id)}
+                        className={`w-full px-4 py-3 rounded-xl text-left font-medium transition-all ${product.bgColor} ${product.hoverBg} ${product.textColor} ${section === product.id
+                            ? "ring-2 ring-offset-2 ring-gray-400 shadow-lg"
+                            : "shadow-sm opacity-90 hover:opacity-100"
                             }`}
                     >
-                        <Table2 className="w-5 h-5" />
-                        Tabelle di Nascita
+                        {product.label}
                     </button>
+                ))}
 
-                    {/* Separator */}
-                    <div className="border-t border-gray-300 my-4"></div>
+                {/* Separator */}
+                <div className="border-t border-gray-300 my-4"></div>
 
-                    {/* Checkbox Visualizza Info */}
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-800 px-2">
-                        <input
-                            type="checkbox"
-                            checked={showTooltips}
-                            onChange={(e) => setShowTooltips(e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        Visualizza info
-                    </label>
-                </nav>
-            </aside>
+                {/* Tabelle di Nascita */}
+                <button
+                    onClick={() => setSection("tabelleNascita")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "tabelleNascita"
+                        ? "bg-gray-700 text-white font-medium shadow-lg"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                >
+                    <Table2 className="w-5 h-5" />
+                    Tabelle di Nascita
+                </button>
+
+                {/* Separator */}
+                <div className="border-t border-gray-300 my-4"></div>
+
+                {/* Checkbox Visualizza Info */}
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-800 px-2">
+                    <input
+                        type="checkbox"
+                        checked={showTooltips}
+                        onChange={(e) => setShowTooltips(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    Visualizza info
+                </label>
+            </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
             <main className="flex-1 p-8">

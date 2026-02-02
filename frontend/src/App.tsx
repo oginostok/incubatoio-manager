@@ -5,9 +5,10 @@ import IncubatoioPage from "@/pages/IncubatoioPage";
 import AllevamentiPage from "@/pages/AllevamentiPage";
 import PulciniPage from "@/pages/PulciniPage";
 import LetturaCodicePage from "@/pages/LetturaCodicePage";
+import TrasportiPage from "@/pages/TrasportiPage";
 import LoginPage from "@/pages/LoginPage";
 
-type Page = "home" | "incubatoio" | "allevamenti" | "produzioni_uova" | "produzioni_pulcini" | "lettura_codice";
+type Page = "home" | "incubatoio" | "allevamenti" | "produzioni_uova" | "produzioni_pulcini" | "lettura_codice" | "trasporti";
 
 function App() {
   // Stato di autenticazione persistente con localStorage
@@ -49,6 +50,8 @@ function App() {
       return <PulciniPage onNavigate={handleNavigate} />;
     case "lettura_codice":
       return <LetturaCodicePage onNavigate={handleNavigate} />;
+    case "trasporti":
+      return <TrasportiPage onNavigate={handleNavigate} />;
     default:
       return <HomePage onNavigate={handleNavigate} onLogout={handleLogout} />;
   }

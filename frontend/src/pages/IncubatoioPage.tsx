@@ -1,87 +1,101 @@
 import { useState } from "react";
-import { ArrowLeft, Settings } from "lucide-react";
+import { Package, Timer, Egg, FileText } from "lucide-react";
 import { GiFactory } from "react-icons/gi";
-import { Button } from "@/components/ui/button";
+import EggStorageTable from "@/components/EggStorageTable";
+import EggStorageTotalsTable from "@/components/EggStorageTotalsTable";
+import ResponsiveSidebar from "@/components/ResponsiveSidebar";
+import IncubationTable from "@/components/IncubationTable";
+import RegistroIncubazioniTable from "@/components/RegistroIncubazioniTable";
 
 interface IncubatoioPageProps {
     onNavigate: (page: string) => void;
 }
 
-type Section = "gestione" | "impostazioni";
+type Section = "magazzino" | "incubazione" | "registro" | "schiusa";
 
 export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
-    const [section, setSection] = useState<Section>("gestione");
+    const [section, setSection] = useState<Section>("magazzino");
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
             {/* SIDEBAR */}
-            <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 p-6 flex flex-col">
-                {/* Back Button */}
-                <Button
-                    variant="ghost"
-                    onClick={() => onNavigate("home")}
-                    className="mb-8 justify-start gap-2 text-gray-600 hover:text-gray-900"
+            <ResponsiveSidebar
+                title="Incubatoio"
+                icon={<GiFactory className="w-8 h-8 text-amber-600" />}
+                onNavigateHome={() => onNavigate("home")}
+            >
+                <button
+                    onClick={() => setSection("magazzino")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "magazzino"
+                        ? "bg-amber-100 text-amber-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
                 >
-                    <ArrowLeft className="w-4 h-4" />
-                    Torna alla Home
-                </Button>
-
-                {/* Logo/Title */}
-                <div className="flex items-center gap-3 mb-8">
-                    <GiFactory className="w-8 h-8 text-amber-600" />
-                    <h1 className="text-xl font-bold text-gray-800">Incubatoio</h1>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 space-y-2">
-                    <button
-                        onClick={() => setSection("gestione")}
-                        className={`w-full px-4 py-3 rounded-xl text-left transition-all ${section === "gestione"
-                            ? "bg-amber-100 text-amber-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        Gestione Incubatoio
-                    </button>
-                    <button
-                        onClick={() => setSection("impostazioni")}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "impostazioni"
-                            ? "bg-amber-100 text-amber-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        <Settings className="w-5 h-5" />
-                        Impostazioni
-                    </button>
-                </nav>
-
-                {/* Footer */}
-                <div className="text-xs text-gray-400 mt-auto pt-4 border-t">
-                    Area in costruzione
-                </div>
-            </aside>
+                    <Package className="w-5 h-5" />
+                    Magazzino Uova
+                </button>
+                <button
+                    onClick={() => setSection("incubazione")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "incubazione"
+                        ? "bg-amber-100 text-amber-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <Timer className="w-5 h-5" />
+                    Incubazione Uova
+                </button>
+                <button
+                    onClick={() => setSection("registro")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "registro"
+                        ? "bg-amber-100 text-amber-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <FileText className="w-5 h-5" />
+                    Registro Incubazioni
+                </button>
+                <button
+                    onClick={() => setSection("schiusa")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "schiusa"
+                        ? "bg-amber-100 text-amber-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <Egg className="w-5 h-5" />
+                    Schiusa Pulcini
+                </button>
+            </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 p-8 overflow-auto">
-                {section === "gestione" && (
+            <main className="flex-1 p-8 overflow-auto min-[1920px]:ml-0 ml-0">
+                {section === "magazzino" && (
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 min-[1920px]:grid-cols-4 gap-6">
+                            <div className="min-[1920px]:col-span-3">
+                                <EggStorageTable />
+                            </div>
+                            <div className="min-[1920px]:col-span-1">
+                                <EggStorageTotalsTable />
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {section === "incubazione" && (
+                    <IncubationTable />
+                )}
+                {section === "registro" && (
+                    <RegistroIncubazioniTable />
+                )}
+                {section === "schiusa" && (
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Gestione Incubatoio</h2>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Schiusa Pulcini</h2>
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                                 <p className="text-blue-700 text-lg">
                                     ℹ️ Area in costruzione.
                                 </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {section === "impostazioni" && (
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Impostazioni</h2>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                <p className="text-blue-700 text-lg">
-                                    ℹ️ Area in costruzione.
+                                <p className="text-gray-600 mt-2">
+                                    Impostazione dati reali di nascita per incubazioni avvenute 3 settimane fa
                                 </p>
                             </div>
                         </div>
