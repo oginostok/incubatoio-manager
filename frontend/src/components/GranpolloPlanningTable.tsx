@@ -79,9 +79,37 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
     // Delete confirmation state
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
+    // M/F toggle state
+    const [showSexSplit, setShowSexSplit] = useState(true);
+
     useEffect(() => {
         fetchData();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/settings/planning-table/T010`);
+            const json = await res.json();
+            setShowSexSplit(json.show_sex_split ?? true);
+        } catch (err) {
+            console.error("Failed to load settings:", err);
+        }
+    };
+
+    const handleToggleSexSplit = async () => {
+        const newValue = !showSexSplit;
+        setShowSexSplit(newValue);
+        try {
+            await fetch(`${API_BASE}/api/settings/planning-table/T010`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ show_sex_split: newValue })
+            });
+        } catch (err) {
+            console.error("Failed to save settings:", err);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -204,12 +232,23 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                     <h2 className="text-xl font-bold text-white">Pianificazione Nascite - Granpollo</h2>
                     <p className="text-xs text-green-100">T010</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2 bg-white text-granpollo-bright rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                >
-                    + Aggiungi Cliente
-                </button>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer bg-white/20 px-3 py-1.5 rounded-lg">
+                        <input
+                            type="checkbox"
+                            checked={showSexSplit}
+                            onChange={handleToggleSexSplit}
+                            className="w-4 h-4 rounded"
+                        />
+                        <span className="text-white text-sm">Visualizza M/F</span>
+                    </label>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-4 py-2 bg-white text-granpollo-bright rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                    >
+                        + Aggiungi Cliente
+                    </button>
+                </div>
             </div>
 
             {/* Add Client Modal */}
@@ -268,7 +307,7 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
             )}
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-hidden">
                 <table className="w-full text-sm table-fixed">
                     <thead className="bg-gray-50">
                         <tr>
@@ -339,12 +378,20 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                             ))}
 
                             {/* Totale columns */}
-                            <th className="px-3 py-2 text-center text-xs font-medium text-blue-700 uppercase border-b bg-blue-50 w-28">
-                                Totale ♂
-                            </th>
-                            <th className="px-3 py-2 text-center text-xs font-medium text-pink-700 uppercase border-b bg-pink-50 w-28">
-                                Totale ♀
-                            </th>
+                            {showSexSplit ? (
+                                <>
+                                    <th className="px-3 py-2 text-center text-xs font-medium text-blue-700 uppercase border-b bg-blue-50 w-28">
+                                        Totale ♂
+                                    </th>
+                                    <th className="px-3 py-2 text-center text-xs font-medium text-pink-700 uppercase border-b bg-pink-50 w-28">
+                                        Totale ♀
+                                    </th>
+                                </>
+                            ) : (
+                                <th className="px-3 py-2 text-center text-xs font-medium text-purple-700 uppercase border-b bg-purple-50 w-28">
+                                    Totale
+                                </th>
+                            )}
                         </tr>
                     </thead>
                     <tbody>
@@ -450,14 +497,21 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                                     );
                                 })}
 
-                                {/* Totale Maschi */}
-                                <td className={`px-3 py-2 text-right font-mono font-semibold ${row.totale_maschi < 0 ? 'text-red-600 bg-red-100' : 'text-blue-700 bg-blue-50'}`}>
-                                    {formatNumber(row.totale_maschi)}
-                                </td>
-                                {/* Totale Femmine */}
-                                <td className={`px-3 py-2 text-right font-mono font-semibold ${row.totale_femmine < 0 ? 'text-red-600 bg-red-100' : 'text-pink-700 bg-pink-50'}`}>
-                                    {formatNumber(row.totale_femmine)}
-                                </td>
+                                {/* Totale columns - conditional */}
+                                {showSexSplit ? (
+                                    <>
+                                        <td className={`px-3 py-2 text-right font-mono font-semibold ${row.totale_maschi < 0 ? 'text-red-600 bg-red-100' : 'text-blue-700 bg-blue-50'}`}>
+                                            {formatNumber(row.totale_maschi)}
+                                        </td>
+                                        <td className={`px-3 py-2 text-right font-mono font-semibold ${row.totale_femmine < 0 ? 'text-red-600 bg-red-100' : 'text-pink-700 bg-pink-50'}`}>
+                                            {formatNumber(row.totale_femmine)}
+                                        </td>
+                                    </>
+                                ) : (
+                                    <td className={`px-3 py-2 text-right font-mono font-semibold ${(row.totale_maschi + row.totale_femmine) < 0 ? 'text-red-600 bg-red-100' : 'text-purple-700 bg-purple-50'}`}>
+                                        {formatNumber(row.totale_maschi + row.totale_femmine)}
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>

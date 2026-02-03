@@ -262,6 +262,20 @@ class IncubationBatch(Base):
         }
 
 
+# --- PLANNING TABLE SETTINGS MODEL ---
+class PlanningTableSettings(Base):
+    __tablename__ = "planning_table_settings"
+    
+    table_id = Column(String, primary_key=True)  # 'T010', 'T011', 'T012', 'T013'
+    show_sex_split = Column(Boolean, default=True)  # True = M/F separate, False = combined
+    
+    def to_dict(self):
+        return {
+            "table_id": self.table_id,
+            "show_sex_split": self.show_sex_split
+        }
+
+
 # --- HELPER FUNCTIONS ---
 def init_db():
     """Initializes the database tables and ensures schema updates."""
@@ -1683,5 +1697,49 @@ def delete_egg_storage(entry_id):
             db.commit()
             return True
         return False
+    finally:
+        db.close()
+
+
+# --- PLANNING TABLE SETTINGS HELPERS ---
+def get_planning_table_setting(table_id):
+    """Returns settings for a planning table, creates default if not exists."""
+    db = SessionLocal()
+    try:
+        setting = db.query(PlanningTableSettings).filter(
+            PlanningTableSettings.table_id == table_id
+        ).first()
+        
+        if not setting:
+            # Create default setting
+            setting = PlanningTableSettings(
+                table_id=table_id,
+                show_sex_split=True
+            )
+            db.add(setting)
+            db.commit()
+            db.refresh(setting)
+        
+        return setting.to_dict()
+    finally:
+        db.close()
+
+
+def update_planning_table_setting(table_id, show_sex_split):
+    """Updates settings for a planning table."""
+    db = SessionLocal()
+    try:
+        setting = db.query(PlanningTableSettings).filter(
+            PlanningTableSettings.table_id == table_id
+        ).first()
+        
+        if not setting:
+            setting = PlanningTableSettings(table_id=table_id)
+            db.add(setting)
+        
+        setting.show_sex_split = show_sex_split
+        db.commit()
+        db.refresh(setting)
+        return setting.to_dict()
     finally:
         db.close()
