@@ -598,7 +598,7 @@ export default function IncubationTable() {
                             onClick={handleCreateIncubation}
                             className="bg-amber-600 hover:bg-amber-700"
                         >
-                            Salva Incubazione
+                            Crea Incubazione
                         </Button>
                     </div>
                 </div>
@@ -1065,7 +1065,7 @@ export default function IncubationTable() {
                                                 className="gap-2 bg-green-600 hover:bg-green-700"
                                             >
                                                 <Save className="w-4 h-4" />
-                                                Salva Incubazione
+                                                Crea Incubazione
                                             </Button>
                                         </div>
                                     )}

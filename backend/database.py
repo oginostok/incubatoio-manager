@@ -439,14 +439,20 @@ def get_trading_config(tipo):
 def add_trading_config(tipo, azienda, prodotto):
     db = SessionLocal()
     try:
-        # Check if exists
+        # Check if exists (including inactive ones)
         exists = db.query(TradingConfig).filter(
             TradingConfig.tipo == tipo, 
             TradingConfig.azienda == azienda, 
             TradingConfig.prodotto == prodotto
         ).first()
         
-        if not exists:
+        if exists:
+            # If it was soft-deleted, reactivate it
+            if not exists.active:
+                exists.active = True
+                db.commit()
+            # If already active, do nothing (duplicate prevention)
+        else:
             new_conf = TradingConfig(tipo=tipo, azienda=azienda, prodotto=prodotto, active=True)
             db.add(new_conf)
             db.commit()
