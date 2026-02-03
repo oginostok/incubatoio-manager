@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Package, Timer, Egg, FileText } from "lucide-react";
 import { GiFactory } from "react-icons/gi";
 import EggStorageTable from "@/components/EggStorageTable";
@@ -15,6 +15,12 @@ type Section = "magazzino" | "incubazione" | "registro" | "schiusa";
 
 export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
     const [section, setSection] = useState<Section>("magazzino");
+    const [eggStorageRefreshTrigger, setEggStorageRefreshTrigger] = useState(0);
+
+    // Callback to trigger refresh of egg storage totals when T014 data changes
+    const handleEggStorageChange = useCallback(() => {
+        setEggStorageRefreshTrigger(prev => prev + 1);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
@@ -72,10 +78,10 @@ export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 min-[1920px]:grid-cols-4 gap-6">
                             <div className="min-[1920px]:col-span-3">
-                                <EggStorageTable />
+                                <EggStorageTable onDataChange={handleEggStorageChange} />
                             </div>
                             <div className="min-[1920px]:col-span-1">
-                                <EggStorageTotalsTable />
+                                <EggStorageTotalsTable refreshTrigger={eggStorageRefreshTrigger} />
                             </div>
                         </div>
                     </div>

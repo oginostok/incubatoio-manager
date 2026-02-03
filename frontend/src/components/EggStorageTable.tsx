@@ -45,9 +45,10 @@ interface LottoData {
 
 interface EggStorageTableProps {
     showTooltips?: boolean;
+    onDataChange?: () => void;
 }
 
-export default function EggStorageTable({ showTooltips = true }: EggStorageTableProps) {
+export default function EggStorageTable({ showTooltips = true, onDataChange }: EggStorageTableProps) {
     const [entries, setEntries] = useState<EggStorageEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -118,25 +119,41 @@ export default function EggStorageTable({ showTooltips = true }: EggStorageTable
         return product ? product.bgColor : "bg-gray-200";
     };
 
+    // Helper function to calculate ISO week number
+    const getISOWeek = (date: Date): { year: number; week: number } => {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        // Set to nearest Thursday: current date + 4 - current day number (Mon=1, Sun=7)
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        // Get first day of year
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        // Calculate full weeks to nearest Thursday
+        const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+        // Return ISO year and week
+        return { year: d.getUTCFullYear(), week: weekNo };
+    };
+
+    // Convert year/week to absolute week number for age calculation
+    const toAbsoluteWeek = (year: number, week: number): number => {
+        return year * 52 + week;
+    };
+
     const handleOrigineChange = (value: string) => {
         setFormOrigine(value);
         // If selected an allevamento, try to get the current age
         if (value !== "Acquisto") {
             const lottiForAllevamento = lotti.filter(l => l.Allevamento === value);
             if (lottiForAllevamento.length > 0) {
-                // Calculate current ISO week
+                // Calculate current ISO week properly
                 const now = new Date();
-                const currentYear = now.getFullYear();
-                const startOfYear = new Date(currentYear, 0, 1);
-                const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-                const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+                const { year: currentYear, week: currentWeek } = getISOWeek(now);
+                const currentAbsoluteWeek = toAbsoluteWeek(currentYear, currentWeek);
 
                 // Calculate age for each lotto and find the minimum
                 const ages = lottiForAllevamento.map(lotto => {
                     if (lotto.Anno_Start && lotto.Sett_Start) {
-                        const startYear = lotto.Anno_Start;
-                        const startWeek = lotto.Sett_Start;
-                        return (currentYear - startYear) * 52 + (currentWeek - startWeek);
+                        const startAbsoluteWeek = toAbsoluteWeek(lotto.Anno_Start, lotto.Sett_Start);
+                        return currentAbsoluteWeek - startAbsoluteWeek;
                     }
                     return 0;
                 }).filter(age => age > 0);
@@ -187,6 +204,7 @@ export default function EggStorageTable({ showTooltips = true }: EggStorageTable
                 await fetchEntries();
                 setShowModal(false);
                 resetForm();
+                onDataChange?.();
             }
         } catch (err) {
             console.error("Failed to save entry:", err);
@@ -258,6 +276,7 @@ export default function EggStorageTable({ showTooltips = true }: EggStorageTable
                 await fetchEntries();
                 setShowModal(false);
                 resetForm();
+                onDataChange?.();
             }
         } catch (err) {
             console.error("Failed to update entry:", err);
@@ -278,6 +297,7 @@ export default function EggStorageTable({ showTooltips = true }: EggStorageTable
                 await fetchEntries();
                 setShowModal(false);
                 resetForm();
+                onDataChange?.();
             }
         } catch (err) {
             console.error("Failed to delete entry:", err);

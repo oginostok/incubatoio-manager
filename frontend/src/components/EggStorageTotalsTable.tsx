@@ -22,13 +22,24 @@ interface EggStorageEntry {
     numero: number;
 }
 
-export default function EggStorageTotalsTable() {
+interface EggStorageTotalsTableProps {
+    refreshTrigger?: number;
+}
+
+export default function EggStorageTotalsTable({ refreshTrigger = 0 }: EggStorageTotalsTableProps) {
     const [entries, setEntries] = useState<EggStorageEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchEntries();
     }, []);
+
+    // Refetch when refreshTrigger changes (triggered by T014 data changes)
+    useEffect(() => {
+        if (refreshTrigger > 0) {
+            fetchEntries();
+        }
+    }, [refreshTrigger]);
 
     const fetchEntries = async () => {
         try {
