@@ -1,6 +1,7 @@
 // API Configuration
-// In production, this will use the relative /api path since frontend and backend are served from the same domain
-// In development, it uses localhost:8000
+// In production, VITE_API_URL should be set to "" (empty) so that API calls use the relative /api path
+// In development (no .env), it falls back to localhost:8000
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const rawUrl = import.meta.env.VITE_API_URL;
+export const API_BASE_URL = rawUrl !== undefined ? rawUrl : "http://localhost:8000";
 export const API_URL = `${API_BASE_URL}/api`;
