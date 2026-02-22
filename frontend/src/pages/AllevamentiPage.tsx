@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { Settings, Dna, Activity } from "lucide-react";
+import { Settings, Dna, Activity, ClipboardList } from "lucide-react";
 import { GiRooster } from "react-icons/gi";
 import { AllevamentiAPI } from "@/lib/api";
 import type { Lotto, FarmStructure } from "@/types";
 import { FarmStatusGrid } from "@/components/FarmStatusGrid";
 import { AccasamentiTable } from "@/components/AccasamentiTable";
 import { GeneticsSettingsTable } from "@/components/GeneticsSettingsTable";
+import { SchedaSettimanale } from "@/components/SchedaSettimanale";
 import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
 interface AllevamentiPageProps {
     onNavigate: (page: string) => void;
 }
 
-type Section = "stato" | "accasamenti" | "genetiche";
+type Section = "stato" | "accasamenti" | "genetiche" | "scheda_settimanale";
 
 export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
     const [section, setSection] = useState<Section>("stato");
@@ -85,6 +86,19 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                     <Dna className="w-5 h-5" />
                     Impostazioni Genetiche
                 </button>
+
+                <div className="my-3 border-t border-gray-200" />
+
+                <button
+                    onClick={() => setSection("scheda_settimanale")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "scheda_settimanale"
+                        ? "bg-red-100 text-red-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <ClipboardList className="w-5 h-5" />
+                    Scheda Settimanale
+                </button>
             </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
@@ -111,6 +125,9 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                         )}
                         {section === "genetiche" && (
                             <GeneticsSettingsTable />
+                        )}
+                        {section === "scheda_settimanale" && (
+                            <SchedaSettimanale />
                         )}
                     </>
                 )}

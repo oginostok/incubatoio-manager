@@ -101,6 +101,24 @@ Implementazione di 4 utenti con login separato e notifiche in tempo reale quando
 
 ---
 
+## 🏠 Nomi Commerciali nei Capannoni
+
+**Descrizione:**  
+Implementare i nomi commerciali dei prodotti (BLA, Pelato Bianco, ecc.) all'interno di ogni capannone in V001, in modo che siano disponibili come opzioni di selezione durante la creazione di nuove incubazioni in T016.
+
+**Dettagli:**
+- Ogni capannone in V001 avrà associato un nome commerciale configurabile
+- I nomi commerciali verranno memorizzati nel database
+- In T016, quando si crea una nuova incubazione:
+  - Appariranno automaticamente i nomi commerciali disponibili
+  - L'utente potrà selezionare direttamente il nome commerciale dalla lista
+  - Selezione tramite dropdown popolato dai nomi dei capannoni
+- Sincronizzazione automatica: modificando il nome in V001, si aggiorna ovunque
+
+**Stato:** 📋 Pianificato
+
+---
+
 ## Legenda Stati
 
 - 📋 **Pianificato** - Feature in backlog, da implementare
@@ -110,4 +128,4 @@ Implementazione di 4 utenti con login separato e notifiche in tempo reale quando
 
 ---
 
-**Ultimo aggiornamento:** 2026-01-31
+**Ultimo aggiornamento:** 2026-02-03
