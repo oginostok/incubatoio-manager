@@ -16,6 +16,9 @@ interface Client {
 
 interface ProductionDetail {
     allevamento: string;
+    capannone: string;
+    razza: string;
+    razza_gallo: string;
     eta: number;
     uova: number;
 }
@@ -413,7 +416,7 @@ export default function GranpolloPlanningTable({ showTooltips = true }: Granpoll
                                             </div>
                                             {row.production_details.map((detail, idx) => (
                                                 <div key={idx} className="py-0.5">
-                                                    {detail.allevamento}: {formatNumber(detail.uova)} - Età W{detail.eta}
+                                                    {detail.allevamento} {detail.capannone || ""}: {formatNumber(detail.uova)} - {detail.razza || "?"}x{detail.razza_gallo || "?"} - Età W{detail.eta}
                                                 </div>
                                             ))}
                                             <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-gray-900" />

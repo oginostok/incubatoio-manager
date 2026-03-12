@@ -600,3 +600,24 @@ scp root@162.55.184.122:/opt/incubatoio-manager/backend/incubatoio.db ./backup_$
 
 ---
 
+## 🏭 Specifiche Incubatoio
+
+L'incubatoio utilizza **cassetti da 150 uova**.
+
+### Macchine Disponibili
+
+| Tipo Macchina | Sigla | Quantità | Carrelli | Cassetti/Carrello | Cassetti Totali | Posti Uovo |
+|---|---|---|---|---|---|---|
+| **Single Stage** | 1-7 | 7 | 12 | 32 | 2.688 | 403.200 |
+| **Multi Stage** | 8-19 | 12 | 2 | 28 | 672 | 100.800 |
+| **Nuove (Settore F)** | 1F-4F | 4 | — | 256 | 1.024 | 153.600 |
+
+> **Posti uovo totali: 374.400 a settimana**
+
+### Regole
+
+1. Le macchine 1-7 sono **single stage**: un solo ciclo di incubazione per volta
+2. Le macchine 8-19 sono **multi stage**: possono contenere più cicli contemporaneamente (2 carrelli x 28 cassetti)
+3. Le macchine 1F-4F sono le nuove macchine del **Settore F**: 256 cassetti ciascuna
+
+---

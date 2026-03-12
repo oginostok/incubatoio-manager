@@ -15,6 +15,7 @@ Specifica dei campi estratti dalla scheda cartacea utilizzata per la raccolta da
 | **Razza Galli** | Razza dei maschi | `CNB` |
 | **Galline presenti ad inizio settimana** | Conteggio femmine a inizio settimana | `9.267` |
 | **Galli presenti ad inizio settimana** | Conteggio maschi a inizio settimana | `1.148` |
+| **Galli Box** | Numero galli in box separato | — |
 | **% Galli** | Percentuale galli su totale (calcolato) | — |
 
 ---
@@ -41,27 +42,21 @@ Una riga per ogni giorno della settimana (1 VEN, 2 SAB, 3 DOM, 4 LUN, 5 MAR, 6 M
 
 ---
 
-## 3. Carico Mangime
-
-| Campo | Tipo | Descrizione | Esempio |
-|---|---|---|---|
-| **Kg** | decimale | Quantità mangime caricato | `2.623` |
-| **Data** | data | Data del carico | `20/02` |
-| **Codice Mangime** | testo | Codice identificativo mangime | `7214397R` |
-| **Razione somministrata Femmine** | Kg/giorno | Razione giornaliera complessiva femmine | — |
-| **Razione somministrata Maschi** | Kg/giorno | Razione giornaliera complessiva maschi | — |
+~~## 3. Carico Mangime~~ (**RIMOSSO** — richiesta cliente 2026-03-05)
 
 ---
 
-## 4. Trattamenti (Acidi, Probiotici, Vitamine)
+## 3. Trattamenti (Acidi, Probiotici, Vitamine)
 
-Due slot disponibili, ognuno con:
+Una singola riga iniziale visibile. Pulsante con freccia (▼) per aggiungere righe aggiuntive.
 
 | Campo | Tipo | Descrizione |
 |---|---|---|
 | **Prodotto** | testo | Nome del prodotto somministrato |
 | **DA** | data | Data inizio trattamento |
 | **A** | data | Data fine trattamento |
+
+> **UI**: Una riga trattamento sempre visibile + pulsante "+" con freccia per espandere e aggiungere altre righe dinamicamente.
 
 ---
 

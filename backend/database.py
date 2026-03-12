@@ -62,6 +62,7 @@ class TradingConfig(Base):
     tipo = Column(String) # 'acquisto' or 'vendita'
     azienda = Column(String)
     prodotto = Column(String)
+    razza = Column(String, default="")
     active = Column(Boolean, default=True)
 
 class TradingData(Base):
@@ -73,6 +74,7 @@ class TradingData(Base):
     tipo = Column(String) # 'acquisto' or 'vendita'
     azienda = Column(String)
     prodotto = Column(String)
+    razza = Column(String, default="")
     quantita = Column(Integer, default=0)
 
 # --- PRODUCTION CACHE MODEL (as per RULES.md) ---
@@ -175,6 +177,7 @@ class EggStorage(Base):
     numero = Column(Integer, default=0)  # Quantity of eggs
     eta = Column(Integer, default=0)  # Age in weeks
     arrivate_il = Column(String)  # Date of arrival (YYYY-MM-DD)
+    numero_ddt = Column(String, default="")  # DDT document number
     
     def to_dict(self):
         return {
@@ -184,7 +187,8 @@ class EggStorage(Base):
             "origine": self.origine,
             "numero": self.numero,
             "eta": self.eta,
-            "arrivate_il": self.arrivate_il
+            "arrivate_il": self.arrivate_il,
+            "numero_ddt": self.numero_ddt or ""
         }
 
 
@@ -243,6 +247,7 @@ class IncubationBatch(Base):
     uova_partita = Column(Integer, default=0)  # Total eggs in batch
     uova_utilizzate = Column(Integer, default=0)  # Eggs used (editable)
     eta = Column(Integer, default=0)  # Age in weeks (from EggStorage)
+    data_arrivo = Column(String, default="")  # Arrival date from EggStorage
     storico_override = Column(Float)  # User-overridden storico value (nullable)
     quantita = Column(Integer)  # Deprecated, kept for backwards compatibility
     
@@ -257,6 +262,7 @@ class IncubationBatch(Base):
             "uova_partita": self.uova_partita,
             "uova_utilizzate": self.uova_utilizzate,
             "eta": self.eta,
+            "data_arrivo": self.data_arrivo,
             "storico_override": self.storico_override,
             "quantita": self.quantita
         }
@@ -339,6 +345,28 @@ def init_db():
         # Incubation committed field migration
         try:
              conn.execute(text("ALTER TABLE incubations ADD COLUMN committed BOOLEAN DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        # T014 DDT field migration
+        try:
+             conn.execute(text("ALTER TABLE egg_storage ADD COLUMN numero_ddt VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
+        # Trading Config new columns migration
+        try:
+             conn.execute(text("ALTER TABLE trading_config ADD COLUMN razza VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE trading_config ADD COLUMN active BOOLEAN DEFAULT 1"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE trading_data ADD COLUMN razza VARCHAR DEFAULT ''"))
              conn.commit()
         except Exception:
              pass
@@ -450,14 +478,15 @@ def get_trading_config(tipo):
     finally:
         db.close()
 
-def add_trading_config(tipo, azienda, prodotto):
+def add_trading_config(tipo, azienda, prodotto, razza=""):
     db = SessionLocal()
     try:
         # Check if exists (including inactive ones)
         exists = db.query(TradingConfig).filter(
             TradingConfig.tipo == tipo, 
             TradingConfig.azienda == azienda, 
-            TradingConfig.prodotto == prodotto
+            TradingConfig.prodotto == prodotto,
+            TradingConfig.razza == razza
         ).first()
         
         if exists:
@@ -467,7 +496,7 @@ def add_trading_config(tipo, azienda, prodotto):
                 db.commit()
             # If already active, do nothing (duplicate prevention)
         else:
-            new_conf = TradingConfig(tipo=tipo, azienda=azienda, prodotto=prodotto, active=True)
+            new_conf = TradingConfig(tipo=tipo, azienda=azienda, prodotto=prodotto, razza=razza, active=True)
             db.add(new_conf)
             db.commit()
     finally:
@@ -483,18 +512,21 @@ def get_trading_data(tipo):
 
 def save_trading_data_bulk(tipo, updates_list):
     """
-    updates_list: list of dicts {anno, settimana, azienda, prodotto, quantita}
+    updates_list: list of dicts {anno, settimana, azienda, prodotto, razza, quantita}
     """
     db = SessionLocal()
     try:
         for item in updates_list:
+            razza_val = item.get('razza', "")
+            
             # Check if record exists
             record = db.query(TradingData).filter(
                 TradingData.tipo == tipo,
                 TradingData.anno == item['anno'],
                 TradingData.settimana == item['settimana'],
                 TradingData.azienda == item['azienda'],
-                TradingData.prodotto == item['prodotto']
+                TradingData.prodotto == item['prodotto'],
+                TradingData.razza == razza_val
             ).first()
             
             if record:
@@ -506,6 +538,7 @@ def save_trading_data_bulk(tipo, updates_list):
                     settimana=item['settimana'],
                     azienda=item['azienda'],
                     prodotto=item['prodotto'],
+                    razza=razza_val,
                     quantita=item['quantita']
                 )
                 db.add(new_rec)
@@ -545,34 +578,38 @@ def init_default_trading_config():
     finally:
         db.close()
 
-def update_trading_config(config_id, new_azienda, new_prodotto):
+def update_trading_config(config_id, new_azienda, new_prodotto, new_razza=""):
     """Updates the name of a trading column config."""
     db = SessionLocal()
     try:
         conf = db.query(TradingConfig).filter(TradingConfig.id == config_id).first()
         if conf:
             # We also need to update the DATA associated with this column? 
-            # Actually, the data is stored by (azienda, prodotto).
+            # Actually, the data is stored by (azienda, prodotto, razza).
             # If we rename the config, we effectively ORPHAN the old data unless we migrate it too.
-            # So we MUST update TradingData records that match the OLD (azienda, prodotto).
+            # So we MUST update TradingData records that match the OLD (azienda, prodotto, razza).
             
             old_az = conf.azienda
             old_prod = conf.prodotto
+            old_razza = conf.razza
             
             conf.azienda = new_azienda
             conf.prodotto = new_prodotto
+            conf.razza = new_razza
             
             # Migrate Data
             # Note: This might be heavy if lots of data, but typically it's small.
             data_rows = db.query(TradingData).filter(
                 TradingData.tipo == conf.tipo,
                 TradingData.azienda == old_az,
-                TradingData.prodotto == old_prod
+                TradingData.prodotto == old_prod,
+                TradingData.razza == old_razza
             ).all()
             
             for row in data_rows:
                 row.azienda = new_azienda
                 row.prodotto = new_prodotto
+                row.razza = new_razza
             
             db.commit()
     finally:
@@ -588,7 +625,8 @@ def delete_trading_config(config_id):
             db.query(TradingData).filter(
                 TradingData.tipo == conf.tipo,
                 TradingData.azienda == conf.azienda,
-                TradingData.prodotto == conf.prodotto
+                TradingData.prodotto == conf.prodotto,
+                TradingData.razza == conf.razza
             ).delete()
             
             # Soft delete the config
@@ -610,18 +648,26 @@ def invalidate_cache_by_lotto(lotto_id: int):
         db.close()
 
 def invalidate_cache_by_curve(curva_nome: str):
-    """Invalidates cache for all lotti using a specific curve."""
+    """Invalidates cache for all lotti using a specific curve.
+    Normalizes whitespace to handle column names with inconsistent spacing.
+    """
+    import re
+    normalized = re.sub(r'\s+', ' ', curva_nome).strip()
     db = SessionLocal()
     try:
-        # Find all lotto IDs that use this curve
-        lotti = db.query(Lotto).filter(Lotto.curva_produzione == curva_nome).all()
-        lotto_ids = [l.id for l in lotti]
-        
+        # Find all lotto IDs that use this curve (match with normalized whitespace)
+        all_lotti = db.query(Lotto).all()
+        lotto_ids = [
+            l.id for l in all_lotti
+            if l.curva_produzione and re.sub(r'\s+', ' ', l.curva_produzione).strip() == normalized
+        ]
+
         if lotto_ids:
             db.query(ProductionCache).filter(
                 ProductionCache.lotto_id.in_(lotto_ids)
             ).update({"valid": False}, synchronize_session=False)
             db.commit()
+            print(f"✅ Cache invalidated for {len(lotto_ids)} lotti using curve: {normalized}")
     finally:
         db.close()
 
@@ -1653,7 +1699,8 @@ def add_egg_storage(data):
             origine=data.get("origine"),
             numero=data.get("numero", 0),
             eta=data.get("eta", 0),
-            arrivate_il=data.get("arrivate_il")
+            arrivate_il=data.get("arrivate_il"),
+            numero_ddt=data.get("numero_ddt", "")
         )
         db.add(new_entry)
         db.commit()
@@ -1680,6 +1727,8 @@ def update_egg_storage(entry_id, data):
                 entry.eta = data["eta"]
             if "arrivate_il" in data:
                 entry.arrivate_il = data["arrivate_il"]
+            if "numero_ddt" in data:
+                entry.numero_ddt = data["numero_ddt"]
             db.commit()
             db.refresh(entry)
             return entry.to_dict()

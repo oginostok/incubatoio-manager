@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Table2 } from "lucide-react";
-import { GiChicken } from "react-icons/gi";
+import { GiChicken, GiFactory } from "react-icons/gi";
 import BirthRatesTable from "@/components/BirthRatesTable";
 import PurchaseBirthRatesTable from "@/components/PurchaseBirthRatesTable";
 import GranpolloPlanningTable from "@/components/GranpolloPlanningTable";
@@ -8,6 +8,7 @@ import Pollo70PlanningTable from "@/components/Pollo70PlanningTable";
 import ColorYealdPlanningTable from "@/components/ColorYealdPlanningTable";
 import RossPlanningTable from "@/components/RossPlanningTable";
 import ResponsiveSidebar from "@/components/ResponsiveSidebar";
+import IncubatorOccupancyTable from "@/components/IncubatorOccupancyTable";
 
 interface PulciniPageProps {
     onNavigate: (page: string) => void;
@@ -21,7 +22,7 @@ const PRODUCTS = [
     { id: "ross", label: "Ross", bgColor: "bg-ross-bright", hoverBg: "hover:bg-orange-600", textColor: "text-white" },
 ] as const;
 
-type Section = "granpollo" | "pollo70" | "colorYeald" | "ross" | "tabelleNascita";
+type Section = "granpollo" | "pollo70" | "colorYeald" | "ross" | "tabelleNascita" | "occupazione";
 
 export default function PulciniPage({ onNavigate }: PulciniPageProps) {
     const [section, setSection] = useState<Section>("granpollo");
@@ -34,6 +35,10 @@ export default function PulciniPage({ onNavigate }: PulciniPageProps) {
                     <BirthRatesTable />
                 </>
             );
+        }
+
+        if (section === "occupazione") {
+            return <IncubatorOccupancyTable />;
         }
 
         if (section === "granpollo") {
@@ -90,6 +95,18 @@ export default function PulciniPage({ onNavigate }: PulciniPageProps) {
 
                 {/* Separator */}
                 <div className="border-t border-gray-300 my-4"></div>
+
+                {/* Occupazione Incubatoio */}
+                <button
+                    onClick={() => setSection("occupazione")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "occupazione"
+                        ? "bg-gray-700 text-white font-medium shadow-lg"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                >
+                    <GiFactory className="w-5 h-5" />
+                    Occupazione Incubatoio
+                </button>
 
                 {/* Tabelle di Nascita */}
                 <button

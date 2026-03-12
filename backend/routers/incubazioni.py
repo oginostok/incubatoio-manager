@@ -96,6 +96,54 @@ def get_incubations():
         db.close()
 
 
+@router.get("/occupancy/weekly")
+def get_incubator_occupancy():
+    """Get weekly incubator occupancy based on active incubations."""
+    db = SessionLocal()
+    try:
+        # Get all incubations from the last 60 days to future
+        cutoff_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+        incubations = db.query(Incubation).filter(Incubation.data_incubazione >= cutoff_date).all()
+        
+        occupancy_by_week = {}  # (iso_year, iso_week) -> total_eggs
+        
+        for inc in incubations:
+            try:
+                inc_date = datetime.strptime(inc.data_incubazione, "%Y-%m-%d")
+            except ValueError:
+                continue
+                
+            # Get total eggs
+            batches = db.query(IncubationBatch).filter(IncubationBatch.incubation_id == inc.id).all()
+            total_eggs = sum(b.uova_utilizzate or 0 for b in batches)
+            if total_eggs == 0:
+                continue
+                
+            # It occupies the incubator for 3 weeks: week of incubation, week+1, week+2
+            for i in range(3):
+                occ_date = inc_date + timedelta(days=i*7)
+                iso_year, iso_week, _ = occ_date.isocalendar()
+                key = (iso_year, iso_week)
+                if key not in occupancy_by_week:
+                    occupancy_by_week[key] = 0
+                occupancy_by_week[key] += total_eggs
+                
+        result = []
+        for key in sorted(occupancy_by_week.keys()):
+            iso_year, iso_week = key
+            result.append({
+                "anno": iso_year,
+                "settimana": iso_week,
+                "uova_totali": occupancy_by_week[key],
+                "capacita_massima": 374400,
+                "percentuale": round((occupancy_by_week[key] / 374400) * 100, 1)
+            })
+            
+        return result
+    finally:
+        db.close()
+
+
 @router.get("/{incubation_id}")
 def get_incubation(incubation_id: int):
     """Get single incubation by ID"""
@@ -240,17 +288,44 @@ def update_incubation(incubation_id: int, data: IncubationUpdate):
 
 @router.delete("/{incubation_id}")
 def delete_incubation(incubation_id: int):
-    """Delete incubation and its batches"""
+    """Delete incubation and its batches, restoring eggs if committed"""
     db = SessionLocal()
     try:
         incubation = db.query(Incubation).filter(Incubation.id == incubation_id).first()
         if not incubation:
             raise HTTPException(status_code=404, detail="Incubation not found")
         
-        # Delete associated batches
-        db.query(IncubationBatch).filter(
+        batches = db.query(IncubationBatch).filter(
             IncubationBatch.incubation_id == incubation_id
-        ).delete()
+        ).all()
+        
+        # Restore eggs if committed
+        if incubation.committed:
+            for batch in batches:
+                if batch.uova_utilizzate and batch.uova_utilizzate > 0:
+                    storage = db.query(EggStorage).filter(
+                        EggStorage.id == batch.egg_storage_id
+                    ).first()
+                    
+                    if storage:
+                        storage.numero += batch.uova_utilizzate
+                    else:
+                        # Recreate storage if deleted
+                        new_storage = EggStorage(
+                            id=batch.egg_storage_id,
+                            prodotto=batch.prodotto,
+                            nome=batch.nome,
+                            origine=batch.origine,
+                            numero=batch.uova_utilizzate,
+                            eta=batch.eta,
+                            arrivate_il=batch.data_arrivo,
+                            numero_ddt="" # Unknown if previously deleted
+                        )
+                        db.add(new_storage)
+        
+        # Delete associated batches
+        for b in batches:
+            db.delete(b)
         
         db.delete(incubation)
         db.commit()
@@ -270,6 +345,10 @@ def add_batch(incubation_id: int, data: BatchCreate):
         if not incubation:
             raise HTTPException(status_code=404, detail="Incubation not found")
         
+        # Verify storage exists to get data_arrivo
+        storage = db.query(EggStorage).filter(EggStorage.id == data.egg_storage_id).first()
+        data_arrivo = storage.arrivate_il if storage else ""
+        
         batch = IncubationBatch(
             incubation_id=incubation_id,
             egg_storage_id=data.egg_storage_id,
@@ -279,6 +358,7 @@ def add_batch(incubation_id: int, data: BatchCreate):
             uova_partita=data.uova_partita,
             uova_utilizzate=0,
             eta=data.eta,
+            data_arrivo=data_arrivo,
             storico_override=None,
             quantita=data.uova_partita  # Backwards compatibility
         )
@@ -391,5 +471,54 @@ def commit_incubation(incubation_id: int):
         db.commit()
         
         return {"success": True, "message": "Incubation committed successfully"}
+    finally:
+        db.close()
+
+@router.post("/{incubation_id}/uncommit")
+def uncommit_incubation(incubation_id: int):
+    """Uncommit incubation: restore egg storage with used quantities (Modifica)"""
+    db = SessionLocal()
+    try:
+        # Get incubation
+        incubation = db.query(Incubation).filter(Incubation.id == incubation_id).first()
+        if not incubation:
+            raise HTTPException(status_code=404, detail="Incubation not found")
+        
+        if not incubation.committed:
+            raise HTTPException(status_code=400, detail="Incubation is not committed")
+        
+        # Get all batches for this incubation
+        batches = db.query(IncubationBatch).filter(
+            IncubationBatch.incubation_id == incubation_id
+        ).all()
+        
+        # Restore eggs to storage
+        for batch in batches:
+            if batch.uova_utilizzate and batch.uova_utilizzate > 0:
+                storage = db.query(EggStorage).filter(
+                    EggStorage.id == batch.egg_storage_id
+                ).first()
+                
+                if storage:
+                    storage.numero += batch.uova_utilizzate
+                else:
+                    # Recreate storage if deleted completely
+                    new_storage = EggStorage(
+                        id=batch.egg_storage_id,
+                        prodotto=batch.prodotto,
+                        nome=batch.nome,
+                        origine=batch.origine,
+                        numero=batch.uova_utilizzate,
+                        eta=batch.eta,
+                        arrivate_il=batch.data_arrivo,
+                        numero_ddt="" # Unknown if deleted
+                    )
+                    db.add(new_storage)
+        
+        # Mark incubation as uncommitted
+        incubation.committed = False
+        db.commit()
+        
+        return {"success": True, "message": "Incubation uncommitted successfully"}
     finally:
         db.close()

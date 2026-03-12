@@ -55,7 +55,8 @@ interface EggStorageEntry {
 
 // Constants
 const OPERATORS = ["Mauro", "Alessandro", "Ivan", "Alessandra"];
-const INCUBATORS = Array.from({ length: 18 }, (_, i) => i + 1);
+const INCUBATORS_MAIN = Array.from({ length: 19 }, (_, i) => String(i + 1));
+const INCUBATORS_F = ["1F", "2F", "3F", "4F"];
 
 const PRODUCT_COLORS: Record<string, string> = {
     "Granpollo": "bg-green-100 text-green-800 border-green-300",
@@ -110,7 +111,7 @@ export default function IncubationTable() {
         pre_incubazione_ore: number;
         partenza_macchine: string;
         operatore: string;
-        incubatrici: number[];
+        incubatrici: string[];
         richiesta_granpollo: number;
         richiesta_pollo70: number;
         richiesta_color_yeald: number;
@@ -126,7 +127,7 @@ export default function IncubationTable() {
         pre_incubazione_ore: 0,
         partenza_macchine: "",
         operatore: "",
-        incubatrici: [] as number[],
+        incubatrici: [] as string[],
         richiesta_granpollo: 0,
         richiesta_pollo70: 0,
         richiesta_color_yeald: 0,
@@ -201,12 +202,12 @@ export default function IncubationTable() {
     };
 
     // Handle incubator selection toggle
-    const toggleIncubator = (num: number) => {
+    const toggleIncubator = (id: string) => {
         setFormData(prev => ({
             ...prev,
-            incubatrici: prev.incubatrici.includes(num)
-                ? prev.incubatrici.filter(n => n !== num)
-                : [...prev.incubatrici, num].sort((a, b) => a - b)
+            incubatrici: prev.incubatrici.includes(id)
+                ? prev.incubatrici.filter(n => n !== id)
+                : [...prev.incubatrici, id]
         }));
     };
 
@@ -391,13 +392,13 @@ export default function IncubationTable() {
     };
 
     // Toggle incubator for edit form
-    const toggleEditIncubator = (num: number) => {
+    const toggleEditIncubator = (id: string) => {
         if (!editFormData) return;
         setEditFormData(prev => prev ? ({
             ...prev,
-            incubatrici: prev.incubatrici.includes(num)
-                ? prev.incubatrici.filter(n => n !== num)
-                : [...prev.incubatrici, num].sort((a, b) => a - b)
+            incubatrici: prev.incubatrici.includes(id)
+                ? prev.incubatrici.filter(n => n !== id)
+                : [...prev.incubatrici, id]
         }) : null);
     };
 
@@ -503,16 +504,31 @@ export default function IncubationTable() {
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-gray-600">Incubatrici:</span>
                                 <div className="flex flex-wrap gap-1">
-                                    {INCUBATORS.map(num => (
+                                    {INCUBATORS_MAIN.map(id => (
                                         <button
-                                            key={num}
-                                            onClick={() => toggleIncubator(num)}
-                                            className={`w-7 h-7 text-xs rounded border transition-all ${formData.incubatrici.includes(num)
+                                            key={id}
+                                            onClick={() => toggleIncubator(id)}
+                                            className={`w-7 h-7 text-xs rounded border transition-all ${formData.incubatrici.includes(id)
                                                 ? "bg-amber-500 text-white border-amber-600"
                                                 : "bg-white text-gray-600 border-gray-300 hover:border-amber-400"
                                                 }`}
                                         >
-                                            {num}
+                                            {id}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="w-full flex items-center gap-1 mt-1">
+                                    <span className="text-xs text-gray-400 mr-1">Settore F:</span>
+                                    {INCUBATORS_F.map(id => (
+                                        <button
+                                            key={id}
+                                            onClick={() => toggleIncubator(id)}
+                                            className={`w-7 h-7 text-xs rounded border transition-all ${formData.incubatrici.includes(id)
+                                                ? "bg-purple-500 text-white border-purple-600"
+                                                : "bg-white text-gray-600 border-gray-300 hover:border-purple-400"
+                                                }`}
+                                        >
+                                            {id}
                                         </button>
                                     ))}
                                 </div>
@@ -527,12 +543,12 @@ export default function IncubationTable() {
                             className="flex items-center gap-2 text-gray-700 hover:text-amber-700 font-medium"
                         >
                             {showRequestForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            Richiesta di animali
+                            Previsione animali
                         </button>
 
                         {showRequestForm && (
                             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p className="text-sm text-blue-700 mb-3">Inserire gli animali richiesti per prodotto:</p>
+                                <p className="text-sm text-blue-700 mb-3">Inserire la previsione di animali richiesti per prodotto:</p>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {/* Granpollo */}
                                     <div className={`p-3 rounded-lg border ${PRODUCT_COLORS["Granpollo"]}`}>
@@ -657,7 +673,7 @@ export default function IncubationTable() {
                                                     pre_incubazione_ore: incubation.pre_incubazione_ore || 0,
                                                     partenza_macchine: incubation.partenza_macchine || "",
                                                     operatore: incubation.operatore || "",
-                                                    incubatrici: incubation.incubatrici ? incubation.incubatrici.split(",").map(Number) : [],
+                                                    incubatrici: incubation.incubatrici ? incubation.incubatrici.split(",").map(s => s.trim()) : [],
                                                     richiesta_granpollo: incubation.richiesta_granpollo || 0,
                                                     richiesta_pollo70: incubation.richiesta_pollo70 || 0,
                                                     richiesta_color_yeald: incubation.richiesta_color_yeald || 0,
@@ -754,24 +770,40 @@ export default function IncubationTable() {
                                                 <div>
                                                     <label className="block text-xs text-gray-600 mb-1">Incubatrici</label>
                                                     <div className="flex flex-wrap gap-1">
-                                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                                                        {INCUBATORS_MAIN.map(id => (
                                                             <button
-                                                                key={num}
+                                                                key={id}
                                                                 type="button"
-                                                                onClick={() => toggleEditIncubator(num)}
-                                                                className={`w-6 h-6 text-xs rounded ${editFormData.incubatrici.includes(num)
+                                                                onClick={() => toggleEditIncubator(id)}
+                                                                className={`w-6 h-6 text-xs rounded ${editFormData.incubatrici.includes(id)
                                                                     ? "bg-amber-600 text-white"
                                                                     : "bg-gray-200 text-gray-600"
                                                                     }`}
                                                             >
-                                                                {num}
+                                                                {id}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        <span className="text-xs text-gray-400 mr-1">F:</span>
+                                                        {INCUBATORS_F.map(id => (
+                                                            <button
+                                                                key={id}
+                                                                type="button"
+                                                                onClick={() => toggleEditIncubator(id)}
+                                                                className={`w-6 h-6 text-xs rounded ${editFormData.incubatrici.includes(id)
+                                                                    ? "bg-purple-600 text-white"
+                                                                    : "bg-gray-200 text-gray-600"
+                                                                    }`}
+                                                            >
+                                                                {id}
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="mb-4">
-                                                <label className="block text-xs text-gray-600 mb-2">Richiesta Animali</label>
+                                                <label className="block text-xs text-gray-600 mb-2">Previsione Animali</label>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                     <div className={`p-2 rounded-lg border ${PRODUCT_COLORS["Granpollo"]}`}>
                                                         <label className="block text-xs mb-1">Granpollo</label>
@@ -832,7 +864,7 @@ export default function IncubationTable() {
 
                                     {/* Animal Requests Summary */}
                                     <div>
-                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Richiesta Animali:</h4>
+                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Previsione Animali:</h4>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                             {(() => {
                                                 // Calculate previsione animali per product from batches
@@ -861,7 +893,9 @@ export default function IncubationTable() {
                                                             <div className="text-xs mt-1">
                                                                 Previsione: {formatNumber(previsione)}
                                                                 <br />
-                                                                Richiesta: <span className={richiesta > 0 ? "text-red-600 font-semibold" : "text-green-600"}>{formatNumber(richiesta)}</span>
+                                                                <span className={richiesta > 0 ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
+                                                                    {richiesta > 0 ? "-" : "+"}{formatNumber(Math.abs(richiesta))}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     );
@@ -980,24 +1014,33 @@ export default function IncubationTable() {
                                                                 <td className="px-2 py-2 text-gray-600">{batch.origine}</td>
                                                                 <td className="px-2 py-2 text-right font-mono">{formatNumber(batch.uova_partita)}</td>
                                                                 <td className="px-2 py-2 text-right">
-                                                                    <input
-                                                                        type="number"
-                                                                        defaultValue={batch.uova_utilizzate || 0}
-                                                                        min={0}
-                                                                        max={batch.uova_partita}
-                                                                        className="w-20 px-2 py-1 text-right font-mono border rounded focus:ring-2 focus:ring-amber-500"
-                                                                        onBlur={(e) => {
-                                                                            const val = parseInt(e.target.value) || 0;
-                                                                            if (val !== batch.uova_utilizzate) {
-                                                                                handleUpdateBatch(incubation.id, batch.id, "uova_utilizzate", val);
-                                                                            }
-                                                                        }}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === "Enter") {
-                                                                                (e.target as HTMLInputElement).blur();
-                                                                            }
-                                                                        }}
-                                                                    />
+                                                                    <div className="relative group">
+                                                                        <input
+                                                                            type="number"
+                                                                            defaultValue={batch.uova_utilizzate || 0}
+                                                                            min={0}
+                                                                            className={`w-20 px-2 py-1 text-right font-mono border rounded focus:ring-2 focus:ring-amber-500 ${(batch.uova_utilizzate || 0) > (batch.uova_partita || 0)
+                                                                                ? "border-red-500 border-2"
+                                                                                : ""
+                                                                                }`}
+                                                                            onBlur={(e) => {
+                                                                                const val = parseInt(e.target.value) || 0;
+                                                                                if (val !== batch.uova_utilizzate) {
+                                                                                    handleUpdateBatch(incubation.id, batch.id, "uova_utilizzate", val);
+                                                                                }
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (e.key === "Enter") {
+                                                                                    (e.target as HTMLInputElement).blur();
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        {(batch.uova_utilizzate || 0) > (batch.uova_partita || 0) && (
+                                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                                                                                ⚠️ Più uova di quelle disponibili nella partita
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
                                                                 <td className="px-2 py-2 text-right font-mono text-gray-600">{formatNumber(uovaRimanenti)}</td>
                                                                 <td className="px-2 py-2 text-center">{batch.eta} sett.</td>

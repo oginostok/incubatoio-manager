@@ -29,6 +29,14 @@ export const ProductionTablesAPI = {
         const res = await api.put("/production-tables", { week, column, value });
         return res.data;
     },
+    addColumn: async (name: string) => {
+        const res = await api.post("/production-tables/columns", { name });
+        return res.data;
+    },
+    deleteColumn: async (columnName: string) => {
+        const res = await api.delete(`/production-tables/columns/${encodeURIComponent(columnName)}`);
+        return res.data;
+    },
 };
 
 // Allevamenti Service Wrapper
@@ -70,8 +78,8 @@ export const TradingAPI = {
     },
 
     // Add new trading config
-    addConfig: async (tipo: string, azienda: string, prodotto: string): Promise<void> => {
-        await api.post('/trading/config', { tipo, azienda, prodotto });
+    addConfig: async (tipo: string, azienda: string, prodotto: string, razza: string = ""): Promise<void> => {
+        await api.post('/trading/config', { tipo, azienda, prodotto, razza });
     },
 
     // Update trading config
@@ -93,6 +101,18 @@ export const TradingAPI = {
     // Update trading data (bulk)
     updateData: async (tipo: string, updates: any[]): Promise<void> => {
         await api.put(`/trading/data/${tipo}`, { updates });
+    },
+};
+
+// Incubazioni Service Wrapper
+export const IncubazioniAPI = {
+    deleteIncubation: async (id: number) => {
+        const res = await api.delete(`/incubazioni/${id}`);
+        return res.data;
+    },
+    uncommitIncubation: async (id: number) => {
+        const res = await api.post(`/incubazioni/${id}/uncommit`);
+        return res.data;
     },
 };
 

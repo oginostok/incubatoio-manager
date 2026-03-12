@@ -5,6 +5,15 @@ import { AllevamentiAPI } from "@/lib/api";
 import type { WeeklySummary, Lotto } from "@/types";
 import ProductionChart from "@/components/ProductionChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Settings, Trash2 } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import {
     Select,
     SelectContent,
@@ -42,6 +51,11 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
     const [editingCell, setEditingCell] = useState<{ row: number, col: string } | null>(null);
     const [cellStatus, setCellStatus] = useState<Record<string, 'saving' | 'success' | 'error'>>({});
     const [editValue, setEditValue] = useState<string>('');
+
+    // T003 Column Management states
+    const [isManaging, setIsManaging] = useState(false);
+    const [showNewColDialog, setShowNewColDialog] = useState(false);
+    const [newColName, setNewColName] = useState('');
 
     // Get current week
     const getCurrentWeek = () => {
@@ -547,11 +561,66 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                 )}
                 {section === "tabelle_produzioni" && (
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Tabelle Produzioni</h2>
-                        <p className="text-xs text-gray-400">T003</p>
-                        <p className="text-gray-600 mb-6">
-                            Curve di produzione per razza (percentuali settimana per settimana). Doppio-click per modificare.
-                        </p>
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Tabelle Produzioni</h2>
+                                <p className="text-xs text-gray-400">T003</p>
+                                <p className="text-gray-600">
+                                    Curve di produzione per razza (percentuali settimana per settimana). Doppio-click per modificare.
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => setShowNewColDialog(true)}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Nuova Colonna
+                                </Button>
+                                <Button
+                                    onClick={() => setIsManaging(!isManaging)}
+                                    variant={isManaging ? "destructive" : "outline"}
+                                >
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    {isManaging ? 'Fine Modifica' : 'Modifica Tabella'}
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Dialog for new column */}
+                        <Dialog open={showNewColDialog} onOpenChange={setShowNewColDialog}>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Nuova Colonna Standard</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 pt-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Nome Razza (verrà aggiunto "STANDARD")</label>
+                                        <input
+                                            type="text"
+                                            value={newColName}
+                                            onChange={(e) => setNewColName(e.target.value)}
+                                            className="w-full px-3 py-2 border rounded-lg uppercase"
+                                            placeholder="es. ROSS 308"
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setShowNewColDialog(false)}>Annulla</Button>
+                                    <Button onClick={async () => {
+                                        if (!newColName.trim()) return;
+                                        try {
+                                            await ProductionTablesAPI.addColumn(newColName.trim());
+                                            setShowNewColDialog(false);
+                                            setNewColName('');
+                                            await refreshAllData();
+                                        } catch (e: any) {
+                                            alert(e.response?.data?.detail || "Errore aggiunta colonna");
+                                        }
+                                    }}>Crea</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
 
                         {loading ? (
                             <div className="flex items-center justify-center h-64">
@@ -675,7 +744,27 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                                                             key={col}
                                                             className={`py-3 px-4 font-semibold text-gray-700 ${bgColor} ${idx === 0 ? 'text-left sticky left-0 z-10 w-20' : 'text-center'}`}
                                                         >
-                                                            {col}
+                                                            <div className="flex flex-col items-center justify-center">
+                                                                <span>{col}</span>
+                                                                {isManaging && !isStandard && idx !== 0 && (
+                                                                    <button
+                                                                        onClick={async () => {
+                                                                            if (window.confirm(`Vuoi davvero eliminare la colonna ${col}?`)) {
+                                                                                try {
+                                                                                    await ProductionTablesAPI.deleteColumn(col);
+                                                                                    await refreshAllData();
+                                                                                } catch (e) {
+                                                                                    alert("Errore eliminazione colonna");
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                        className="mt-1 p-1 hover:bg-red-100 rounded"
+                                                                        title="Elimina colonna"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </th>
                                                     );
                                                 })}

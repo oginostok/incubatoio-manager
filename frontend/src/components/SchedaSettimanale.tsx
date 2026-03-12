@@ -15,6 +15,7 @@ interface HeaderData {
     razzaGalli: string;
     gallinePresenti: string;
     galliPresenti: string;
+    galliBox: string;
 }
 
 interface DailyRow {
@@ -29,14 +30,6 @@ interface DailyRow {
     razioneMaschi: string;
     razioneFemmine: string;
     acquaConsumata: string;
-}
-
-interface CaricoMangime {
-    kg: string;
-    data: string;
-    codiceMangime: string;
-    razioneFemmine: string;
-    razioneMaschi: string;
 }
 
 interface Trattamento {
@@ -95,21 +88,13 @@ export function SchedaSettimanale() {
         razzaGalli: "",
         gallinePresenti: "",
         galliPresenti: "",
+        galliBox: "",
     });
 
     // -- Daily rows --
     const [rows, setRows] = useState<DailyRow[]>(
         GIORNI.map(() => ({ ...EMPTY_ROW }))
     );
-
-    // -- Carico Mangime --
-    const [carico, setCarico] = useState<CaricoMangime>({
-        kg: "",
-        data: "",
-        codiceMangime: "",
-        razioneFemmine: "",
-        razioneMaschi: "",
-    });
 
     // -- Trattamenti --
     const [trattamenti, setTrattamenti] = useState<Trattamento[]>([
@@ -152,9 +137,6 @@ export function SchedaSettimanale() {
 
     const updateRow = (idx: number, field: keyof DailyRow, value: string) =>
         setRows(prev => prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r)));
-
-    const updateCarico = (field: keyof CaricoMangime, value: string) =>
-        setCarico(prev => ({ ...prev, [field]: value }));
 
     const updateTrattamento = (idx: number, field: keyof Trattamento, value: string) =>
         setTrattamenti(prev => prev.map((t, i) => (i === idx ? { ...t, [field]: value } : t)));
@@ -251,11 +233,21 @@ export function SchedaSettimanale() {
                                     type="number"
                                 />
                             </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <label className="text-sm font-semibold text-gray-600 w-28 shrink-0">% Galli</label>
-                            <div className="bg-red-50 border border-red-200 rounded px-3 py-1 text-sm font-bold text-red-700 min-w-[80px] text-center">
-                                {percGalli ? `${percGalli}%` : "—"}
+                            <div className="flex items-center gap-3">
+                                <label className="text-xs font-semibold text-gray-500 w-28 shrink-0">% Galli</label>
+                                <div className="bg-red-50 border border-red-200 rounded px-3 py-1 text-sm font-bold text-red-700 min-w-[80px] text-center">
+                                    {percGalli ? `${percGalli}%` : "—"}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label className="text-xs font-semibold text-gray-500 w-28 shrink-0">Galli Box</label>
+                                <input
+                                    className={headerInput + " flex-1"}
+                                    value={header.galliBox}
+                                    onChange={e => updateHeader("galliBox", e.target.value)}
+                                    placeholder="Box separato"
+                                    type="number"
+                                />
                             </div>
                         </div>
                     </div>
@@ -406,103 +398,41 @@ export function SchedaSettimanale() {
                 </div>
             </div>
 
-            {/* ========== CARICO MANGIME + TRATTAMENTI (side-by-side) ========== */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* -- Carico Mangime -- */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className={sectionTitle}>Carico Mangime</div>
-                    <div className="p-4 space-y-3">
-                        <div className="grid grid-cols-3 gap-3">
+            {/* ========== TRATTAMENTI ========== */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className={sectionTitle}>Trattamenti (Acidi, Probiotici, Vitamine)</div>
+                <div className="p-4 space-y-4">
+                    {trattamenti.map((t, idx) => (
+                        <div key={idx} className="grid grid-cols-3 gap-3">
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 block mb-1">Kg</label>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">Prodotto {idx + 1}</label>
                                 <input
                                     className={headerInput + " w-full"}
-                                    value={carico.kg}
-                                    onChange={e => updateCarico("kg", e.target.value)}
-                                    type="number"
-                                    placeholder="es. 2623"
+                                    value={t.prodotto}
+                                    onChange={e => updateTrattamento(idx, "prodotto", e.target.value)}
+                                    placeholder="Nome prodotto"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 block mb-1">Data</label>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">DA</label>
                                 <input
                                     className={headerInput + " w-full"}
-                                    value={carico.data}
-                                    onChange={e => updateCarico("data", e.target.value)}
-                                    placeholder="gg/mm"
+                                    value={t.da}
+                                    onChange={e => updateTrattamento(idx, "da", e.target.value)}
+                                    placeholder="gg/mm/aa"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 block mb-1">Codice Mangime</label>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">A</label>
                                 <input
                                     className={headerInput + " w-full"}
-                                    value={carico.codiceMangime}
-                                    onChange={e => updateCarico("codiceMangime", e.target.value)}
-                                    placeholder="es. 7214397R"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 block mb-1">Razione Somm. Femmine (Kg/giorno)</label>
-                                <input
-                                    className={headerInput + " w-full"}
-                                    value={carico.razioneFemmine}
-                                    onChange={e => updateCarico("razioneFemmine", e.target.value)}
-                                    type="number"
-                                    step="0.1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 block mb-1">Razione Somm. Maschi (Kg/giorno)</label>
-                                <input
-                                    className={headerInput + " w-full"}
-                                    value={carico.razioneMaschi}
-                                    onChange={e => updateCarico("razioneMaschi", e.target.value)}
-                                    type="number"
-                                    step="0.1"
+                                    value={t.a}
+                                    onChange={e => updateTrattamento(idx, "a", e.target.value)}
+                                    placeholder="gg/mm/aa"
                                 />
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* -- Trattamenti -- */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className={sectionTitle}>Trattamenti (Acidi, Probiotici, Vitamine)</div>
-                    <div className="p-4 space-y-4">
-                        {trattamenti.map((t, idx) => (
-                            <div key={idx} className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-500 block mb-1">Prodotto {idx + 1}</label>
-                                    <input
-                                        className={headerInput + " w-full"}
-                                        value={t.prodotto}
-                                        onChange={e => updateTrattamento(idx, "prodotto", e.target.value)}
-                                        placeholder="Nome prodotto"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-500 block mb-1">DA</label>
-                                    <input
-                                        className={headerInput + " w-full"}
-                                        value={t.da}
-                                        onChange={e => updateTrattamento(idx, "da", e.target.value)}
-                                        placeholder="gg/mm/aa"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-500 block mb-1">A</label>
-                                    <input
-                                        className={headerInput + " w-full"}
-                                        value={t.a}
-                                        onChange={e => updateTrattamento(idx, "a", e.target.value)}
-                                        placeholder="gg/mm/aa"
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </div>
 

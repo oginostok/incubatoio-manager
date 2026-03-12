@@ -1,5 +1,26 @@
 # Issues da Risolvere
 
+## Riepilogo
+
+| # | Titolo | Componente | Stato |
+|---|--------|------------|-------|
+| 1 | Pulsanti +/- Data Fine Non Funzionanti | `AccasamentiTable.tsx` | ✅ Risolto |
+| 2 | Formula Produzioni Non Si Ricalcola (T003) | `database.py` | ✅ Risolto |
+| 3 | Totali Grafico Non Corrispondono alla Tabella | `ProductionPage.tsx` | ✅ Risolto |
+| 4 | Dati Persi al Riavvio (DB Path Relativo) | `database.py` | ✅ Risolto |
+| 5 | Grafico G001 Non Mostra Curve di Produzione | `production_service.py` | ✅ Risolto |
+| 6 | Calcolo Vendite nel Grafico G001 Errato | `ProductionPage.tsx` | ✅ Risolto |
+| 7 | V001 Non Usa Dati da T001 (Farm Structure Hardcoded) | `allevamenti.py` | ✅ Risolto |
+| 8 | Modifiche T004 Non Aggiornano Grafici | `TradingTable.tsx`, `ProductionPage.tsx` | ✅ Risolto |
+| 9 | Formula Non Ricalcolata Dopo Modifica T004 | `production_service.py` | ✅ Risolto |
+| 10 | Modifiche T003 Richiedono Refresh Manuale (F5) | `ProductionPage.tsx`, `ProductionTablesView.tsx` | ✅ Risolto |
+| 11 | Passirano 1 Calcolato Come Ross Invece di Granpollo | `helpers.py` (seed data) | ✅ Risolto |
+| 12 | Configurare HTTPS/SSL per Server Produzione | Server VPS | 🔴 Non Risolto |
+| 13 | T014 Età Settimane Errata Alla Selezione Allevamento | `EggStorageTable.tsx` | ✅ Risolto |
+| 14 | Curva Produzione: Dropdown Non Persisteva + Calcoli Includevano Tutti i Lotti | `allevamenti.py`, `production_service.py` | ✅ Risolto |
+
+---
+
 ## 1. Pulsanti +/- Data Fine Non Funzionanti
 
 **Stato:** � Risolto  
@@ -45,8 +66,9 @@ Sostituzione dei pulsanti con elementi `<span>` con styling button-like e gestio
 
 ## 2. Formula Produzioni Non Si Ricalcola Automaticamente
 
-**Stato:** 🔴 Non Risolto  
-**Data:** 2025-01-25  
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-03-09
+**Data:** 2025-01-25
 **Componente:** `backend/routers/production_tables_router.py`, `backend/services/production_service.py`
 
 ### Descrizione del Problema
@@ -77,10 +99,8 @@ Dopo aver modificato una cella nella tabella "Tabelle Produzioni" (es. cambiando
 4. Vai su PRODUZIONE UOVA > Produzioni e Totali
 5. Osserva che i grafici NON riflettono il nuovo valore
 
-### Prossimi Passi
-- [ ] Verificare se `calculate_weekly_summary()` salva risultati da qualche parte
-- [ ] Controllare se serve endpoint dedicato per persistere produzioni calcolate
-- [ ] Valutare se serve cache invalidation nel frontend
+### Soluzione Implementata
+Fix in `database.py`: `invalidate_cache_by_curve()` ora normalizza gli spazi bianchi nel nome della curva prima del confronto, risolvendo il mismatch tra nomi con spazi doppi nel DB e nomi normalizzati dal frontend. Il refresh del frontend era già stato risolto dall'Issue #10.
 
 ---
 
@@ -129,7 +149,7 @@ I valori nel grafico ora corrispondono esattamente a quelli nella tabella:
 
 ## 4. Dati Persi al Riavvio del Server (Database Path Relativo)
 
-**Stato:** 🟡 Risolto Parzialmente  
+**Stato:** 🟢 Risolto  
 **Data:** 2026-01-26  
 **Componente:** `backend/database.py`
 
@@ -248,20 +268,19 @@ Il grafico G001 per "Granpollo" settimana 2026-05 ora mostra correttamente:
 
 ## 7. V001 Stato Allevamenti Non Usa Dati da T001
 
-**Stato:** 🔴 Non Risolto  
-**Data:** 2026-01-27  
-**Componente:** `frontend/src/components/FarmStatusGrid.tsx`
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-03-09
+**Data:** 2026-01-27
+**Componente:** `backend/routers/allevamenti.py`
 
 ### Descrizione del Problema
-I capannoni visualizzati nella griglia V001 (Situazione Allevamenti) non prendono i dati direttamente dalla tabella T001 (Impostazioni Accasamenti). Potrebbero usare dati hardcoded o una fonte diversa.
+I capannoni visualizzati nella griglia V001 (Situazione Allevamenti) non prendono i dati direttamente dalla tabella T001 (Impostazioni Accasamenti). Usavano dati hardcoded.
 
-### Analisi Tecnica
-- Verificare che `FarmStatusGrid` riceva i lotti aggiornati da T001
-- Controllare il flusso dati da `AccasamentiTable` → parent → `FarmStatusGrid`
+### Causa Root
+`FARM_STRUCTURE` era una costante hardcoded in `allevamenti.py` che definiva staticamente quali capannoni appartengono a ogni allevamento.
 
-### Come Riprodurre
-1. Modifica un lotto in T001 (Impostazioni Accasamenti)
-2. Controlla se V001 riflette immediatamente la modifica
+### Soluzione Implementata
+Rimossa la costante `FARM_STRUCTURE`. Il endpoint `GET /api/allevamenti/farms` ora genera la struttura dinamicamente leggendo tutti i lotti da T001 ed estraendo i numeri capannone univoci per allevamento.
 
 ---
 
@@ -290,18 +309,13 @@ Implementato **Data Refresh Pattern** con callback `onDataRefresh` in `TradingTa
 
 ## 9. Formula Non Ricalcolata Dopo Modifica T004
 
-**Stato:** 🔴 Non Risolto  
-**Data:** 2026-01-27  
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-03-09 (via Issue #8)
+**Data:** 2026-01-27
 **Componente:** `backend/routers/trading_router.py`, `backend/services/production_service.py`
 
-### Descrizione del Problema
-Dopo aver modificato valori in T004 (Acquisti), la formula di calcolo produzioni non viene rieseguita. I grafici mostrano valori vecchi.
-
-### Analisi Tecnica
-Simile all'Issue #2 - manca trigger di ricalcolo quando i trading data cambiano.
-
-### Soluzione Proposta
-Aggiungere chiamata a `ProductionService.calculate_weekly_summary()` dopo salvataggio trading data.
+### Risoluzione
+I dati trading in `calculate_weekly_summary()` vengono sempre letti freschi dal DB (non sono cachati), quindi non serve invalidazione. Il frontend refresh dopo T004 era già risolto dall'Issue #8.
 
 ---
 
@@ -334,22 +348,16 @@ Implementato **Data Refresh Pattern** con callback `onDataRefresh` in `Productio
 
 ## 11. Bug: Passirano 1 Calcolato Come Ross Invece di Granpollo
 
-**Stato:** 🔴 Non Risolto  
-**Data:** 2026-01-27  
-**Componente:** `backend/services/production_service.py` o `T001 dati`
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-03-09
+**Data:** 2026-01-27
+**Componente:** `backend/utils/helpers.py` (seed data)
 
-### Descrizione del Problema
-Il capannone Passirano 1 sembra essere calcolato con il prodotto "Ross" invece del corretto "Granpollo".
+### Causa Root
+Il seed data iniziale in `helpers.py` aveva Passirano 1 con `Prodotto: 'Ross'` invece di `'Granpollo'`.
 
-### Analisi Tecnica
-Possibili cause:
-1. **Dato errato in T001:** Il campo "Prodotto" per Passirano 1 potrebbe essere settato su "Ross"
-2. **Logica di mapping errata:** Il backend potrebbe applicare il prodotto sbagliato
-3. **Cache stale:** Dati vecchi nella `ProductionCache`
-
-### Come Verificare
-1. Controllare T001: campo "Prodotto" per lotti di Passirano 1
-2. Controllare nel DB: `SELECT * FROM lotti WHERE Allevamento = 'Passirano' AND Capannone = '1'`
+### Soluzione Implementata
+Corretto il seed data. **Nota:** se il database è già stato seeded con il valore errato, è necessario aggiornare manualmente il lotto in T001 (Impostazioni Accasamenti) impostando il Prodotto su "Granpollo".
 
 ---
 
@@ -374,5 +382,67 @@ Configurare **Let's Encrypt** con Certbot per ottenere certificato SSL gratuito:
 
 ### Priorità
 🟡 Media - Funziona senza SSL, ma consigliato per sicurezza
+
+---
+
+## 13. Bug: T014 Età Settimane Errata Alla Selezione Allevamento
+
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-03-09
+**Data:** 2026-03-05  
+**Componente:** `frontend/src/components/EggStorageTable.tsx`
+
+### Descrizione del Problema
+Quando si aggiunge una partita al magazzino (T014) e si seleziona un allevamento come origine, il campo "Età (settimane)" non mostra il valore corretto. Ad esempio, selezionando "Passirano" dovrebbe mostrare 63 ma mostra 10.
+
+### Analisi Tecnica
+La logica di calcolo dell'età usa l'aritmetica "absolute week" (`Year * 52 + Week`) per calcolare la differenza tra la settimana corrente e la settimana di inizio del lotto. Possibili cause:
+1. Il sistema seleziona il lotto sbagliato (es. un lotto più recente con poche settimane di vita)
+2. Il calcolo della settimana corrente è errato (valore statico o timezone issue)
+3. Il calcolo della differenza in settimane è errato (overflow anno non gestito correttamente)
+
+### Come Riprodurre
+1. Vai su Incubatoio → Magazzino Uova
+2. Clicca "Aggiungi partita"
+3. Seleziona "Passirano" come allevamento di origine
+4. Osserva il valore mostrato in "Età (settimane)" — dovrebbe essere ~63, mostra 10
+
+### Causa Root
+In `handleOrigineChange` (EggStorageTable.tsx), quando un allevamento ha più lotti attivi, veniva selezionata l'**età minima** (`Math.min`) invece dell'età massima. Il lotto più giovane (10 settimane) veniva preferito rispetto a quello più vecchio (63 settimane).
+
+### Soluzione Implementata
+Cambiato `Math.min` in `Math.max` in `handleOrigineChange`: viene ora usata l'età del lotto più anziano (gregge principale in produzione).
+
+---
+
+## 14. Curva Produzione: Dropdown Non Persisteva + Calcoli Includevano Tutti i Lotti
+
+**Stato:** 🟢 Risolto
+**Data Risoluzione:** 2026-01-25
+**Componente:** `backend/routers/allevamenti.py`, `backend/services/production_service.py`
+
+### Bug #1: Dropdown non persisteva nel database
+
+**Problema:** Selezionando una curva dal dropdown "Usa dati di:" in T001, il valore tornava a "-" dopo refresh.
+
+**Causa Root:** Import errato in `allevamenti.py` che puntava a un'istanza diversa del modulo database (working directory diversa). Le API restituivano 200 OK ma scrivevano su un database fantasma.
+
+**Soluzione:** Corretto l'import per usare il path relativo corretto al modulo database.
+
+### Bug #2: Calcoli includevano tutti i lotti anche senza curva
+
+**Problema:** La pagina "Produzioni Uova" includeva tutti i lotti nei totali anche se non avevano `Curva_Produzione` impostata.
+
+**Causa Root:** `production_service.py` faceva fallback automatico su `Razza` se `Curva_Produzione` era vuoto:
+```python
+curva_da_usare = lotto.get('Curva_Produzione') or lotto.get('Razza')  # ERRATO
+```
+
+**Soluzione:** Rimosso il fallback. Solo lotti con `Curva_Produzione` esplicita vengono inclusi nei calcoli:
+```python
+curva_da_usare = lotto.get('Curva_Produzione')
+if not curva_da_usare or curva_da_usare not in df_curve.columns:
+    continue  # skip lotti senza curva
+```
 
 ---

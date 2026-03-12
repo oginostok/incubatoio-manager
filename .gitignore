@@ -6,6 +6,10 @@ __pycache__/
 # Database
 incubatoio.db
 *.sqlite3
+backup_*.db
+
+# Claude Code
+.claude/
 
 # Environment variables
 .env

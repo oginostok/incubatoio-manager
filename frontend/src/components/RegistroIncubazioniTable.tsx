@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
+import { IncubazioniAPI } from "@/lib/api";
 
 interface IncubationBatch {
     id: number;
@@ -10,6 +11,7 @@ interface IncubationBatch {
     uova_partita: number;
     uova_utilizzate: number;
     eta: number;
+    data_arrivo?: string;
     storico_override: number | null;
     egg_storage_id: number;
 }
@@ -257,6 +259,7 @@ export default function RegistroIncubazioniTable() {
                                                             <th className="px-2 py-2 text-right">Uova Partita</th>
                                                             <th className="px-2 py-2 text-right">Uova Utilizzate</th>
                                                             <th className="px-2 py-2 text-center">Età</th>
+                                                            <th className="px-2 py-2 text-center">Data Arrivo</th>
                                                             <th className="px-2 py-2 text-right">Storico %</th>
                                                             <th className="px-2 py-2 text-right">Prev. Animali</th>
                                                         </tr>
@@ -280,6 +283,7 @@ export default function RegistroIncubazioniTable() {
                                                                         <td className="px-2 py-2 text-right font-mono">{formatNumber(batch.uova_partita)}</td>
                                                                         <td className="px-2 py-2 text-right font-mono">{formatNumber(batch.uova_utilizzate || 0)}</td>
                                                                         <td className="px-2 py-2 text-center">{batch.eta} sett.</td>
+                                                                        <td className="px-2 py-2 text-center text-gray-500">{batch.data_arrivo ? formatDateLong(batch.data_arrivo) : "-"}</td>
                                                                         <td className="px-2 py-2 text-right font-mono">{storico}%</td>
                                                                         <td className="px-2 py-2 text-right font-mono font-bold text-green-700">{formatNumber(previsioneAnimali)}</td>
                                                                     </tr>
@@ -291,7 +295,7 @@ export default function RegistroIncubazioniTable() {
                                                             <td className="px-2 py-2 text-right font-mono">
                                                                 {formatNumber(totalUova)}
                                                             </td>
-                                                            <td colSpan={2} className="px-2 py-2"></td>
+                                                            <td colSpan={3} className="px-2 py-2"></td>
                                                             <td className="px-2 py-2 text-right font-mono text-green-700">
                                                                 {formatNumber(totalPulcini)}
                                                             </td>
@@ -300,6 +304,43 @@ export default function RegistroIncubazioniTable() {
                                                 </table>
                                             </div>
                                         )}
+
+                                        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200">
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm("Vuoi davvero annullare e cancellare questa incubazione? Le uova torneranno a magazzino.")) {
+                                                        try {
+                                                            await IncubazioniAPI.deleteIncubation(incubation.id);
+                                                            fetchIncubations();
+                                                        } catch (err) {
+                                                            console.error("Failed to delete", err);
+                                                            alert("Errore nella cancellazione: ricaricare la pagina o controllare connessione");
+                                                        }
+                                                    }
+                                                }}
+                                                className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                Cancella Incubazione
+                                            </button>
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm("Vuoi riportare questa incubazione in fase di Modifica? Le uova torneranno a magazzino finché non la salvi di nuovo.")) {
+                                                        try {
+                                                            await IncubazioniAPI.uncommitIncubation(incubation.id);
+                                                            fetchIncubations();
+                                                        } catch (err) {
+                                                            console.error("Failed to uncommit", err);
+                                                            alert("Errore nella modifica: ricaricare la pagina o controllare connessione");
+                                                        }
+                                                    }
+                                                }}
+                                                className="px-4 py-2 text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                Modifica (Riporta a Incubazione Uova)
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

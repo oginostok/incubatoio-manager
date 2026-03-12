@@ -1,12 +1,29 @@
 import { useState } from "react";
 import type { Lotto } from "@/types";
 import { AllevamentiAPI } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 import { getProductPastelBg } from "@/lib/productColors";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { X, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Trash2, ChevronDown, ChevronUp, LineChart, Table2 } from "lucide-react";
 import { CycleWeeklyTable } from "./CycleWeeklyTable";
+import { FarmChart } from "./FarmChart";
+
+interface WeeklyData {
+    id: number;
+    lotto_id: number;
+    eta_animali: number;
+    anno: number;
+    settimana: number;
+    galline_morte: number;
+    galli_morti: number;
+    uova_incubabili: number;
+    uova_seconda: number;
+    tipo_mangime: string;
+    accensione_luce: string;
+    spegnimento_luce: string;
+}
 
 interface ShedDetailPanelProps {
     lotti: Lotto[];
@@ -37,6 +54,8 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState<Partial<Lotto>>({});
     const [expandedAdvanced, setExpandedAdvanced] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<"table" | "chart">("table");
+    const [chartDataCache, setChartDataCache] = useState<Record<number, WeeklyData[]>>({});
 
     // Generate user-friendly Cycle ID
     const getUserId = (lotto: Lotto): string => {
@@ -75,6 +94,19 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
             } catch (error) {
                 console.error("Failed to delete lotto", error);
             }
+        }
+    };
+
+    const fetchChartData = async (lottoId: number) => {
+        if (chartDataCache[lottoId]) return; // Already cached
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/allevamenti/lotti/${lottoId}/weekly-data`);
+            if (response.ok) {
+                const result = await response.json();
+                setChartDataCache(prev => ({ ...prev, [lottoId]: result.data || [] }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch chart data", error);
         }
     };
 
@@ -232,7 +264,14 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                                     </Button>
                                     <Button
                                         size="sm"
-                                        onClick={() => setExpandedAdvanced(expandedAdvanced === lotto.id ? null : lotto.id)}
+                                        onClick={() => {
+                                            if (expandedAdvanced === lotto.id) {
+                                                setExpandedAdvanced(null);
+                                            } else {
+                                                setExpandedAdvanced(lotto.id);
+                                                fetchChartData(lotto.id);
+                                            }
+                                        }}
                                         variant="outline"
                                         className="gap-1"
                                     >
@@ -252,13 +291,38 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                             )}
                         </div>
 
-                        {/* Advanced Weekly Data Table */}
+                        {/* Advanced Weekly Data Table / Chart */}
                         {expandedAdvanced === lotto.id && (
-                            <CycleWeeklyTable
-                                lottoId={lotto.id}
-                                annoStart={lotto.Anno_Start}
-                                settStart={lotto.Sett_Start}
-                            />
+                            <div className="mt-4 border border-gray-100 rounded-lg p-3 bg-white">
+                                <div className="flex justify-end mb-2">
+                                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                                        <button
+                                            onClick={() => setViewMode("table")}
+                                            className={`p-1.5 rounded-md flex items-center justify-center transition-all ${viewMode === "table" ? "bg-white shadow-sm text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+                                            title="Vista Tabella"
+                                        >
+                                            <Table2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode("chart")}
+                                            className={`p-1.5 rounded-md flex items-center justify-center transition-all ${viewMode === "chart" ? "bg-white shadow-sm text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+                                            title="Vista Grafici"
+                                        >
+                                            <LineChart className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {viewMode === "table" ? (
+                                    <CycleWeeklyTable
+                                        lottoId={lotto.id}
+                                        annoStart={lotto.Anno_Start}
+                                        settStart={lotto.Sett_Start}
+                                    />
+                                ) : (
+                                    <FarmChart data={chartDataCache[lotto.id] || []} />
+                                )}
+                            </div>
                         )}
                     </div>
                 );

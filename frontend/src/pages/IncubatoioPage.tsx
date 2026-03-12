@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Package, Timer, Egg, FileText } from "lucide-react";
+import { Package, Timer, Egg, FileText, Truck } from "lucide-react";
 import { GiFactory } from "react-icons/gi";
 import EggStorageTable from "@/components/EggStorageTable";
 import EggStorageTotalsTable from "@/components/EggStorageTotalsTable";
@@ -11,7 +11,7 @@ interface IncubatoioPageProps {
     onNavigate: (page: string) => void;
 }
 
-type Section = "magazzino" | "incubazione" | "registro" | "schiusa";
+type Section = "magazzino" | "incubazione" | "registro" | "trasferimento" | "schiusa";
 
 export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
     const [section, setSection] = useState<Section>("magazzino");
@@ -61,6 +61,16 @@ export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
                     Registro Incubazioni
                 </button>
                 <button
+                    onClick={() => setSection("trasferimento")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "trasferimento"
+                        ? "bg-amber-100 text-amber-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <Truck className="w-5 h-5" />
+                    Trasferimento
+                </button>
+                <button
                     onClick={() => setSection("schiusa")}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "schiusa"
                         ? "bg-amber-100 text-amber-700 font-medium"
@@ -91,6 +101,21 @@ export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
                 )}
                 {section === "registro" && (
                     <RegistroIncubazioniTable />
+                )}
+                {section === "trasferimento" && (
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Trasferimento</h2>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                <p className="text-blue-700 text-lg">
+                                    ℹ️ Area in costruzione.
+                                </p>
+                                <p className="text-gray-600 mt-2">
+                                    Gestione trasferimenti tra incubatrici e sedi
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 )}
                 {section === "schiusa" && (
                     <div>

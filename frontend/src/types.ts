@@ -57,6 +57,7 @@ export interface TradingConfig {
     tipo: string;
     azienda: string;
     prodotto: string;
+    razza?: string;
     active: boolean;
 }
 

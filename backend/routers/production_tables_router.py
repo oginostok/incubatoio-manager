@@ -12,6 +12,9 @@ class CellUpdate(BaseModel):
     column: str
     value: str
 
+class ColumnCreate(BaseModel):
+    name: str
+
 @router.get("/test")
 async def test_endpoint():
     """Test endpoint to verify router is working"""
@@ -131,3 +134,72 @@ async def update_production_table_cell(update: CellUpdate):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error updating cell: {str(e)}")
+
+@router.post("/columns")
+async def add_production_table_column(column_data: ColumnCreate):
+    """Add a new column to the production tables with default 0% values."""
+    try:
+        df = carica_dati_v20()
+        if df.empty:
+            raise HTTPException(status_code=404, detail="Production table not found")
+        
+        column_name = column_data.name.strip().upper() + " STANDARD"
+        if column_name in df.columns:
+            raise HTTPException(status_code=400, detail=f"Column '{column_name}' already exists")
+            
+        # Add column with 0% for all rows
+        df[column_name] = "0%"
+        
+        # Save to database
+        df.to_sql("standard_curves", engine, if_exists='replace', index=False)
+        return {"success": True, "message": f"Column {column_name} added successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/columns/{column_name}")
+async def delete_production_table_column(column_name: str):
+    """Delete a column from the production tables."""
+    try:
+        # Standard columns that cannot be deleted
+        protected_columns = [
+            'JA57  STANDARD', 'JA57K  STANDARD', 'JA57KI  STANDARD', 
+            'JA87  STANDARD', 'RANGER  STANDARD', 'GOLDEN  STANDARD', 'ROSS 308  STANDARD'
+        ]
+        
+        # Normalize name for comparison
+        clean_name = column_name.replace('%20', ' ')
+        
+        is_protected = any(
+            clean_name.replace(' ', '').upper() == p_col.replace(' ', '').upper() 
+            for p_col in protected_columns
+        )
+        
+        if is_protected:
+            raise HTTPException(status_code=403, detail="Cannot delete protected standard column")
+            
+        df = carica_dati_v20()
+        if df.empty:
+            raise HTTPException(status_code=404, detail="Production table not found")
+            
+        # Find exact column match
+        target_col = None
+        for col in df.columns:
+            if col == clean_name or col.replace(' ', '').upper() == clean_name.replace(' ', '').upper():
+                target_col = col
+                break
+                
+        if not target_col:
+            raise HTTPException(status_code=404, detail=f"Column '{clean_name}' not found")
+            
+        # Drop column
+        df = df.drop(columns=[target_col])
+        
+        # Save to database
+        df.to_sql("standard_curves", engine, if_exists='replace', index=False)
+        return {"success": True, "message": f"Column {target_col} deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

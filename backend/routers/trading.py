@@ -18,13 +18,15 @@ class TradingConfigCreate(BaseModel):
     tipo: str  # "acquisto" or "vendita"
     azienda: str
     prodotto: str
+    razza: str = ""
 
 class TradingConfigUpdate(BaseModel):
     azienda: str
     prodotto: str
+    razza: str = ""
 
 class TradingDataUpdate(BaseModel):
-    updates: List[dict]  # List of {anno, settimana, azienda, prodotto, quantita}
+    updates: List[dict]  # List of {anno, settimana, azienda, prodotto, razza, quantita}
 
 # Helper function to get current week
 def get_current_week():
@@ -60,6 +62,7 @@ def get_config(tipo: str):
             "tipo": c.tipo,
             "azienda": c.azienda,
             "prodotto": c.prodotto,
+            "razza": c.razza,
             "active": c.active
         } for c in configs]
     except Exception as e:
@@ -67,9 +70,9 @@ def get_config(tipo: str):
 
 @router.post("/config")
 def create_config(config: TradingConfigCreate):
-    """Create a new trading config (azienda + prodotto)"""
+    """Create a new trading config (azienda + prodotto + razza)"""
     try:
-        add_trading_config(config.tipo, config.azienda, config.prodotto)
+        add_trading_config(config.tipo, config.azienda, config.prodotto, config.razza)
         return {"status": "success", "message": "Config created"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -78,7 +81,7 @@ def create_config(config: TradingConfigCreate):
 def update_config(config_id: int, config: TradingConfigUpdate):
     """Update an existing trading config"""
     try:
-        update_trading_config(config_id, config.azienda, config.prodotto)
+        update_trading_config(config_id, config.azienda, config.prodotto, config.razza)
         return {"status": "success", "message": "Config updated"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -105,22 +108,22 @@ def get_data(tipo: str):
         # Get configs
         configs = get_trading_config(tipo)
         
-        # Build column headers: ["Periodo", "Azienda1_Prodotto1", "Azienda2_Prodotto2", ...]
+        # Build column headers: ["Periodo", "Azienda1_Prodotto1_Razza1", "Azienda2..."]
         columns = ["Periodo"]
-        column_map = {}  # Maps column name to (azienda, prodotto)
+        column_map = {}  # Maps column name to (azienda, prodotto, razza)
         
         for cfg in configs:
-            col_name = f"{cfg.azienda}_{cfg.prodotto}"
+            col_name = f"{cfg.azienda}_{cfg.prodotto}_{cfg.razza}"
             columns.append(col_name)
-            column_map[col_name] = (cfg.azienda, cfg.prodotto)
+            column_map[col_name] = (cfg.azienda, cfg.prodotto, cfg.razza)
         
         # Get all trading data
         all_data = get_trading_data(tipo)
         
-        # Build data map: (anno, settimana, azienda, prodotto) -> quantita
+        # Build data map: (anno, settimana, azienda, prodotto, razza) -> quantita
         data_map = {}
         for row in all_data:
-            key = (row.anno, row.settimana, row.azienda, row.prodotto)
+            key = (row.anno, row.settimana, row.azienda, row.prodotto, row.razza)
             data_map[key] = row.quantita
         
         # Generate 52 weeks
@@ -133,8 +136,8 @@ def get_data(tipo: str):
             row_data = {"Periodo": periodo}
             
             # Add data for each column
-            for col_name, (azienda, prodotto) in column_map.items():
-                key = (year, week, azienda, prodotto)
+            for col_name, (azienda, prodotto, razza) in column_map.items():
+                key = (year, week, azienda, prodotto, razza)
                 quantity = data_map.get(key, 0)
                 row_data[col_name] = quantity
             
@@ -151,7 +154,7 @@ def get_data(tipo: str):
 def update_data(tipo: str, payload: TradingDataUpdate):
     """
     Bulk update trading data.
-    Expects: {updates: [{anno, settimana, azienda, prodotto, quantita}, ...]}
+    Expects: {updates: [{anno, settimana, azienda, prodotto, razza, quantita}, ...]}
     """
     try:
         save_trading_data_bulk(tipo, payload.updates)

@@ -16,6 +16,7 @@ class EggStorageCreate(BaseModel):
     numero: int
     eta: int
     arrivate_il: str
+    numero_ddt: Optional[str] = ""
 
 class EggStorageUpdate(BaseModel):
     prodotto: Optional[str] = None
@@ -24,6 +25,7 @@ class EggStorageUpdate(BaseModel):
     numero: Optional[int] = None
     eta: Optional[int] = None
     arrivate_il: Optional[str] = None
+    numero_ddt: Optional[str] = None
 
 
 @router.get("")

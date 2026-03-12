@@ -73,8 +73,10 @@ def update_lotto_endpoint(lotto_id: int, lotto: LottoUpdate):
         if not result.get("success"):
             raise HTTPException(status_code=404, detail=result.get("error", "Update failed"))
         
-        # Invalidate cache for this lotto (as per RULES.md)
-        invalidate_cache_by_lotto(lotto_id)
+        # Delete cache for this lotto to force full recalculation (as per RULES.md)
+        # Using delete instead of invalidate ensures that when Fine Ciclo is changed,
+        # no phantom entries remain for weeks beyond the new end date.
+        delete_cache_by_lotto(lotto_id)
         
         return {
             "status": "ok", 
@@ -123,20 +125,24 @@ def search_lotto_by_code(codice: str):
     
     raise HTTPException(status_code=404, detail=f"Lotto con ID {lotto_id} non trovato.")
 
-# Farm structure constant (matching Streamlit)
-FARM_STRUCTURE = {
-    "Cortefranca": [1, 2],
-    "Mussano": [1],
-    "Passirano": [1, 2, 3],
-    "Tarantasca": [1],
-    "Tonengo": [1, 2, 3, 4, 5, 6],
-    "Villafranca": [1, 2, 3, 4]
-}
-
 @router.get("/farms")
 def get_farm_structure():
-    """Returns the farm structure with shed numbers."""
-    return FARM_STRUCTURE
+    """Returns the farm structure with shed numbers, derived dynamically from lotti in T001."""
+    import re
+    all_lotti = get_lotti()
+    structure = {}
+    for lotto in all_lotti:
+        farm = lotto.get("Allevamento")
+        cap = str(lotto.get("Capannone", ""))
+        if not farm or not cap:
+            continue
+        match = re.match(r'^(\d+)', cap)
+        if match:
+            shed_num = int(match.group(1))
+            if farm not in structure:
+                structure[farm] = set()
+            structure[farm].add(shed_num)
+    return {farm: sorted(list(sheds)) for farm, sheds in sorted(structure.items())}
 
 # --- CYCLE WEEKLY DATA ENDPOINTS (Dati Avanzati) ---
 from database import (

@@ -357,6 +357,9 @@ def get_coloryeald_extended():
                     lotto_details[key] = []
                 lotto_details[key].append({
                     "allevamento": entry.get('allevamento', f"Lotto {lotto.get('id')}"),
+                    "capannone": lotto.get('Capannone', ''),
+                    "razza": lotto.get('Razza', ''),
+                    "razza_gallo": lotto.get('Razza_Gallo', ''),
                     "eta": entry.get('eta', 30),
                     "uova": entry['uova']
                 })
@@ -542,6 +545,9 @@ def get_pollo70_extended():
                     lotto_details[key] = []
                 lotto_details[key].append({
                     "allevamento": entry.get('allevamento', f"Lotto {lotto.get('id')}"),
+                    "capannone": lotto.get('Capannone', ''),
+                    "razza": lotto.get('Razza', ''),
+                    "razza_gallo": lotto.get('Razza_Gallo', ''),
                     "eta": entry.get('eta', 30),
                     "uova": entry['uova']
                 })
@@ -727,6 +733,9 @@ def get_granpollo_extended():
                     lotto_details[key] = []
                 lotto_details[key].append({
                     "allevamento": entry.get('allevamento', f"Lotto {lotto.get('id')}"),
+                    "capannone": lotto.get('Capannone', ''),
+                    "razza": lotto.get('Razza', ''),
+                    "razza_gallo": lotto.get('Razza_Gallo', ''),
                     "eta": entry.get('eta', 30),
                     "uova": entry['uova']
                 })
@@ -968,6 +977,9 @@ def get_planning_data(product: str):
                 lotto_details[key] = []
             lotto_details[key].append({
                 "allevamento": entry.get('allevamento', f"Lotto {lotto.get('id')}"),
+                "capannone": lotto.get('Capannone', ''),
+                "razza": lotto.get('Razza', ''),
+                "razza_gallo": lotto.get('Razza_Gallo', ''),
                 "eta": entry.get('eta', 30),
                 "uova": entry['uova']
             })

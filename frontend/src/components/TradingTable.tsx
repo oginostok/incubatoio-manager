@@ -40,6 +40,7 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [newAzienda, setNewAzienda] = useState('');
     const [newProdotto, setNewProdotto] = useState('');
+    const [newRazza, setNewRazza] = useState('');
 
     // Product colors (using official colors)
 
@@ -87,8 +88,9 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
             const anno = parseInt(yearStr);
             const settimana = parseInt(weekStr);
 
-            // Parse column name: "Azienda_Prodotto"
-            const [azienda, prodotto] = col.split('_');
+            // Parse column name: "Azienda_Prodotto_Razza"
+            const [azienda, prodotto, ...razzaParts] = col.split('_');
+            const razza = razzaParts.join('_');
 
             const quantita = parseInt(editValue) || 0;
 
@@ -98,6 +100,7 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
                 settimana,
                 azienda,
                 prodotto,
+                razza: razza || "",
                 quantita
             }]);
 
@@ -144,11 +147,12 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
 
     // Handle delete column
     const handleDeleteColumn = async (colName: string) => {
-        const [azienda, prodotto] = colName.split('_');
+        const [azienda, prodotto, ...razzaParts] = colName.split('_');
+        const razza = razzaParts.join('_');
         try {
             // Find config ID from the column name
             const configs = await TradingAPI.getConfig(tipo);
-            const config = configs.find(c => c.azienda === azienda && c.prodotto === prodotto);
+            const config = configs.find(c => c.azienda === azienda && c.prodotto === prodotto && (c.razza || "") === (razza || ""));
             if (config) {
                 await TradingAPI.deleteConfig(config.id);
                 await fetchData(); // Reload data
@@ -166,10 +170,11 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
         }
 
         try {
-            await TradingAPI.addConfig(tipo, newAzienda.trim(), newProdotto);
+            await TradingAPI.addConfig(tipo, newAzienda.trim(), newProdotto, newRazza.trim());
             setShowNewDialog(false);
             setNewAzienda('');
             setNewProdotto('');
+            setNewRazza('');
             await fetchData(); // Reload data
         } catch (error) {
             console.error('Error adding config:', error);
@@ -237,6 +242,16 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
                                 </SelectContent>
                             </Select>
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Razza</label>
+                            <input
+                                type="text"
+                                value={newRazza}
+                                onChange={(e) => setNewRazza(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                placeholder="es. R123 (opzionale)"
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowNewDialog(false)}>Annulla</Button>
@@ -259,14 +274,16 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
                                     bgColor = getProductBrightBg(prodotto);
                                 }
 
-                                // Parse azienda/prodotto for header
+                                // Parse azienda/prodotto/razza for header
                                 let displayHeader: string | React.ReactNode = col;
                                 if (!isPeriodo) {
-                                    const [azienda, prodotto] = col.split('_');
+                                    const [azienda, prodotto, ...razzaParts] = col.split('_');
+                                    const razza = razzaParts.join('_');
                                     displayHeader = (
                                         <div className="flex flex-col items-center">
                                             <div className="font-semibold text-xs text-gray-700">{azienda}</div>
                                             <div className="text-xs text-gray-600">{prodotto}</div>
+                                            {razza && <div className="text-xs text-gray-500 italic mt-0.5">{razza}</div>}
                                             {isManaging && (
                                                 <button
                                                     onClick={() => handleDeleteColumn(col)}

@@ -34,6 +34,7 @@ interface EggStorageEntry {
     numero: number;
     eta: number;
     arrivate_il: string;
+    numero_ddt?: string;
 }
 
 interface LottoData {
@@ -65,6 +66,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
     const [formNumero, setFormNumero] = useState("");
     const [formEta, setFormEta] = useState("");
     const [formArrivateIl, setFormArrivateIl] = useState("");
+    const [formNumeroDdt, setFormNumeroDdt] = useState("");
     const [formNewNome, setFormNewNome] = useState("");
     const [showNewNomeInput, setShowNewNomeInput] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -119,23 +121,15 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         return product ? product.bgColor : "bg-gray-200";
     };
 
-    // Helper function to calculate ISO week number
-    const getISOWeek = (date: Date): { year: number; week: number } => {
-        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        // Set to nearest Thursday: current date + 4 - current day number (Mon=1, Sun=7)
-        const dayNum = d.getUTCDay() || 7;
-        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-        // Get first day of year
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        // Calculate full weeks to nearest Thursday
-        const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-        // Return ISO year and week
-        return { year: d.getUTCFullYear(), week: weekNo };
-    };
-
-    // Convert year/week to absolute week number for age calculation
-    const toAbsoluteWeek = (year: number, week: number): number => {
-        return year * 52 + week;
+    // Calculate age in weeks from a start year/week
+    const calculateAgeWeeks = (yearStart: number, weekStart: number): number => {
+        const today = new Date();
+        const jan4 = new Date(yearStart, 0, 4);
+        const dayOfWeek = jan4.getDay() || 7;
+        const monday = new Date(jan4);
+        monday.setDate(jan4.getDate() - dayOfWeek + 1 + (weekStart - 1) * 7);
+        const diffDays = Math.floor((today.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24));
+        return Math.max(0, Math.floor(diffDays / 7));
     };
 
     const handleOrigineChange = (value: string) => {
@@ -144,24 +138,18 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         if (value !== "Acquisto") {
             const lottiForAllevamento = lotti.filter(l => l.Allevamento === value);
             if (lottiForAllevamento.length > 0) {
-                // Calculate current ISO week properly
-                const now = new Date();
-                const { year: currentYear, week: currentWeek } = getISOWeek(now);
-                const currentAbsoluteWeek = toAbsoluteWeek(currentYear, currentWeek);
-
                 // Calculate age for each lotto and find the minimum
                 const ages = lottiForAllevamento.map(lotto => {
                     if (lotto.Anno_Start && lotto.Sett_Start) {
-                        const startAbsoluteWeek = toAbsoluteWeek(lotto.Anno_Start, lotto.Sett_Start);
-                        return currentAbsoluteWeek - startAbsoluteWeek;
+                        return calculateAgeWeeks(lotto.Anno_Start, lotto.Sett_Start);
                     }
                     return 0;
                 }).filter(age => age > 0);
 
                 if (ages.length > 0) {
-                    // Use minimum age when multiple lotti exist
-                    const minAge = Math.min(...ages);
-                    setFormEta(String(minAge));
+                    // Use maximum age when multiple lotti exist (oldest/most established flock)
+                    const maxAge = Math.max(...ages);
+                    setFormEta(String(maxAge));
                 }
             }
         }
@@ -196,7 +184,8 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     origine: origine,
                     numero: parseInt(formNumero.replace(/\./g, ""), 10) || 0,
                     eta: parseInt(formEta, 10) || 0,
-                    arrivate_il: formArrivateIl
+                    arrivate_il: formArrivateIl,
+                    numero_ddt: formNumeroDdt
                 })
             });
 
@@ -221,6 +210,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         setFormNumero("");
         setFormEta("");
         setFormArrivateIl("");
+        setFormNumeroDdt("");
         setFormNewNome("");
         setShowNewNomeInput(false);
         setEditingEntry(null);
@@ -244,6 +234,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         setFormNumero(entry.numero.toLocaleString("it-IT"));
         setFormEta(String(entry.eta));
         setFormArrivateIl(entry.arrivate_il);
+        setFormNumeroDdt(entry.numero_ddt || "");
         setEditingEntry(entry);
         setShowModal(true);
     };
@@ -268,7 +259,8 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     origine: origine,
                     numero: parseInt(formNumero.replace(/\./g, ""), 10) || 0,
                     eta: parseInt(formEta, 10) || 0,
-                    arrivate_il: formArrivateIl
+                    arrivate_il: formArrivateIl,
+                    numero_ddt: formNumeroDdt
                 })
             });
 
@@ -560,21 +552,35 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                                 />
                             </div>
 
-                            {/* Età */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Età (settimane)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formEta}
-                                    onChange={(e) => setFormEta(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                                    placeholder="es. 32"
-                                    min="0"
-                                    max="100"
-                                    required
-                                />
+                            {/* Età + Numero DDT (side by side) */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Età (settimane)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formEta}
+                                        onChange={(e) => setFormEta(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                        placeholder="es. 32"
+                                        min="0"
+                                        max="100"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Numero DDT
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formNumeroDdt}
+                                        onChange={(e) => setFormNumeroDdt(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                        placeholder="es. 12345"
+                                    />
+                                </div>
                             </div>
 
                             {/* Arrivate il */}

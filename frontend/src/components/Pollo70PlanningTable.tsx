@@ -14,6 +14,28 @@ interface Client {
     sex_type: string;
 }
 
+interface ProductionDetail {
+    allevamento: string;
+    capannone: string;
+    razza: string;
+    razza_gallo: string;
+    eta: number;
+    uova: number;
+}
+
+interface PurchaseDetail {
+    azienda: string;
+    quantita: number;
+}
+
+interface AnimaliCalcDetail {
+    source: string;
+    uova: number;
+    eta: number | null;
+    rate_percent: number;
+    animali: number;
+}
+
 interface PlanningRow {
     settimana_nascita: string;
     anno: number;
@@ -26,6 +48,9 @@ interface PlanningRow {
     client_values: Record<number, number>;
     totale_maschi: number;
     totale_femmine: number;
+    production_details: ProductionDetail[];
+    purchase_details: PurchaseDetail[];
+    animali_calc_details: AnimaliCalcDetail[];
 }
 
 interface EditingCell {
@@ -38,7 +63,7 @@ interface Pollo70PlanningTableProps {
     showTooltips?: boolean;
 }
 
-export default function Pollo70PlanningTable(_props: Pollo70PlanningTableProps) {
+export default function Pollo70PlanningTable({ showTooltips = true }: Pollo70PlanningTableProps) {
     const [data, setData] = useState<PlanningRow[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
@@ -381,12 +406,38 @@ export default function Pollo70PlanningTable(_props: Pollo70PlanningTableProps) 
                                 <td className="px-3 py-2 text-center font-medium text-gray-700 sticky left-0 bg-inherit">
                                     {row.settimana_nascita}
                                 </td>
-                                <td className="px-3 py-2 text-right font-mono text-gray-600">
+                                <td className={`px-3 py-2 text-right font-mono text-gray-600 relative ${showTooltips ? "group cursor-help" : ""}`}>
                                     {formatNumber(row.uova_prodotte)}
+                                    {showTooltips && row.production_details && row.production_details.length > 0 && (
+                                        <div className="absolute z-50 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg py-2 px-3 left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap shadow-lg">
+                                            <div className="font-semibold mb-1 border-b border-gray-700 pb-1">
+                                                Produzione {row.settimana_nascita}
+                                            </div>
+                                            {row.production_details.map((detail, idx) => (
+                                                <div key={idx} className="py-0.5">
+                                                    {detail.allevamento} {detail.capannone || ""}: {formatNumber(detail.uova)} - {detail.razza || "?"}x{detail.razza_gallo || "?"} - Età W{detail.eta}
+                                                </div>
+                                            ))}
+                                            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-gray-900" />
+                                        </div>
+                                    )}
                                 </td>
                                 {hasAcquisti && (
-                                    <td className="px-3 py-2 text-right font-mono text-gray-600">
+                                    <td className={`px-3 py-2 text-right font-mono text-gray-600 relative ${showTooltips && row.purchase_details?.length > 0 ? "group cursor-help" : ""}`}>
                                         {formatNumber(row.uova_acquistate)}
+                                        {showTooltips && row.purchase_details && row.purchase_details.length > 0 && (
+                                            <div className="absolute z-50 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg py-2 px-3 left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap shadow-lg">
+                                                <div className="font-semibold mb-1 border-b border-gray-700 pb-1">
+                                                    Acquisti {row.settimana_nascita}
+                                                </div>
+                                                {row.purchase_details.map((detail, idx) => (
+                                                    <div key={idx} className="py-0.5">
+                                                        {detail.azienda}: {formatNumber(detail.quantita)}
+                                                    </div>
+                                                ))}
+                                                <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-gray-900" />
+                                            </div>
+                                        )}
                                     </td>
                                 )}
                                 {hasVendite && (
@@ -397,8 +448,21 @@ export default function Pollo70PlanningTable(_props: Pollo70PlanningTableProps) 
                                 <td className="px-3 py-2 text-right font-mono font-semibold text-gray-800 bg-gray-100">
                                     {formatNumber(row.uova_totali)}
                                 </td>
-                                <td className="px-3 py-2 text-right font-mono font-semibold text-green-700 bg-green-50">
+                                <td className={`px-3 py-2 text-right font-mono font-semibold text-green-700 bg-green-50 relative ${showTooltips && row.animali_calc_details?.length > 0 ? "group cursor-help" : ""}`}>
                                     {formatNumber(row.animali_possibili)}
+                                    {showTooltips && row.animali_calc_details && row.animali_calc_details.length > 0 && (
+                                        <div className="absolute z-50 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg py-2 px-3 left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap shadow-lg">
+                                            <div className="font-semibold mb-1 border-b border-gray-700 pb-1">
+                                                Calcolo Animali Possibili
+                                            </div>
+                                            {row.animali_calc_details.map((detail, idx) => (
+                                                <div key={idx} className="py-0.5">
+                                                    {detail.source}: {formatNumber(detail.uova)} {detail.eta !== null ? `W${detail.eta}` : ""} × {detail.rate_percent.toFixed(0)}% = {formatNumber(detail.animali)}
+                                                </div>
+                                            ))}
+                                            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-gray-900" />
+                                        </div>
+                                    )}
                                 </td>
 
                                 {/* Dynamic client cells */}
