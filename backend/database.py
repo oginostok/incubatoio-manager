@@ -1792,3 +1792,155 @@ def update_planning_table_setting(table_id, show_sex_split):
         return setting.to_dict()
     finally:
         db.close()
+
+
+# --- INCUBATION PLANNING MODELS (T017 - Piano Incubazione) ---
+
+class IncubationPlanningConto(Base):
+    """Dynamic 'Conto Incubazione' column config for T017."""
+    __tablename__ = "incubation_planning_conti"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    ordine = Column(Integer, default=0)
+    active = Column(Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "ordine": self.ordine,
+            "active": self.active
+        }
+
+
+class IncubationPlanningData(Base):
+    """Per-week editable data for T017 (conto incubazione values + zona faraone)."""
+    __tablename__ = "incubation_planning_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    anno = Column(Integer, index=True)
+    settimana = Column(Integer, index=True)
+    conto_id = Column(Integer, index=True, nullable=True)  # NULL = zona faraone
+    quantita = Column(Integer, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "anno": self.anno,
+            "settimana": self.settimana,
+            "conto_id": self.conto_id,
+            "quantita": self.quantita
+        }
+
+
+# --- INCUBATION PLANNING HELPERS ---
+
+def get_incubation_planning_conti():
+    """Returns all active conti incubazione ordered by ordine."""
+    db = SessionLocal()
+    try:
+        conti = db.query(IncubationPlanningConto)\
+            .filter(IncubationPlanningConto.active == True)\
+            .order_by(IncubationPlanningConto.ordine)\
+            .all()
+        return [c.to_dict() for c in conti]
+    finally:
+        db.close()
+
+
+def add_incubation_planning_conto(nome: str):
+    """Adds a new conto incubazione column."""
+    db = SessionLocal()
+    try:
+        max_ordine = db.query(IncubationPlanningConto)\
+            .filter(IncubationPlanningConto.active == True)\
+            .count()
+        new_conto = IncubationPlanningConto(nome=nome, ordine=max_ordine, active=True)
+        db.add(new_conto)
+        db.commit()
+        db.refresh(new_conto)
+        return new_conto.to_dict()
+    finally:
+        db.close()
+
+
+def rename_incubation_planning_conto(conto_id: int, nome: str):
+    """Renames a conto incubazione column."""
+    db = SessionLocal()
+    try:
+        conto = db.query(IncubationPlanningConto).filter(IncubationPlanningConto.id == conto_id).first()
+        if not conto:
+            return None
+        conto.nome = nome
+        db.commit()
+        db.refresh(conto)
+        return conto.to_dict()
+    finally:
+        db.close()
+
+
+def delete_incubation_planning_conto(conto_id: int):
+    """Soft-deletes a conto incubazione column (only if at least 1 active remains)."""
+    db = SessionLocal()
+    try:
+        active_count = db.query(IncubationPlanningConto)\
+            .filter(IncubationPlanningConto.active == True).count()
+        if active_count <= 1:
+            return False  # Cannot delete last column
+        conto = db.query(IncubationPlanningConto).filter(IncubationPlanningConto.id == conto_id).first()
+        if not conto:
+            return False
+        db.query(IncubationPlanningData)\
+            .filter(IncubationPlanningData.conto_id == conto_id).delete()
+        conto.active = False
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+def get_incubation_planning_data():
+    """Returns all planning data as dict {(anno, settimana, conto_id): quantita}."""
+    db = SessionLocal()
+    try:
+        records = db.query(IncubationPlanningData).all()
+        return {(r.anno, r.settimana, r.conto_id): r.quantita for r in records}
+    finally:
+        db.close()
+
+
+def update_incubation_planning_data(anno: int, settimana: int, conto_id, quantita: int):
+    """Updates or creates a planning data entry. conto_id=None means zona faraone."""
+    db = SessionLocal()
+    try:
+        record = db.query(IncubationPlanningData).filter(
+            IncubationPlanningData.anno == anno,
+            IncubationPlanningData.settimana == settimana,
+            IncubationPlanningData.conto_id == conto_id
+        ).first()
+        if record:
+            record.quantita = quantita
+        else:
+            record = IncubationPlanningData(
+                anno=anno, settimana=settimana, conto_id=conto_id, quantita=quantita
+            )
+            db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+def ensure_incubation_planning_conto_default():
+    """Ensures at least one default conto incubazione exists."""
+    db = SessionLocal()
+    try:
+        count = db.query(IncubationPlanningConto)\
+            .filter(IncubationPlanningConto.active == True).count()
+        if count == 0:
+            db.add(IncubationPlanningConto(nome="Conto Incubazione 1", ordine=0, active=True))
+            db.commit()
+    finally:
+        db.close()
