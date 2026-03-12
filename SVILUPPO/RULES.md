@@ -544,11 +544,7 @@ Se il webhook non funziona, esegui manualmente:
 
 ```bash
 ssh root@162.55.184.122
-cd /opt/incubatoio-manager
-git pull origin main
-cd frontend && npm run build
-cd ..
-systemctl restart incubatoio
+bash /opt/incubatoio-manager/deploy/deploy.sh
 ```
 
 ---

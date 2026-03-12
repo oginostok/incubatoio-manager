@@ -9,10 +9,11 @@ import datetime
 from typing import List, Dict, Optional
 from utils.helpers import carica_dati_v20, pulisci_percentuale
 from database import (
-    get_lotti, 
+    get_lotti,
     get_trading_data,
     get_valid_cache,
     save_production_cache_bulk,
+    get_cycle_settings,
     SessionLocal,
     Lotto
 )
@@ -43,67 +44,84 @@ class ProductionService:
         return (int(year), int(week))
     
     @staticmethod
-    def _calculate_production_for_lotto(lotto: dict, df_curve) -> List[Dict]:
+    def _calculate_production_for_lotto(lotto: dict, df_curve, lifecycle_max: int) -> List[Dict]:
         """
         Calculates production for a single lotto across all weeks.
         Returns list of {anno, settimana, lotto_id, prodotto, uova, allevamento, eta}
-        
+
         Follows RULES.md formula:
         - [EtaGalline] = W value from curve
         - [NumGalline] = lotto['Capi']
         - [Produzione] = percentage from T003 curve at row W
         - Uova = [NumGalline] × [Produzione] × 7 (rounded to nearest 100)
+
+        Fine ciclo (Data_Fine_Prevista from T001) is the authoritative end date when set.
+        When not set, lifecycle_max (eta_fine_ciclo from cycle settings) is used as default.
         """
         results = []
-        
+
         # --- Variables from RULES.md ---
         num_galline = lotto['Capi']  # [NumGalline]
         curva_da_usare = lotto.get('Curva_Produzione')  # [GeneticaGalline] / Curve to use
         prodotto = lotto.get('Prodotto')  # Destination product
         lotto_id = lotto.get('id')
-        
+
+        # Parse Data_Fine_Prevista from T001 once per lotto
+        fine_prod = lotto.get('Data_Fine_Prevista')
+        fine_year = None
+        fine_week = None
+        has_fine_ciclo = False
+        if fine_prod and '/' in str(fine_prod):
+            try:
+                fine_year, fine_week = map(int, str(fine_prod).strip().split('/'))
+                has_fine_ciclo = True
+            except:
+                pass
+
         # Skip if no curve assigned
         if not curva_da_usare or curva_da_usare not in df_curve.columns:
             return results
-        
+
         # Get curve data (W column + curve column)
         subset = df_curve[['W', curva_da_usare]].dropna()
-        
+
         for _, row in subset.iterrows():
             try:
                 # Parse W value (age of hens in weeks)
                 val_w = str(row['W']).replace(',', '.').strip()
                 if not val_w.replace('.', '', 1).isdigit():
                     continue
-                    
+
                 eta_gallina = float(val_w)  # [EtaGalline]
-                
-                # Skip weeks outside productive lifecycle (RULES.md: W 24-64)
-                if eta_gallina < ProductionService.LIFECYCLE_MIN or eta_gallina > ProductionService.LIFECYCLE_MAX:
+
+                # Skip pre-productive weeks (RULES.md: W 24+ starts production)
+                if eta_gallina < ProductionService.LIFECYCLE_MIN:
                     continue
-                
+
+                # When no fine ciclo is set in T001, apply the default lifecycle max
+                # (eta_fine_ciclo from cycle settings). When fine ciclo IS set, it is
+                # the authoritative cutoff — do not limit by lifecycle_max so the full
+                # curve range is evaluated and filtered by Data_Fine_Prevista below.
+                if not has_fine_ciclo and eta_gallina > lifecycle_max:
+                    continue
+
                 # Get production percentage from curve [Produzione]
                 produzione = pulisci_percentuale(row[curva_da_usare])
-                
+
                 if produzione <= 0:
                     continue
-                
+
                 # Calculate real calendar week from lotto start + hen age
                 sett_offset = lotto['Sett_Start'] + eta_gallina
                 anno_curr = lotto['Anno_Start']
-                
+
                 # Normalize year/week overflow
                 year, week = ProductionService._normalize_year_week(anno_curr, sett_offset)
-                
-                # Check "Data Fine Prevista" (end date)
-                fine_prod = lotto.get('Data_Fine_Prevista')
-                if fine_prod and '/' in str(fine_prod):
-                    try:
-                        fy, fw = map(int, str(fine_prod).strip().split('/'))
-                        if year > fy or (year == fy and week > fw):
-                            continue
-                    except:
-                        pass
+
+                # Check "Data Fine Prevista" (fine ciclo from T001) — authoritative cutoff
+                if has_fine_ciclo:
+                    if year > fine_year or (year == fine_year and week > fine_week):
+                        continue
                 
                 # --- RULES.md Formula ---
                 # Uova Prodotte = [NumGalline] × [Produzione] × 7
@@ -164,7 +182,14 @@ class ProductionService:
         df_curve = carica_dati_v20()
         if df_curve.empty:
             return []
-        
+
+        # Load eta_fine_ciclo from cycle settings (default: LIFECYCLE_MAX constant)
+        try:
+            cycle_settings = get_cycle_settings()
+            lifecycle_max = cycle_settings.get('eta_fine_ciclo', ProductionService.LIFECYCLE_MAX)
+        except Exception:
+            lifecycle_max = ProductionService.LIFECYCLE_MAX
+
         # 2. GET LOTTI
         lotti_db = get_lotti()
         lotti_attivi = [l for l in lotti_db if l.get('Attivo', True)]
@@ -212,7 +237,7 @@ class ProductionService:
                         production_entries.append(entry)
             else:
                 # Calculate and cache
-                lotto_production = ProductionService._calculate_production_for_lotto(lotto, df_curve)
+                lotto_production = ProductionService._calculate_production_for_lotto(lotto, df_curve, lifecycle_max)
                 production_entries.extend(lotto_production)
                 new_cache_entries.extend(lotto_production)
         
