@@ -232,12 +232,12 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
 
                         const weekData = weeklyByProduct.get(periodo)!;
 
-                        // Add purchases by product from columns like "Amadori_Granpollo"
+                        // Add purchases by product from columns like "Amadori_Granpollo_Razza"
                         tradingDataAcquisti.columns.forEach((col: string) => {
                             if (col === 'Periodo') return;
                             const parts = col.split('_');
                             if (parts.length >= 2) {
-                                const prodotto = parts.slice(1).join('_'); // Handle "Color Yeald"
+                                const prodotto = parts[1]; // Column format: azienda_prodotto_razza
                                 if (prodotto in weekData) {
                                     weekData[prodotto] += row[col] || 0;
                                 }
@@ -254,12 +254,12 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
 
                         const weekData = weeklyByProduct.get(periodo)!;
 
-                        // Subtract sales by product from columns like "Amadori_Granpollo"
+                        // Subtract sales by product from columns like "Amadori_Granpollo_Razza"
                         tradingDataVendite.columns.forEach((col: string) => {
                             if (col === 'Periodo') return;
                             const parts = col.split('_');
                             if (parts.length >= 2) {
-                                const prodotto = parts.slice(1).join('_'); // Handle "Color Yeald"
+                                const prodotto = parts[1]; // Column format: azienda_prodotto_razza
                                 if (prodotto in weekData) {
                                     weekData[prodotto] -= row[col] || 0;
                                     // Keep non-negative
