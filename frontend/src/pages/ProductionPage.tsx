@@ -286,8 +286,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
             const allShedKeys = new Set<string>();
             data.forEach(week => {
                 week.dettagli_produzione.forEach(detail => {
-                    const product = allevamentoProductMap.get(detail.allevamento);
-                    if (product === chartProductFilter) {
+                    if (detail.prodotto === chartProductFilter) {
                         allShedKeys.add(`${chartProductFilter}_${detail.allevamento}`);
                     }
                 });
@@ -317,8 +316,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
 
                 // Sum production by shed for this product
                 week.dettagli_produzione.forEach(detail => {
-                    const product = allevamentoProductMap.get(detail.allevamento);
-                    if (product === chartProductFilter) {
+                    if (detail.prodotto === chartProductFilter) {
                         // Use product_shedname as key
                         const shedKey = `${chartProductFilter}_${detail.allevamento}`;
                         weekData[shedKey] = (weekData[shedKey] || 0) + detail.quantita;
