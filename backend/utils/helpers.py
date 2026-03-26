@@ -57,9 +57,74 @@ def carica_dati_v20():
         return pd.DataFrame()
 
 
+def migrate_t003_extend_to_w75():
+    """
+    Migration: extend standard_curves from W64 to W75.
+    Each new week = previous week value - 1 percentage point.
+    Runs idempotently: does nothing if W > 64 rows already exist.
+    """
+    import sqlite3 as _sqlite3
+    import os as _os
+    TARGET_MAX_W = 75
+    db_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'incubatoio.db')
+    try:
+        conn = _sqlite3.connect(db_path)
+        df = pd.read_sql("SELECT * FROM standard_curves", conn)
+        df.columns = df.columns.str.replace(r'\s+', ' ', regex=True).str.strip()
+        df['W'] = pd.to_numeric(df['W'], errors='coerce')
+        current_max = df['W'].max()
+        if pd.isna(current_max) or current_max >= TARGET_MAX_W:
+            conn.close()
+            print(f"T003 migration: already at W{int(current_max) if not pd.isna(current_max) else '?'}, skipping.")
+            return
+        curve_cols = [c for c in df.columns if c != 'W']
+        last_row = df[df['W'] == current_max].iloc[0]
+        # Parse current percentage values (stored as "64,71%" or "0.6471")
+        current_vals = {}
+        for col in curve_cols:
+            val = last_row[col]
+            parsed = None
+            if val is not None and val != '' and not (isinstance(val, float) and pd.isna(val)):
+                s = str(val).replace('%', '').replace(',', '.').strip()
+                try:
+                    v = float(s)
+                    parsed = v * 100 if v < 2 else v
+                except ValueError:
+                    pass
+            current_vals[col] = parsed
+        new_rows = []
+        for w in range(int(current_max) + 1, TARGET_MAX_W + 1):
+            row = {'W': float(w)}
+            for col in curve_cols:
+                if current_vals[col] is None:
+                    row[col] = None
+                else:
+                    new_val = max(0.0, current_vals[col] - 1.0)
+                    row[col] = f"{new_val:.2f}%".replace('.', ',')
+                    current_vals[col] = new_val
+            new_rows.append(row)
+        new_df = pd.DataFrame(new_rows)
+        df_extended = pd.concat([df, new_df], ignore_index=True)
+        df_extended.to_sql("standard_curves", conn, if_exists='replace', index=False)
+        conn.commit()
+        print(f"T003 migration: extended standard_curves from W{int(current_max)} to W{TARGET_MAX_W}.")
+        # Also bump cycle_settings.eta_fine_ciclo if it's still at the old default (<=64)
+        try:
+            settings_row = conn.execute("SELECT id, eta_fine_ciclo FROM cycle_settings LIMIT 1").fetchone()
+            if settings_row and settings_row[1] <= 64:
+                conn.execute("UPDATE cycle_settings SET eta_fine_ciclo = ? WHERE id = ?", (TARGET_MAX_W, settings_row[0]))
+                conn.commit()
+                print(f"T003 migration: updated cycle_settings.eta_fine_ciclo to {TARGET_MAX_W}.")
+        except Exception as ce:
+            print(f"T003 migration: could not update cycle_settings: {ce}")
+        conn.close()
+    except Exception as e:
+        print(f"T003 migration error: {e}")
+
+
 def seed_database():
     """Seeds the database with default data if empty."""
-    
+
     # 0. INIT DB
     try:
         init_db()
@@ -71,6 +136,9 @@ def seed_database():
         print("Trading tables initialized.")
     except Exception as e:
         print(f"DB Init Error: {e}")
+
+    # Extend T003 curves to W75 if not already done
+    migrate_t003_extend_to_w75()
 
     # 1. LOTTI (CHECK IF EMPTY)
     current_lotti = get_lotti()
