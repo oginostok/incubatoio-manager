@@ -214,7 +214,7 @@ export function CycleWeeklyTable({ lottoId, annoStart, settStart, dataFinePrevis
 
     const renderEditableCell = (row: DisplayRow, field: string, type: ColType = 'number') => {
         const isEditing = editingCell?.rowEta === row.eta_animali && editingCell?.field === field;
-        const rawValue = (row as Record<string, unknown>)[field];
+        const rawValue = (row as unknown as Record<string, unknown>)[field];
         const isPhantom = row.id === null;
 
         if (isEditing) {
