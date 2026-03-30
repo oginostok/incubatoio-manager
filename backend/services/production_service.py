@@ -206,17 +206,22 @@ class ProductionService:
         if product_filter:
             lotti_attivi = [l for l in lotti_attivi if l.get('Prodotto') == product_filter]
         
-        # Build lotto_id -> allevamento map for cache reconstruction
+        # Build lotto_id -> allevamento/genetics map for cache reconstruction
         lotto_allevamento_map = {}
+        lotto_razza_map = {}
         for lotto in lotti_db:
             lotto_id = lotto.get('id')
             lotto_allevamento_map[lotto_id] = f"{lotto['Allevamento']} {lotto['Capannone']}"
-        
+            lotto_razza_map[lotto_id] = {
+                "razza": lotto.get('Razza', ''),
+                "razza_gallo": lotto.get('Razza_Gallo', '')
+            }
+
         # 3. CHECK CACHE
         cached = get_valid_cache(product_filter)
         cache_by_key = {}
         cached_lotto_ids = set()
-        
+
         if cached:
             for c in cached:
                 key = (c.anno, c.settimana, c.lotto_id)
@@ -226,6 +231,7 @@ class ProductionService:
                     "lotto_id": c.lotto_id,
                     "prodotto": c.prodotto,
                     "uova": c.uova,
+                    "eta": c.eta if c.eta else 0,
                     "allevamento": lotto_allevamento_map.get(c.lotto_id, f"Lotto {c.lotto_id}")
                 }
                 cached_lotto_ids.add(c.lotto_id)
@@ -259,11 +265,15 @@ class ProductionService:
             key = (entry['anno'], entry['settimana'])
             if key not in production_data:
                 production_data[key] = []
+            lotto_id = entry.get('lotto_id')
+            razza_info = lotto_razza_map.get(lotto_id, {})
             production_data[key].append({
-                "allevamento": entry.get('allevamento', f"Lotto {entry['lotto_id']}"),
+                "allevamento": entry.get('allevamento', f"Lotto {lotto_id}"),
                 "quantita": entry['uova'],
                 "eta": entry.get('eta', 0),
-                "prodotto": entry['prodotto']
+                "prodotto": entry['prodotto'],
+                "razza": razza_info.get('razza', ''),
+                "razza_gallo": razza_info.get('razza_gallo', '')
             })
         
         # 7. GET TRADING DATA (T004 Purchases, T005 Sales)

@@ -157,16 +157,6 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
         initialLoad();
     }, []);
 
-    // Create allevamento -> product map
-    const allevamentoProductMap = useMemo(() => {
-        const map = new Map<string, string>();
-        lotti.forEach(lotto => {
-            const key = `${lotto.Allevamento} ${lotto.Capannone}`;
-            map.set(key, lotto.Prodotto);
-        });
-        return map;
-    }, [lotti]);
-
     // Fetch product-specific data when a product is selected
     useEffect(() => {
         if (chartProductFilter !== 'all') {
@@ -215,7 +205,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
 
                 // Sum production by product
                 week.dettagli_produzione.forEach(detail => {
-                    const product = allevamentoProductMap.get(detail.allevamento);
+                    const product = detail.prodotto;
                     if (product && product in weekData) {
                         weekData[product] += detail.quantita;
                     }
@@ -357,7 +347,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                 }))
                 .sort((a, b) => a.periodo.localeCompare(b.periodo));
         }
-    }, [data, chartProductFilter, startPeriod, effectiveEndPeriod, allevamentoProductMap, includeTradingData, tradingDataAcquisti, tradingDataVendite]);
+    }, [data, chartProductFilter, startPeriod, effectiveEndPeriod, includeTradingData, tradingDataAcquisti, tradingDataVendite]);
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
             {/* SIDEBAR */}

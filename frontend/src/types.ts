@@ -3,6 +3,8 @@ export interface ProductionDetail {
     quantita: number;
     eta: number;
     prodotto: string;
+    razza?: string;
+    razza_gallo?: string;
 }
 
 export interface PurchaseDetail {

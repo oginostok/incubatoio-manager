@@ -107,7 +107,7 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                             {expandedRow === row.periodo && includeTradingData && (
                                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                                     <TableCell colSpan={6} className="p-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
+                                        <div className={`grid grid-cols-1 ${row.dettagli_acquisti.length > 0 ? 'md:grid-cols-2' : ''} gap-6 animate-in slide-in-from-top-2 duration-200`}>
 
                                             {/* PRODUCTION DETAILS */}
                                             <Card className="shadow-sm border-l-4 border-l-green-500">
@@ -124,6 +124,13 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                                                     <div>
                                                                         <span className="font-medium text-foreground">{d.allevamento}</span>
                                                                         <div className="text-xs text-muted-foreground">Età: {d.eta} settimane</div>
+                                                                        {(d.razza || d.razza_gallo) && (
+                                                                            <div className="text-xs text-muted-foreground">
+                                                                                {d.razza && <span>Gallina: {d.razza}</span>}
+                                                                                {d.razza && d.razza_gallo && <span className="mx-1">·</span>}
+                                                                                {d.razza_gallo && <span>Gallo: {d.razza_gallo}</span>}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                     <div className="font-mono font-bold text-green-700">
                                                                         {fmt(d.quantita)}
@@ -137,15 +144,15 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                                 </CardContent>
                                             </Card>
 
-                                            {/* PURCHASE DETAILS */}
-                                            <Card className="shadow-sm border-l-4 border-l-blue-500">
-                                                <CardContent className="pt-6">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <ShoppingCart className="w-5 h-5 text-blue-600" />
-                                                        <h3 className="font-semibold text-lg">Dettaglio Acquisti</h3>
-                                                    </div>
+                                            {/* PURCHASE DETAILS - only shown when there are purchases */}
+                                            {row.dettagli_acquisti.length > 0 && (
+                                                <Card className="shadow-sm border-l-4 border-l-blue-500">
+                                                    <CardContent className="pt-6">
+                                                        <div className="flex items-center gap-2 mb-4">
+                                                            <ShoppingCart className="w-5 h-5 text-blue-600" />
+                                                            <h3 className="font-semibold text-lg">Dettaglio Acquisti</h3>
+                                                        </div>
 
-                                                    {row.dettagli_acquisti.length > 0 ? (
                                                         <div className="space-y-3">
                                                             {row.dettagli_acquisti.map((d, i) => (
                                                                 <div key={i} className="flex justify-between items-center text-sm border-b border-dashed pb-2 last:border-0 last:pb-0">
@@ -156,11 +163,9 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                    ) : (
-                                                        <p className="text-sm text-muted-foreground italic">Nessun acquisto per questa settimana</p>
-                                                    )}
-                                                </CardContent>
-                                            </Card>
+                                                    </CardContent>
+                                                </Card>
+                                            )}
 
                                         </div>
                                     </TableCell>

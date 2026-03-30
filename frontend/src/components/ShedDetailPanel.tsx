@@ -318,9 +318,13 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                                         lottoId={lotto.id}
                                         annoStart={lotto.Anno_Start}
                                         settStart={lotto.Sett_Start}
+                                        dataFinePrevista={lotto.Data_Fine_Prevista}
                                     />
                                 ) : (
-                                    <FarmChart data={chartDataCache[lotto.id] || []} />
+                                    <FarmChart
+                                        data={chartDataCache[lotto.id] || []}
+                                        capiPresenti={lotto.Capi || 0}
+                                    />
                                 )}
                             </div>
                         )}

@@ -11,6 +11,7 @@ Uso:
 
 import argparse
 import datetime
+import random
 import sys
 import time
 
@@ -31,6 +32,8 @@ except ImportError:
 
 DEFAULT_BASE_URL = "http://localhost:8000"
 ETA_INIZIO_CICLO_DEFAULT = 24   # settimane minime per essere "in produzione"
+
+PRODUCTS = ["Granpollo", "Pollo70", "Color Yeald", "Ross"]
 
 
 # ---------------------------------------------------------------------------
@@ -327,6 +330,79 @@ def run_checks(lotti: list, farm_structure: dict, prod_summary: list,
 
 
 # ---------------------------------------------------------------------------
+# CHECK 7 – G001: coerenza "tutti i prodotti" vs per-prodotto (campione casuale)
+# ---------------------------------------------------------------------------
+
+def check_g001_consistency(
+    session: "requests.Session",
+    api: str,
+    prod_summary_all: list,
+    n_every: int = 10,
+) -> tuple[list[str], list[tuple[int, int]]]:
+    """
+    Campiona casualmente 1 settimana ogni n_every e confronta i totali
+    per-prodotto della vista 'tutti' con quelli delle API filtrate per prodotto.
+
+    Ritorna (lista_anomalie, settimane_campionate).
+    """
+    issues: list[str] = []
+
+    # Costruisce mappa (anno, settimana) → {prodotto: totale} dalla vista "tutti"
+    all_by_week: dict[tuple, dict] = {}
+    for entry in prod_summary_all:
+        key = (entry["anno"], entry["settimana"])
+        totals: dict[str, int] = {}
+        for det in entry.get("dettagli_produzione", []):
+            prod = det.get("prodotto", "")
+            totals[prod] = totals.get(prod, 0) + det.get("quantita", 0)
+        all_by_week[key] = totals
+
+    all_weeks = sorted(all_by_week.keys())
+    if not all_weeks:
+        return issues, []
+
+    # Campiona 1 settimana casuale per ogni gruppo di n_every
+    sampled: list[tuple[int, int]] = []
+    for i in range(0, len(all_weeks), n_every):
+        group = all_weeks[i : i + n_every]
+        sampled.append(random.choice(group))
+
+    # Scarica le summary per-prodotto
+    product_summaries: dict[str, list] = {}
+    for product in PRODUCTS:
+        encoded = requests.utils.quote(product)
+        product_summaries[product] = fetch(session, f"{api}/production/summary?product={encoded}")
+
+    # Costruisce mappa (anno, settimana) → {prodotto: totale} dalle API per-prodotto
+    pp_by_week: dict[tuple, dict] = {}
+    for product, summary in product_summaries.items():
+        for entry in summary:
+            key = (entry["anno"], entry["settimana"])
+            if key not in pp_by_week:
+                pp_by_week[key] = {}
+            total = sum(d["quantita"] for d in entry.get("dettagli_produzione", []))
+            pp_by_week[key][product] = total
+
+    # Confronta le settimane campionate
+    for yw in sorted(sampled):
+        label = week_label(*yw)
+        all_totals = all_by_week.get(yw, {})
+        pp_totals  = pp_by_week.get(yw, {})
+
+        for product in PRODUCTS:
+            v_all = all_totals.get(product, 0)
+            v_pp  = pp_totals.get(product, 0)
+            if v_all != v_pp:
+                issues.append(
+                    f"[G001] Settimana {label} — {product}: "
+                    f"vista 'tutti' = {v_all:,} vs per-prodotto = {v_pp:,} "
+                    f"(Δ {v_all - v_pp:+,})"
+                )
+
+    return issues, sampled
+
+
+# ---------------------------------------------------------------------------
 # Stampa report
 # ---------------------------------------------------------------------------
 
@@ -419,8 +495,8 @@ def run_once(base_url: str, run_num: int):
     else:
         print("  (nessun dato di produzione trovato in G001)")
 
-    # ---- Checks ----
-    print_section("ANALISI COERENZA")
+    # ---- Checks V001/T001/G001 ----
+    print_section("ANALISI COERENZA V001/T001/G001")
     issues = run_checks(lotti, farm_structure, prod_summary, eta_inizio, eta_fine)
 
     if not issues:
@@ -429,6 +505,22 @@ def run_once(base_url: str, run_num: int):
         print(f"\n  ⚠️   Trovate {len(issues)} anomalie:\n")
         for i, issue in enumerate(issues, 1):
             print(f"  {i:2d}. {issue}")
+
+    # ---- CHECK 7: G001 coerenza tutti vs per-prodotto ----
+    print_section("CHECK 7 — G001: 'tutti i prodotti' vs per-prodotto (campione casuale)")
+    g001_issues, sampled_weeks = check_g001_consistency(session, api, prod_summary)
+    sampled_labels = [week_label(*w) for w in sorted(sampled_weeks)]
+    if sampled_labels:
+        print(f"  Settimane campionate ({len(sampled_labels)}): {', '.join(sampled_labels)}")
+    else:
+        print("  Nessuna settimana disponibile per il campionamento.")
+    if not g001_issues:
+        print("  ✅  Nessuna discrepanza — i totali G001 sono consistenti.")
+    else:
+        print(f"\n  ⚠️   Trovate {len(g001_issues)} discrepanze:\n")
+        for iss in g001_issues:
+            print(f"    • {iss}")
+    issues.extend(g001_issues)
 
     return issues
 

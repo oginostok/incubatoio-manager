@@ -87,6 +87,7 @@ class ProductionCache(Base):
     lotto_id = Column(Integer, index=True)  # FK verso lotti
     prodotto = Column(String, index=True)
     uova = Column(Integer)
+    eta = Column(Integer, default=0)  # Age in weeks (eta_gallina)
     valid = Column(Boolean, default=True)
     calculated_at = Column(DateTime, default=datetime.utcnow)
 
@@ -367,6 +368,12 @@ def init_db():
              pass
         try:
              conn.execute(text("ALTER TABLE trading_data ADD COLUMN razza VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
+        # Production cache eta migration
+        try:
+             conn.execute(text("ALTER TABLE production_cache ADD COLUMN eta INTEGER DEFAULT 0"))
              conn.commit()
         except Exception:
              pass
@@ -710,6 +717,7 @@ def save_production_cache_bulk(cache_entries: list):
             
             if existing:
                 existing.uova = entry['uova']
+                existing.eta = entry.get('eta', 0)
                 existing.prodotto = entry['prodotto']
                 existing.valid = True
                 existing.calculated_at = datetime.utcnow()
@@ -720,6 +728,7 @@ def save_production_cache_bulk(cache_entries: list):
                     lotto_id=entry['lotto_id'],
                     prodotto=entry['prodotto'],
                     uova=entry['uova'],
+                    eta=entry.get('eta', 0),
                     valid=True,
                     calculated_at=datetime.utcnow()
                 )
