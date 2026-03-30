@@ -2,6 +2,7 @@ export interface ProductionDetail {
     allevamento: string;
     quantita: number;
     eta: number;
+    prodotto: string;
 }
 
 export interface PurchaseDetail {

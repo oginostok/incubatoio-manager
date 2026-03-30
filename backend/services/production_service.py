@@ -23,7 +23,7 @@ class ProductionService:
     
     # Constants from RULES.md
     LIFECYCLE_MIN = 25  # W 24+ starts production (we use 25 as first productive week)
-    LIFECYCLE_MAX = 64  # W 65+ ends production
+    LIFECYCLE_MAX = 75  # W 76+ ends production
     
     @staticmethod
     def get_start_date_from_year_week(year: int, week: int) -> datetime.date:
@@ -44,7 +44,7 @@ class ProductionService:
         return (int(year), int(week))
     
     @staticmethod
-    def _calculate_production_for_lotto(lotto: dict, df_curve, lifecycle_max: int) -> List[Dict]:
+    def _calculate_production_for_lotto(lotto: dict, df_curve, lifecycle_max: int = None) -> List[Dict]:
         """
         Calculates production for a single lotto across all weeks.
         Returns list of {anno, settimana, lotto_id, prodotto, uova, allevamento, eta}
@@ -59,6 +59,14 @@ class ProductionService:
         When not set, lifecycle_max (eta_fine_ciclo from cycle settings) is used as default.
         """
         results = []
+
+        # Resolve lifecycle_max if not provided (load from cycle settings)
+        if lifecycle_max is None:
+            try:
+                cycle_settings = get_cycle_settings()
+                lifecycle_max = cycle_settings.get('eta_fine_ciclo', ProductionService.LIFECYCLE_MAX)
+            except Exception:
+                lifecycle_max = ProductionService.LIFECYCLE_MAX
 
         # --- Variables from RULES.md ---
         num_galline = lotto['Capi']  # [NumGalline]

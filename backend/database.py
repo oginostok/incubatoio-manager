@@ -124,7 +124,7 @@ class CycleSettings(Base):
     
     id = Column(Integer, primary_key=True, default=1)
     eta_inizio_ciclo = Column(Integer, default=24)
-    eta_fine_ciclo = Column(Integer, default=64)
+    eta_fine_ciclo = Column(Integer, default=75)
     
     def to_dict(self):
         return {
@@ -879,7 +879,7 @@ def get_cycle_settings():
             settings = CycleSettings(
                 id=1,
                 eta_inizio_ciclo=24,
-                eta_fine_ciclo=64
+                eta_fine_ciclo=75
             )
             db.add(settings)
             db.commit()
