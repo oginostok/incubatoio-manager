@@ -1069,22 +1069,22 @@ def update_birth_rate(week: int, product: str, rate: float):
         db.close()
 
 def seed_birth_rates():
-    """Seeds default birth rates (82.00%) for all weeks (24-64) and products."""
+    """Seeds default birth rates (82.00%) for all weeks (24-75) and products."""
     db = SessionLocal()
     try:
         # Check if already seeded
         existing = db.query(BirthRate).first()
         if existing:
             return  # Already seeded
-        
+
         products = ["granpollo", "pollo70", "colorYeald", "ross"]
-        for week in range(24, 65):  # 24 to 64 inclusive
+        for week in range(24, 76):  # 24 to 75 inclusive
             for product in products:
                 rate = BirthRate(week=week, product=product, rate=82.00)
                 db.add(rate)
-        
+
         db.commit()
-        print(f"Seeded birth rates: {41 * 4} entries (W24-W64 x 4 products)")
+        print(f"Seeded birth rates: {52 * 4} entries (W24-W75 x 4 products)")
     finally:
         db.close()
 

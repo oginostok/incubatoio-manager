@@ -142,7 +142,7 @@ export default function BirthRatesTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.from({ length: 64 - 24 + 1 }, (_, i) => 24 + i).map((week, index) => (
+                        {Array.from({ length: 75 - 24 + 1 }, (_, i) => 24 + i).map((week, index) => (
                             <tr
                                 key={week}
                                 className={`hover:bg-gray-200 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-100"

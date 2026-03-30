@@ -44,8 +44,8 @@ def get_all_birth_rates():
 @router.put("")
 def update_rate(update: BirthRateUpdate):
     """Update a single birth rate value."""
-    if update.week < 24 or update.week > 64:
-        raise HTTPException(status_code=400, detail="Week must be between 24 and 64")
+    if update.week < 24 or update.week > 75:
+        raise HTTPException(status_code=400, detail="Week must be between 24 and 75")
     
     valid_products = ["granpollo", "pollo70", "colorYeald", "ross"]
     if update.product not in valid_products:
