@@ -5,11 +5,24 @@ __pycache__/
 
 # Database
 incubatoio.db
+*.db
 *.sqlite3
-backup_*.db
 
-# Claude Code
+# Backup files
+*.backup
+backup_*/
+
+# Logs
+*.log
+
+# Claude Code / AI tools
 .claude/
+.agent/
+
+# Development / internal notes
+OLD/
+SVILUPPO/
+ISSUES/
 
 # Environment variables
 .env
