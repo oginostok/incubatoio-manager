@@ -26,10 +26,6 @@ function colorForId(id: number): string {
     return PILL_COLORS[id % PILL_COLORS.length];
 }
 
-function isoToYMD(iso: string): { y: number; m: number; d: number } {
-    const [y, m, d] = iso.split('-').map(Number);
-    return { y, m, d };
-}
 
 function dateInRange(date: Date, inizio: string, fine: string): boolean {
     const d = date.getTime();

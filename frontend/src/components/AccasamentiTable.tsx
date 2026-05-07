@@ -139,16 +139,6 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
         return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     };
 
-    // Returns ISO date string (YYYY-MM-DD) for the Monday of (anno, sett) + weeksToAdd weeks
-    const calcEndDate = (anno: number, sett: number, weeksToAdd: number): string => {
-        const jan4 = new Date(anno, 0, 4);
-        const dow = jan4.getDay() || 7;
-        const monday = new Date(jan4);
-        monday.setDate(jan4.getDate() - dow + 1 + (sett - 1) * 7);
-        monday.setDate(monday.getDate() + weeksToAdd * 7);
-        return monday.toISOString().split('T')[0];
-    };
-
     const getLottoStatus = (lotto: Lotto): { label: string; color: string } => {
         const currentWeeks = getCurrentWeek(lotto);
 

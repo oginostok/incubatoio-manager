@@ -224,7 +224,6 @@ export function SchedaSettimanale() {
                 setNote("");
                 setPesi({ pesoGalline: "", pesoGallineAtteso: "", pesoGalli: "", pesoGalliAtteso: "" });
                 setRows(Array.from({ length: 7 }, () => ({ ...EMPTY_ROW })));
-                setTrattamenti([{ prodotto: "", da: "", a: "" }, { prodotto: "", da: "", a: "" }]);
                 setSaveStatus("idle");
             }
         });

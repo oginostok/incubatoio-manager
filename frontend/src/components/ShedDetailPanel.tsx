@@ -62,7 +62,7 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose, hideProduzione = fal
     const [viewMode, setViewMode] = useState<"table" | "chart">("table");
     const [chartDataCache, setChartDataCache] = useState<Record<number, WeeklyData[]>>({});
 
-    const closeAllSections = (exceptId: number | null, except: 'advanced' | 'treatments' | 'weights') => {
+    const closeAllSections = (_exceptId: number | null, except: 'advanced' | 'treatments' | 'weights') => {
         if (except !== 'advanced') setExpandedAdvanced(null);
         if (except !== 'treatments') setExpandedTreatments(null);
         if (except !== 'weights') setExpandedWeights(null);
