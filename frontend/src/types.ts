@@ -12,6 +12,11 @@ export interface PurchaseDetail {
     quantita: number;
 }
 
+export interface SaleDetail {
+    azienda: string;
+    quantita: number;
+}
+
 export interface WeeklySummary {
     periodo: string;
     anno: number;
@@ -22,6 +27,7 @@ export interface WeeklySummary {
     totale_netto: number;
     dettagli_produzione: ProductionDetail[];
     dettagli_acquisti: PurchaseDetail[];
+    dettagli_vendite: SaleDetail[];
 }
 
 // Allevamenti Types
@@ -37,6 +43,7 @@ export interface Lotto {
     Sett_Start: number;
     Data_Fine_Prevista?: string;
     Curva_Produzione?: string;
+    Fase?: string | null;
     Attivo: boolean;
 }
 
@@ -51,6 +58,7 @@ export interface LottoCreate {
     Sett_Start: number;
     Data_Fine_Prevista?: string;
     Curva_Produzione?: string;
+    Fase?: string | null;
     Attivo?: boolean;
 }
 

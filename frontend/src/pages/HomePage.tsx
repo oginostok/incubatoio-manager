@@ -88,6 +88,8 @@ export default function HomePage({ onNavigate, onLogout }: HomePageProps) {
                     <FaTruck className="w-12 h-12 text-teal-600 group-hover:scale-110 transition-transform" />
                     <span className="text-xl font-bold text-gray-700">TRASPORTI</span>
                 </button>
+
+
             </div>
 
             {/* Exit Button */}

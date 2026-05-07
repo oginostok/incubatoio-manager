@@ -1,5 +1,5 @@
 import { useState, Fragment } from "react";
-import { ChevronDown, ChevronRight, Egg, ShoppingCart } from "lucide-react";
+import { ChevronDown, ChevronRight, Egg, ShoppingCart, TrendingDown } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -104,12 +104,12 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                 </TableCell>
                             </TableRow>
 
-                            {expandedRow === row.periodo && includeTradingData && (
+                            {expandedRow === row.periodo && (
                                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                    <TableCell colSpan={6} className="p-4">
-                                        <div className={`grid grid-cols-1 ${row.dettagli_acquisti.length > 0 ? 'md:grid-cols-2' : ''} gap-6 animate-in slide-in-from-top-2 duration-200`}>
+                                    <TableCell colSpan={includeTradingData ? 6 : 4} className="p-4">
+                                        <div className={`grid grid-cols-1 ${includeTradingData && (row.dettagli_acquisti.length > 0 || row.dettagli_vendite.length > 0) ? 'md:grid-cols-2 lg:grid-cols-3' : ''} gap-6 animate-in slide-in-from-top-2 duration-200`}>
 
-                                            {/* PRODUCTION DETAILS */}
+                                            {/* PRODUCTION DETAILS - always visible */}
                                             <Card className="shadow-sm border-l-4 border-l-green-500">
                                                 <CardContent className="pt-6">
                                                     <div className="flex items-center gap-2 mb-4">
@@ -144,8 +144,8 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                                 </CardContent>
                                             </Card>
 
-                                            {/* PURCHASE DETAILS - only shown when there are purchases */}
-                                            {row.dettagli_acquisti.length > 0 && (
+                                            {/* PURCHASE DETAILS - only when trading data enabled and there are purchases */}
+                                            {includeTradingData && row.dettagli_acquisti.length > 0 && (
                                                 <Card className="shadow-sm border-l-4 border-l-blue-500">
                                                     <CardContent className="pt-6">
                                                         <div className="flex items-center gap-2 mb-4">
@@ -158,6 +158,29 @@ export function WeeklySummaryTable({ data, includeTradingData = true }: WeeklySu
                                                                 <div key={i} className="flex justify-between items-center text-sm border-b border-dashed pb-2 last:border-0 last:pb-0">
                                                                     <span className="font-medium text-foreground">{d.azienda}</span>
                                                                     <div className="font-mono font-bold text-blue-600">
+                                                                        {fmt(d.quantita)}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            )}
+
+                                            {/* SALE DETAILS - only when trading data enabled and there are sales */}
+                                            {includeTradingData && row.dettagli_vendite.length > 0 && (
+                                                <Card className="shadow-sm border-l-4 border-l-orange-500">
+                                                    <CardContent className="pt-6">
+                                                        <div className="flex items-center gap-2 mb-4">
+                                                            <TrendingDown className="w-5 h-5 text-orange-600" />
+                                                            <h3 className="font-semibold text-lg">Dettaglio Vendite</h3>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            {row.dettagli_vendite.map((d, i) => (
+                                                                <div key={i} className="flex justify-between items-center text-sm border-b border-dashed pb-2 last:border-0 last:pb-0">
+                                                                    <span className="font-medium text-foreground">{d.azienda}</span>
+                                                                    <div className="font-mono font-bold text-orange-600">
                                                                         {fmt(d.quantita)}
                                                                     </div>
                                                                 </div>

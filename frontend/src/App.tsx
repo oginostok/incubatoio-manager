@@ -7,7 +7,6 @@ import PulciniPage from "@/pages/PulciniPage";
 import LetturaCodicePage from "@/pages/LetturaCodicePage";
 import TrasportiPage from "@/pages/TrasportiPage";
 import LoginPage from "@/pages/LoginPage";
-
 type Page = "home" | "incubatoio" | "allevamenti" | "produzioni_uova" | "produzioni_pulcini" | "lettura_codice" | "trasporti";
 
 function App() {

@@ -13,6 +13,8 @@ interface AccasamentiTableProps {
     lotti: Lotto[];
     farmStructure: FarmStructure;
     onUpdate: () => void;
+    fase?: string;         // Se presente, ogni nuovo lotto viene creato con questo valore di Fase
+    tableLabel?: string;   // Etichetta tabella (default "T001")
 }
 
 const PRODUCT_OPTIONS = ["Granpollo", "Pollo70", "Color Yeald", "Ross"];
@@ -33,7 +35,7 @@ interface DeleteConfirmation {
 
 const API_BASE = API_BASE_URL;
 
-export function AccasamentiTable({ lotti, farmStructure, onUpdate }: AccasamentiTableProps) {
+export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLabel = "T001" }: AccasamentiTableProps) {
     const [showForm, setShowForm] = useState(false);
     const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
     const [cellStatus, setCellStatus] = useState<{ [key: string]: CellStatus }>({});
@@ -57,6 +59,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
         Sett_Start: 1,
         Data_Fine_Prevista: "",
         Curva_Produzione: "ROSS 308 STANDARD",
+        Fase: fase ?? null,
         Attivo: true,
     });
 
@@ -136,24 +139,38 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
         return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     };
 
+    // Returns ISO date string (YYYY-MM-DD) for the Monday of (anno, sett) + weeksToAdd weeks
+    const calcEndDate = (anno: number, sett: number, weeksToAdd: number): string => {
+        const jan4 = new Date(anno, 0, 4);
+        const dow = jan4.getDay() || 7;
+        const monday = new Date(jan4);
+        monday.setDate(jan4.getDate() - dow + 1 + (sett - 1) * 7);
+        monday.setDate(monday.getDate() + weeksToAdd * 7);
+        return monday.toISOString().split('T')[0];
+    };
+
     const getLottoStatus = (lotto: Lotto): { label: string; color: string } => {
         const currentWeeks = getCurrentWeek(lotto);
 
-        // If Data_Fine_Prevista is set and passed, it's closed
         if (lotto.Data_Fine_Prevista) {
-            // Parse date and check if it's in the past
             const endDate = new Date(lotto.Data_Fine_Prevista);
             if (endDate < new Date()) {
-                return { label: "Chiuso", color: "text-red-600" };
+                return fase === "pollastra"
+                    ? { label: "Fine ciclo", color: "text-gray-500" }
+                    : { label: "Chiuso", color: "text-red-600" };
             }
         }
 
-        // Less than 24 weeks since start = Previsto (not producing yet)
+        if (fase === "pollastra") {
+            return currentWeeks <= 20
+                ? { label: "In crescita", color: "text-blue-600" }
+                : { label: "Fine ciclo", color: "text-gray-500" };
+        }
+
         if (currentWeeks < 24) {
             return { label: "Previsto", color: "text-blue-600" };
         }
 
-        // Otherwise, in production
         return { label: "In produzione", color: "text-green-600" };
     };
 
@@ -509,6 +526,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                 Sett_Start: 1,
                 Data_Fine_Prevista: "",
                 Curva_Produzione: "ROSS 308 STANDARD",
+                Fase: fase ?? null,
                 Attivo: true,
             });
             onUpdate();
@@ -575,7 +593,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Impostazioni Accasamenti</h2>
-                    <p className="text-xs text-gray-400">T001</p>
+                    <p className="text-xs text-gray-400">{tableLabel}</p>
                     <p className="text-gray-500">Gestisci tutti i lotti di allevamento - Doppio click per modificare</p>
                 </div>
                 <Button onClick={() => setShowForm(!showForm)} className="gap-2">
@@ -668,7 +686,12 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                                     <Input
                                         type="number"
                                         value={formData.Anno_Start}
-                                        onChange={(e) => setFormData({ ...formData, Anno_Start: parseInt(e.target.value) })}
+                                        onChange={(e) => {
+                                            const anno = parseInt(e.target.value);
+                                            const updates: Partial<typeof formData> = { Anno_Start: anno };
+                                            if (fase === "pollastra") updates.Data_Fine_Prevista = addWeeksToYYYYWW(`${anno}/${formData.Sett_Start.toString().padStart(2, '0')}`, 20);
+                                            setFormData({ ...formData, ...updates });
+                                        }}
                                     />
                                 </div>
 
@@ -677,7 +700,12 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                                     <Input
                                         type="number"
                                         value={formData.Sett_Start}
-                                        onChange={(e) => setFormData({ ...formData, Sett_Start: parseInt(e.target.value) })}
+                                        onChange={(e) => {
+                                            const sett = parseInt(e.target.value);
+                                            const updates: Partial<typeof formData> = { Sett_Start: sett };
+                                            if (fase === "pollastra") updates.Data_Fine_Prevista = addWeeksToYYYYWW(`${formData.Anno_Start}/${sett.toString().padStart(2, '0')}`, 20);
+                                            setFormData({ ...formData, ...updates });
+                                        }}
                                         min={1}
                                         max={52}
                                     />
@@ -736,17 +764,23 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                         <table className="w-full table-fixed">
                             <thead className="bg-gray-50 border-b">
                                 <tr>
-                                    <th className="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allevamento</th>
-                                    <th className="w-20 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cap.</th>
-                                    <th className="w-40 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gallina</th>
-                                    <th className="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gallo</th>
-                                    <th className="w-40 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usa dati di:</th>
-                                    <th className="w-28 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prodotto</th>
-                                    <th className="w-24 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Capi</th>
+                                    <th className="w-32 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Allevamento</th>
+                                    <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Cap.</th>
+                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Gallina</th>
+                                    <th className="w-32 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Gallo</th>
+                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Usa dati di:</th>
+                                    <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Prodotto</th>
+                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Capi</th>
                                     <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Inserire data nascita pulcini">Nascita Ripr.</th>
-                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Entrata in produzione del capannone. Questa impostazione è modificabile nel menu Impostazioni Genetiche">Inizio Ciclo</th>
-                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Fine Ciclo</th>
-                                    <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Età Fine</th>
+                                    {fase !== "pollastra" && (
+                                        <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Entrata in produzione del capannone. Questa impostazione è modificabile nel menu Impostazioni Genetiche">Inizio Ciclo</th>
+                                    )}
+                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                        {fase === "pollastra" ? "Trasferimento" : "Fine Ciclo"}
+                                    </th>
+                                    {fase !== "pollastra" && (
+                                        <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Età Fine</th>
+                                    )}
                                     <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Stato</th>
                                     <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Azioni</th>
                                 </tr>
@@ -754,7 +788,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                             <tbody className="divide-y">
                                 {activeLotti.length === 0 ? (
                                     <tr>
-                                        <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                                        <td colSpan={fase === "pollastra" ? 10 : 12} className="px-4 py-8 text-center text-gray-500">
                                             Nessun lotto attivo. Aggiungi un nuovo accasamento.
                                         </td>
                                     </tr>
@@ -766,28 +800,28 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
 
                                         return lotto.id && (
                                             <tr key={lotto.id} className={`hover:${getProductPastelBg(lotto.Prodotto)}`}>
-                                                <td className="px-4 py-3 text-sm font-medium">
+                                                <td className="px-4 py-3 text-sm text-center font-medium">
                                                     {renderEditableCell(lotto, 'Allevamento', 'select', Object.keys(farmStructure))}
                                                     <span className="block text-[10px] text-gray-400 font-mono mt-0.5" title="ID Ciclo">
                                                         {getUserId(lotto)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-4 py-3 text-sm text-center">
                                                     {renderEditableCell(lotto, 'Capannone', 'text')}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-4 py-3 text-sm text-center">
                                                     {renderEditableCell(lotto, 'Razza', 'select', gallinaOptions)}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-500">
+                                                <td className="px-4 py-3 text-sm text-center text-gray-500">
                                                     {renderEditableCell(lotto, 'Razza_Gallo', 'select', galloOptions)}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-4 py-3 text-sm text-center">
                                                     {renderEditableCell(lotto, 'Curva_Produzione', 'select', productionCurveOptions)}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-4 py-3 text-sm text-center">
                                                     {renderEditableCell(lotto, 'Prodotto', 'select', PRODUCT_OPTIONS)}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-right font-mono">
+                                                <td className="px-4 py-3 text-sm text-center font-mono">
                                                     {renderEditableCell(lotto, 'Capi', 'number')}
                                                 </td>
                                                 {/* Nascita Ripr. - Combined display with tooltip */}
@@ -799,14 +833,16 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                                                         {getNascitaRipr(lotto)}
                                                     </div>
                                                 </td>
-                                                {/* Inizio Ciclo - Read only, calculated */}
-                                                <td
-                                                    className="px-4 py-3 text-sm text-center text-gray-500"
-                                                    title="Entrata in produzione del capannone. Questa impostazione è modificabile nel menu Impostazioni Genetiche"
-                                                >
-                                                    {getInizioCiclo(lotto)}
-                                                </td>
-                                                {/* Fine Ciclo - Editable with buttons */}
+                                                {/* Inizio Ciclo - hidden for pollastra */}
+                                                {fase !== "pollastra" && (
+                                                    <td
+                                                        className="px-4 py-3 text-sm text-center text-gray-500"
+                                                        title="Entrata in produzione del capannone. Questa impostazione è modificabile nel menu Impostazioni Genetiche"
+                                                    >
+                                                        {getInizioCiclo(lotto)}
+                                                    </td>
+                                                )}
+                                                {/* Fine Ciclo / Trasferimento - Editable with buttons */}
                                                 <td className="px-4 py-3 text-sm text-center">
                                                     <div className="flex items-center justify-center gap-1">
                                                         <button
@@ -840,10 +876,12 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate }: Accasamenti
                                                         </button>
                                                     </div>
                                                 </td>
-                                                {/* Età Fine Ciclo - Calculated */}
-                                                <td className="px-4 py-3 text-sm text-center font-mono text-gray-600">
-                                                    {getEtaFineCicloValue(lotto)}
-                                                </td>
+                                                {/* Età Fine Ciclo - hidden for pollastra */}
+                                                {fase !== "pollastra" && (
+                                                    <td className="px-4 py-3 text-sm text-center font-mono text-gray-600">
+                                                        {getEtaFineCicloValue(lotto)}
+                                                    </td>
+                                                )}
                                                 {/* Stato */}
                                                 <td className="px-4 py-3 text-sm text-center">
                                                     <span className={`font-semibold ${status.color}`}>

@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { X, Trash2, ChevronDown, ChevronUp, LineChart, Table2 } from "lucide-react";
 import { CycleWeeklyTable } from "./CycleWeeklyTable";
 import { FarmChart } from "./FarmChart";
+import { TreatmentsCalendar } from "./TreatmentsCalendar";
+import { WeightsSection } from "./WeightsSection";
 
 interface WeeklyData {
     id: number;
@@ -29,6 +31,7 @@ interface ShedDetailPanelProps {
     lotti: Lotto[];
     onUpdate: () => void;
     onClose: () => void;
+    hideProduzione?: boolean;
 }
 
 // Calculate age in weeks
@@ -50,12 +53,20 @@ function getDateFromYearWeek(year: number, week: number): Date {
 const GENETICS_OPTIONS = ["JA57 STANDARD", "JA57K STANDARD", "JA57KI STANDARD", "JA87 STANDARD", "RANGER STANDARD", "ROSS 308 STANDARD"];
 const PRODUCT_OPTIONS = ["Granpollo", "Pollo70", "Color Yeald", "Ross"];
 
-export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelProps) {
+export function ShedDetailPanel({ lotti, onUpdate, onClose, hideProduzione = false }: ShedDetailPanelProps) {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState<Partial<Lotto>>({});
     const [expandedAdvanced, setExpandedAdvanced] = useState<number | null>(null);
+    const [expandedTreatments, setExpandedTreatments] = useState<number | null>(null);
+    const [expandedWeights, setExpandedWeights] = useState<number | null>(null);
     const [viewMode, setViewMode] = useState<"table" | "chart">("table");
     const [chartDataCache, setChartDataCache] = useState<Record<number, WeeklyData[]>>({});
+
+    const closeAllSections = (exceptId: number | null, except: 'advanced' | 'treatments' | 'weights') => {
+        if (except !== 'advanced') setExpandedAdvanced(null);
+        if (except !== 'treatments') setExpandedTreatments(null);
+        if (except !== 'weights') setExpandedWeights(null);
+    };
 
     // Generate user-friendly Cycle ID
     const getUserId = (lotto: Lotto): string => {
@@ -262,12 +273,14 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                                     <Button size="sm" onClick={() => handleEdit(lotto)} variant="outline">
                                         Modifica
                                     </Button>
+                                    {!hideProduzione && (
                                     <Button
                                         size="sm"
                                         onClick={() => {
                                             if (expandedAdvanced === lotto.id) {
                                                 setExpandedAdvanced(null);
                                             } else {
+                                                closeAllSections(lotto.id, 'advanced');
                                                 setExpandedAdvanced(lotto.id);
                                                 fetchChartData(lotto.id);
                                             }
@@ -276,7 +289,40 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                                         className="gap-1"
                                     >
                                         {expandedAdvanced === lotto.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                        Dati avanzati
+                                        Produzione Uova
+                                    </Button>
+                                    )}
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            if (expandedTreatments === lotto.id) {
+                                                setExpandedTreatments(null);
+                                            } else {
+                                                closeAllSections(lotto.id, 'treatments');
+                                                setExpandedTreatments(lotto.id);
+                                            }
+                                        }}
+                                        variant="outline"
+                                        className="gap-1"
+                                    >
+                                        {expandedTreatments === lotto.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                        Trattamenti
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            if (expandedWeights === lotto.id) {
+                                                setExpandedWeights(null);
+                                            } else {
+                                                closeAllSections(lotto.id, 'weights');
+                                                setExpandedWeights(lotto.id);
+                                            }
+                                        }}
+                                        variant="outline"
+                                        className="gap-1"
+                                    >
+                                        {expandedWeights === lotto.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                        Pesi
                                     </Button>
                                     <Button
                                         size="sm"
@@ -291,7 +337,7 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                             )}
                         </div>
 
-                        {/* Advanced Weekly Data Table / Chart */}
+                        {/* Produzione Uova: Weekly Data Table / Chart */}
                         {expandedAdvanced === lotto.id && (
                             <div className="mt-4 border border-gray-100 rounded-lg p-3 bg-white">
                                 <div className="flex justify-end mb-2">
@@ -326,6 +372,26 @@ export function ShedDetailPanel({ lotti, onUpdate, onClose }: ShedDetailPanelPro
                                         capiPresenti={lotto.Capi || 0}
                                     />
                                 )}
+                            </div>
+                        )}
+
+                        {/* Trattamenti calendar */}
+                        {expandedTreatments === lotto.id && (
+                            <div className="mt-4 border border-gray-100 rounded-lg p-3 bg-white">
+                                <h6 className="text-sm font-semibold text-gray-700 mb-3">Calendario Trattamenti</h6>
+                                <TreatmentsCalendar lottoId={lotto.id} />
+                            </div>
+                        )}
+
+                        {/* Pesi section */}
+                        {expandedWeights === lotto.id && (
+                            <div className="mt-4 border border-gray-100 rounded-lg p-3 bg-white">
+                                <h6 className="text-sm font-semibold text-gray-700 mb-3">Pesi Animali</h6>
+                                <WeightsSection
+                                    lottoId={lotto.id}
+                                    annoStart={lotto.Anno_Start}
+                                    settStart={lotto.Sett_Start}
+                                />
                             </div>
                         )}
                     </div>

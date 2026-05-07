@@ -22,13 +22,14 @@ class Lotto(Base):
     allevamento = Column(String, index=True)
     capannone = Column(String)
     razza = Column(String)
-    razza_gallo = Column(String) # NEW FIELD
+    razza_gallo = Column(String)
     prodotto = Column(String)
     capi = Column(Integer)
     anno_start = Column(Integer)
     sett_start = Column(Integer)
     data_fine_prevista = Column(String)
-    curva_produzione = Column(String) # Production curve to use
+    curva_produzione = Column(String)
+    fase = Column(String, nullable=True)  # null=normale, 'pollastra'=fase pollastra
     attivo = Column(Boolean, default=True)
     # Concurrency protection fields
     version = Column(Integer, default=1)  # Optimistic locking
@@ -49,6 +50,7 @@ class Lotto(Base):
             "Data_Fine_Prevista": self.data_fine_prevista,
             "Curva_Produzione": self.curva_produzione,
             "Attivo": self.attivo,
+            "Fase": self.fase,
             "version": self.version,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
@@ -175,17 +177,19 @@ class EggStorage(Base):
     prodotto = Column(String, index=True)  # Granpollo, Pollo70, Color Yeald, Ross
     nome = Column(String)  # BLA, Bla Plus, BR, etc.
     origine = Column(String)  # "Acquisto" or allevamento name
+    capannone = Column(String, default="")  # Shed/barn identifier
     numero = Column(Integer, default=0)  # Quantity of eggs
     eta = Column(Integer, default=0)  # Age in weeks
     arrivate_il = Column(String)  # Date of arrival (YYYY-MM-DD)
     numero_ddt = Column(String, default="")  # DDT document number
-    
+
     def to_dict(self):
         return {
             "id": self.id,
             "prodotto": self.prodotto,
             "nome": self.nome,
             "origine": self.origine,
+            "capannone": self.capannone or "",
             "numero": self.numero,
             "eta": self.eta,
             "arrivate_il": self.arrivate_il,
@@ -245,13 +249,14 @@ class IncubationBatch(Base):
     prodotto = Column(String)
     nome = Column(String)  # Name of the batch
     origine = Column(String)  # Origin of the batch (from EggStorage)
+    capannone = Column(String, default="")  # Shed/barn identifier (from EggStorage)
     uova_partita = Column(Integer, default=0)  # Total eggs in batch
     uova_utilizzate = Column(Integer, default=0)  # Eggs used (editable)
     eta = Column(Integer, default=0)  # Age in weeks (from EggStorage)
     data_arrivo = Column(String, default="")  # Arrival date from EggStorage
     storico_override = Column(Float)  # User-overridden storico value (nullable)
     quantita = Column(Integer)  # Deprecated, kept for backwards compatibility
-    
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -260,6 +265,7 @@ class IncubationBatch(Base):
             "prodotto": self.prodotto,
             "nome": self.nome,
             "origine": self.origine,
+            "capannone": self.capannone or "",
             "uova_partita": self.uova_partita,
             "uova_utilizzate": self.uova_utilizzate,
             "eta": self.eta,
@@ -280,6 +286,164 @@ class PlanningTableSettings(Base):
         return {
             "table_id": self.table_id,
             "show_sex_split": self.show_sex_split
+        }
+
+
+# --- TRASFERIMENTO MODEL (A7) ---
+class Trasferimento(Base):
+    __tablename__ = "trasferimenti_incubazione"
+
+    id = Column(Integer, primary_key=True, index=True)
+    incubation_id = Column(Integer, index=True)
+    batch_id = Column(Integer, nullable=True, index=True)  # FK to incubation_batches
+    data_trasferimento = Column(String)         # YYYY-MM-DD
+    n_uova_trasferite = Column(Integer, default=0)
+    n_uova_scartate = Column(Integer, default=0)
+    incubatrice_origine = Column(String, default="")
+    chioccia_destinazione = Column(String, default="")
+    note = Column(String, default="")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "incubation_id": self.incubation_id,
+            "batch_id": self.batch_id,
+            "data_trasferimento": self.data_trasferimento,
+            "n_uova_trasferite": self.n_uova_trasferite,
+            "n_uova_scartate": self.n_uova_scartate,
+            "incubatrice_origine": self.incubatrice_origine,
+            "chioccia_destinazione": self.chioccia_destinazione,
+            "note": self.note or "",
+        }
+
+
+# --- SCHIUSA PULCINI MODEL (A7) ---
+class SchiusaPulcini(Base):
+    __tablename__ = "schiusa_pulcini"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trasferimento_id = Column(Integer, index=True, nullable=True)
+    incubation_id = Column(Integer, index=True)
+    batch_id = Column(Integer, nullable=True, index=True)  # FK to incubation_batches
+    data_schiusa = Column(String)               # YYYY-MM-DD
+    n_pulcini_nati = Column(Integer, default=0)
+    n_pulcini_seconda_scelta = Column(Integer, default=0)
+    n_uova_trasferite_rif = Column(Integer, default=0)  # Uova Trasferite
+    n_uova_incubate = Column(Integer, default=0)        # Uova Incubate (hidden, for % calc)
+    destinazione = Column(String, default="")
+    note = Column(String, default="")
+
+    def to_dict(self):
+        n_nati = self.n_pulcini_nati or 0
+        n_trasf = self.n_uova_trasferite_rif or 0
+        n_inc = self.n_uova_incubate or 0
+        nato_su_incubato = round(n_nati / n_inc * 100, 2) if n_inc else 0
+        nato_su_fertile = round(n_nati / n_trasf * 100, 2) if n_trasf else 0
+        return {
+            "id": self.id,
+            "trasferimento_id": self.trasferimento_id,
+            "incubation_id": self.incubation_id,
+            "batch_id": self.batch_id,
+            "data_schiusa": self.data_schiusa,
+            "n_pulcini_nati": n_nati,
+            "n_uova_trasferite_rif": n_trasf,
+            "n_uova_incubate": n_inc,
+            "nato_su_incubato": nato_su_incubato,
+            "nato_su_fertile": nato_su_fertile,
+            "destinazione": self.destinazione or "",
+            "note": self.note or "",
+        }
+
+
+# --- TRATTAMENTI MODEL (A3) ---
+class Trattamento(Base):
+    __tablename__ = "trattamenti"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lotto_id = Column(Integer, index=True)
+    nome = Column(String)
+    data_inizio = Column(String)   # ISO date string YYYY-MM-DD
+    data_fine = Column(String)     # ISO date string YYYY-MM-DD
+    note = Column(String, default="")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "lotto_id": self.lotto_id,
+            "nome": self.nome,
+            "data_inizio": self.data_inizio,
+            "data_fine": self.data_fine,
+            "note": self.note or "",
+        }
+
+
+# --- SCHEDA SETTIMANALE MODEL ---
+class SchedaSettimanaleRecord(Base):
+    __tablename__ = "schede_settimanali"
+
+    id = Column(Integer, primary_key=True, index=True)
+    allevamento = Column(String, index=True)
+    capannone = Column(String, index=True)
+    anno = Column(Integer, index=True)
+    settimana = Column(Integer, index=True)
+    lotto_id = Column(Integer, nullable=True)
+    galline_presenti = Column(Integer, default=0)
+    galli_presenti = Column(Integer, default=0)
+    galli_box = Column(Integer, default=0)
+    righe_json = Column(String, default="[]")
+    trattamenti_json = Column(String, default="[]")
+    peso_galline = Column(Float, nullable=True)
+    peso_galline_atteso = Column(Float, nullable=True)
+    peso_galli = Column(Float, nullable=True)
+    peso_galli_atteso = Column(Float, nullable=True)
+    note = Column(String, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        import json as _json
+        return {
+            "id": self.id,
+            "allevamento": self.allevamento,
+            "capannone": self.capannone,
+            "anno": self.anno,
+            "settimana": self.settimana,
+            "lotto_id": self.lotto_id,
+            "galline_presenti": self.galline_presenti or 0,
+            "galli_presenti": self.galli_presenti or 0,
+            "galli_box": self.galli_box or 0,
+            "righe": _json.loads(self.righe_json or "[]"),
+            "trattamenti": _json.loads(self.trattamenti_json or "[]"),
+            "peso_galline": self.peso_galline,
+            "peso_galline_atteso": self.peso_galline_atteso,
+            "peso_galli": self.peso_galli,
+            "peso_galli_atteso": self.peso_galli_atteso,
+            "note": self.note or "",
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+# --- PESI ANIMALI MODEL (A4) ---
+class PesoAnimale(Base):
+    __tablename__ = "pesi_animali"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lotto_id = Column(Integer, index=True)
+    settimana = Column(Integer)
+    anno = Column(Integer)
+    peso_medio_g = Column(Float)
+    n_capi = Column(Integer, default=0)
+    note = Column(String, default="")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "lotto_id": self.lotto_id,
+            "settimana": self.settimana,
+            "anno": self.anno,
+            "peso_medio_g": self.peso_medio_g,
+            "n_capi": self.n_capi,
+            "note": self.note or "",
         }
 
 
@@ -343,6 +507,11 @@ def init_db():
              conn.commit()
         except Exception:
              pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN data_arrivo VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
         # Incubation committed field migration
         try:
              conn.execute(text("ALTER TABLE incubations ADD COLUMN committed BOOLEAN DEFAULT 0"))
@@ -374,6 +543,40 @@ def init_db():
         # Production cache eta migration
         try:
              conn.execute(text("ALTER TABLE production_cache ADD COLUMN eta INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        # Fase pollastra migration (A6)
+        try:
+             conn.execute(text("ALTER TABLE lotti ADD COLUMN fase VARCHAR"))
+             conn.commit()
+        except Exception:
+             pass
+        # Scheda settimanale table (created via metadata.create_all above, migrations below)
+        # A7: Trasferimento and SchiusaPulcini tables created via metadata.create_all above
+        try:
+             conn.execute(text("ALTER TABLE trasferimenti_incubazione ADD COLUMN batch_id INTEGER"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE schiusa_pulcini ADD COLUMN batch_id INTEGER"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE schiusa_pulcini ADD COLUMN n_uova_incubate INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        # Capannone field migration for egg_storage and incubation_batches
+        try:
+             conn.execute(text("ALTER TABLE egg_storage ADD COLUMN capannone VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN capannone VARCHAR DEFAULT ''"))
              conn.commit()
         except Exception:
              pass
@@ -410,6 +613,7 @@ def add_lotto(data):
             sett_start=data.get("Sett_Start"),
             data_fine_prevista=data.get("Data_Fine_Prevista"),
             curva_produzione=data.get("Curva_Produzione"),
+            fase=data.get("Fase"),
             attivo=data.get("Attivo", True)
         )
         db.add(new_lotto)
@@ -454,6 +658,7 @@ def update_lotto(lotto_id, data, expected_version=None):
         if "Sett_Start" in data: lotto.sett_start = data["Sett_Start"]
         if "Data_Fine_Prevista" in data: lotto.data_fine_prevista = data["Data_Fine_Prevista"]
         if "Curva_Produzione" in data: lotto.curva_produzione = data["Curva_Produzione"]
+        if "Fase" in data: lotto.fase = data["Fase"]
         if "Attivo" in data: lotto.attivo = data["Attivo"]
         
         # Increment version and update timestamp
@@ -1706,6 +1911,7 @@ def add_egg_storage(data):
             prodotto=data.get("prodotto"),
             nome=data.get("nome"),
             origine=data.get("origine"),
+            capannone=data.get("capannone", ""),
             numero=data.get("numero", 0),
             eta=data.get("eta", 0),
             arrivate_il=data.get("arrivate_il"),
@@ -1730,6 +1936,8 @@ def update_egg_storage(entry_id, data):
                 entry.nome = data["nome"]
             if "origine" in data:
                 entry.origine = data["origine"]
+            if "capannone" in data:
+                entry.capannone = data["capannone"]
             if "numero" in data:
                 entry.numero = data["numero"]
             if "eta" in data:
@@ -1951,5 +2159,213 @@ def ensure_incubation_planning_conto_default():
         if count == 0:
             db.add(IncubationPlanningConto(nome="Conto Incubazione 1", ordine=0, active=True))
             db.commit()
+    finally:
+        db.close()
+
+
+# --- TRASFERIMENTO CRUD (A7) ---
+def get_trasferimenti(incubation_id: int = None):
+    db = SessionLocal()
+    try:
+        q = db.query(Trasferimento)
+        if incubation_id is not None:
+            q = q.filter(Trasferimento.incubation_id == incubation_id)
+        rows = q.order_by(Trasferimento.data_trasferimento.desc()).all()
+        return [r.to_dict() for r in rows]
+    finally:
+        db.close()
+
+
+def add_trasferimento(data: dict):
+    db = SessionLocal()
+    try:
+        row = Trasferimento(**data)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def update_trasferimento(trasferimento_id: int, updates: dict):
+    db = SessionLocal()
+    try:
+        row = db.query(Trasferimento).filter(Trasferimento.id == trasferimento_id).first()
+        if not row:
+            return None
+        for k, v in updates.items():
+            setattr(row, k, v)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def delete_trasferimento(trasferimento_id: int):
+    db = SessionLocal()
+    try:
+        row = db.query(Trasferimento).filter(Trasferimento.id == trasferimento_id).first()
+        if not row:
+            return False
+        db.delete(row)
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+# --- SCHIUSA PULCINI CRUD (A7) ---
+def get_schiuse(incubation_id: int = None):
+    db = SessionLocal()
+    try:
+        q = db.query(SchiusaPulcini)
+        if incubation_id is not None:
+            q = q.filter(SchiusaPulcini.incubation_id == incubation_id)
+        rows = q.order_by(SchiusaPulcini.data_schiusa.desc()).all()
+        return [r.to_dict() for r in rows]
+    finally:
+        db.close()
+
+
+def add_schiusa(data: dict):
+    db = SessionLocal()
+    try:
+        row = SchiusaPulcini(**data)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def update_schiusa(schiusa_id: int, updates: dict):
+    db = SessionLocal()
+    try:
+        row = db.query(SchiusaPulcini).filter(SchiusaPulcini.id == schiusa_id).first()
+        if not row:
+            return None
+        for k, v in updates.items():
+            setattr(row, k, v)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def delete_schiusa(schiusa_id: int):
+    db = SessionLocal()
+    try:
+        row = db.query(SchiusaPulcini).filter(SchiusaPulcini.id == schiusa_id).first()
+        if not row:
+            return False
+        db.delete(row)
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+# --- TRATTAMENTI CRUD (A3) ---
+def get_trattamenti(lotto_id: int):
+    db = SessionLocal()
+    try:
+        rows = db.query(Trattamento).filter(Trattamento.lotto_id == lotto_id)\
+            .order_by(Trattamento.data_inizio).all()
+        return [r.to_dict() for r in rows]
+    finally:
+        db.close()
+
+
+def add_trattamento(data: dict):
+    db = SessionLocal()
+    try:
+        row = Trattamento(**data)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def update_trattamento(trattamento_id: int, updates: dict):
+    db = SessionLocal()
+    try:
+        row = db.query(Trattamento).filter(Trattamento.id == trattamento_id).first()
+        if not row:
+            return None
+        for k, v in updates.items():
+            setattr(row, k, v)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def delete_trattamento(trattamento_id: int):
+    db = SessionLocal()
+    try:
+        row = db.query(Trattamento).filter(Trattamento.id == trattamento_id).first()
+        if not row:
+            return False
+        db.delete(row)
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+# --- PESI ANIMALI CRUD (A4) ---
+def get_pesi(lotto_id: int):
+    db = SessionLocal()
+    try:
+        rows = db.query(PesoAnimale).filter(PesoAnimale.lotto_id == lotto_id)\
+            .order_by(PesoAnimale.anno, PesoAnimale.settimana).all()
+        return [r.to_dict() for r in rows]
+    finally:
+        db.close()
+
+
+def add_peso(data: dict):
+    db = SessionLocal()
+    try:
+        row = PesoAnimale(**data)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def update_peso(peso_id: int, updates: dict):
+    db = SessionLocal()
+    try:
+        row = db.query(PesoAnimale).filter(PesoAnimale.id == peso_id).first()
+        if not row:
+            return None
+        for k, v in updates.items():
+            setattr(row, k, v)
+        db.commit()
+        db.refresh(row)
+        return row.to_dict()
+    finally:
+        db.close()
+
+
+def delete_peso(peso_id: int):
+    db = SessionLocal()
+    try:
+        row = db.query(PesoAnimale).filter(PesoAnimale.id == peso_id).first()
+        if not row:
+            return False
+        db.delete(row)
+        db.commit()
+        return True
     finally:
         db.close()

@@ -24,6 +24,7 @@ class LottoCreate(BaseModel):
     Sett_Start: int
     Data_Fine_Prevista: Optional[str] = None
     Curva_Produzione: Optional[str] = None
+    Fase: Optional[str] = None
     Attivo: bool = True
 
 class LottoUpdate(BaseModel):
@@ -37,6 +38,7 @@ class LottoUpdate(BaseModel):
     Sett_Start: Optional[int] = None
     Data_Fine_Prevista: Optional[str] = None
     Curva_Produzione: Optional[str] = None
+    Fase: Optional[str] = None
     Attivo: Optional[bool] = None
     version: Optional[int] = None  # For optimistic locking
 

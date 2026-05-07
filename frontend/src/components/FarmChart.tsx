@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
     AreaChart,
     Area,
@@ -10,6 +11,7 @@ import {
     ComposedChart,
     Line,
 } from 'recharts';
+import { API_BASE_URL } from '@/lib/config';
 
 interface WeeklyData {
     eta_animali: number;
@@ -25,6 +27,49 @@ interface FarmChartProps {
 }
 
 export function FarmChart({ data, capiPresenti }: FarmChartProps) {
+    const [standardColumns, setStandardColumns] = useState<string[]>([]);
+    const [selectedStandard, setSelectedStandard] = useState<string>('');
+    // Map from week number → percentage (0-100)
+    const [standardTable, setStandardTable] = useState<Record<number, number>>({});
+
+    // Fetch T003 standard columns once
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/production-tables`);
+                const json = await res.json();
+                const cols: string[] = (json.columns || []).filter((c: string) => c.includes('STANDARD'));
+                setStandardColumns(cols);
+            } catch { /* silently ignore */ }
+        };
+        load();
+    }, []);
+
+    // When standard selection changes, build lookup table
+    useEffect(() => {
+        if (!selectedStandard) {
+            setStandardTable({});
+            return;
+        }
+        const load = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/production-tables`);
+                const json = await res.json();
+                const lookup: Record<number, number> = {};
+                (json.data || []).forEach((row: any) => {
+                    const week = Number(row['W']);
+                    const rawVal = row[selectedStandard];
+                    if (rawVal != null) {
+                        const pct = parseFloat(String(rawVal).replace('%', '').replace(',', '.').trim());
+                        if (!isNaN(pct)) lookup[week] = pct;
+                    }
+                });
+                setStandardTable(lookup);
+            } catch { /* silently ignore */ }
+        };
+        load();
+    }, [selectedStandard]);
+
     if (!data || data.length === 0) {
         return (
             <div className="flex items-center justify-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
@@ -35,7 +80,6 @@ export function FarmChart({ data, capiPresenti }: FarmChartProps) {
 
     const sortedData = [...data].sort((a, b) => a.eta_animali - b.eta_animali);
 
-    // Mortality as percentage of total birds
     const mortalityData = sortedData.map(row => ({
         eta_animali: row.eta_animali,
         mortalita_pct: capiPresenti > 0
@@ -43,12 +87,14 @@ export function FarmChart({ data, capiPresenti }: FarmChartProps) {
             : 0,
     }));
 
-    // Egg production with total line
     const eggData = sortedData.map(row => ({
         eta_animali: row.eta_animali,
         uova_incubabili: row.uova_incubabili,
         uova_seconda: row.uova_seconda,
         uova_totali: row.uova_incubabili + row.uova_seconda,
+        standard_atteso: selectedStandard && standardTable[row.eta_animali] != null
+            ? Math.round(capiPresenti * standardTable[row.eta_animali] / 100)
+            : undefined,
     }));
 
     return (
@@ -156,15 +202,44 @@ export function FarmChart({ data, capiPresenti }: FarmChartProps) {
                             <Line
                                 type="monotone"
                                 dataKey="uova_totali"
-                                name="Totale Incubate"
+                                name="Uova Totali"
                                 stroke="#059669"
                                 strokeWidth={2}
                                 dot={false}
                                 strokeDasharray="4 2"
                             />
+                            {selectedStandard && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="standard_atteso"
+                                    name={`Standard: ${selectedStandard}`}
+                                    stroke="#f59e0b"
+                                    strokeWidth={2}
+                                    dot={false}
+                                    strokeDasharray="6 3"
+                                    connectNulls={false}
+                                />
+                            )}
                         </ComposedChart>
                     </ResponsiveContainer>
                 </div>
+
+                {/* Standard curve dropdown */}
+                {standardColumns.length > 0 && (
+                    <div className="mt-3 flex items-center gap-3">
+                        <label className="text-xs text-gray-500 shrink-0">Curva standard:</label>
+                        <select
+                            value={selectedStandard}
+                            onChange={(e) => setSelectedStandard(e.target.value)}
+                            className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                        >
+                            <option value="">— Nessuno —</option>
+                            {standardColumns.map(col => (
+                                <option key={col} value={col}>{col}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
         </div>
     );

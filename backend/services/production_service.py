@@ -206,9 +206,10 @@ class ProductionService:
         if product_filter:
             lotti_attivi = [l for l in lotti_attivi if l.get('Prodotto') == product_filter]
         
-        # Build lotto_id -> allevamento/genetics map for cache reconstruction
+        # Build lotto_id -> allevamento/genetics/start map for cache reconstruction
         lotto_allevamento_map = {}
         lotto_razza_map = {}
+        lotto_start_map = {}
         for lotto in lotti_db:
             lotto_id = lotto.get('id')
             lotto_allevamento_map[lotto_id] = f"{lotto['Allevamento']} {lotto['Capannone']}"
@@ -216,6 +217,10 @@ class ProductionService:
                 "razza": lotto.get('Razza', ''),
                 "razza_gallo": lotto.get('Razza_Gallo', '')
             }
+            lotto_start_map[lotto_id] = (
+                lotto.get('Anno_Start', 0),
+                lotto.get('Sett_Start', 0)
+            )
 
         # 3. CHECK CACHE
         cached = get_valid_cache(product_filter)
@@ -225,13 +230,20 @@ class ProductionService:
         if cached:
             for c in cached:
                 key = (c.anno, c.settimana, c.lotto_id)
+                # Fix #17: recalculate eta from lotto start when cache entry has eta=0
+                # (happens for entries written before the eta column was added)
+                cached_eta = c.eta if c.eta else 0
+                if cached_eta == 0 and c.lotto_id in lotto_start_map:
+                    anno_start, sett_start = lotto_start_map[c.lotto_id]
+                    if anno_start and sett_start:
+                        cached_eta = max(0, (c.anno * 52 + c.settimana) - (anno_start * 52 + sett_start))
                 cache_by_key[key] = {
                     "anno": c.anno,
                     "settimana": c.settimana,
                     "lotto_id": c.lotto_id,
                     "prodotto": c.prodotto,
                     "uova": c.uova,
-                    "eta": c.eta if c.eta else 0,
+                    "eta": cached_eta,
                     "allevamento": lotto_allevamento_map.get(c.lotto_id, f"Lotto {c.lotto_id}")
                 }
                 cached_lotto_ids.add(c.lotto_id)
@@ -284,10 +296,9 @@ class ProductionService:
         purchases_by_week_product = ProductionService._aggregate_trading_by_product(trading_acq, product_filter)
         sales_by_week_product = ProductionService._aggregate_trading_by_product(trading_ven, product_filter)
         
-        # Create simple maps for backward compatibility
         purchases_map = {}  # (anno, settimana) -> list of details
-        sales_map = {}      # (anno, settimana) -> total
-        
+        sales_map = {}     # (anno, settimana) -> list of details
+
         for row in trading_acq:
             if row.quantita > 0 and (not product_filter or row.prodotto == product_filter):
                 k = (row.anno, row.settimana)
@@ -298,13 +309,17 @@ class ProductionService:
                     "prodotto": row.prodotto,
                     "quantita": row.quantita
                 })
-        
+
         for row in trading_ven:
             if row.quantita > 0 and (not product_filter or row.prodotto == product_filter):
                 k = (row.anno, row.settimana)
                 if k not in sales_map:
-                    sales_map[k] = 0
-                sales_map[k] += row.quantita
+                    sales_map[k] = []
+                sales_map[k].append({
+                    "azienda": row.azienda,
+                    "prodotto": row.prodotto,
+                    "quantita": row.quantita
+                })
         
         # 8. AGGREGATE SUMMARY
         all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys())
@@ -314,16 +329,17 @@ class ProductionService:
         for year, week in sorted_keys:
             prod_details = production_data.get((year, week), [])
             prod_total = sum(d['quantita'] for d in prod_details)
-            
+
             acq_details = purchases_map.get((year, week), [])
             acq_total = sum(d['quantita'] for d in acq_details)
-            
-            ven_total = sales_map.get((year, week), 0)
-            
+
+            ven_details = sales_map.get((year, week), [])
+            ven_total = sum(d['quantita'] for d in ven_details)
+
             # --- RULES.md Formula ---
             # [TotaleUovaProdotto] = [UovaProdotte] + [UovaAcquisto] - [UovaVendita]
             net_total = prod_total + acq_total - ven_total
-            
+
             summary.append({
                 "periodo": f"{year} - {week:02d}",
                 "anno": year,
@@ -333,7 +349,8 @@ class ProductionService:
                 "vendite_totale": ven_total,
                 "totale_netto": net_total,
                 "dettagli_produzione": prod_details,
-                "dettagli_acquisti": acq_details
+                "dettagli_acquisti": acq_details,
+                "dettagli_vendite": ven_details
             })
         
         return summary

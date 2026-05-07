@@ -4,6 +4,7 @@ import { ProductionAPI, ProductionTablesAPI } from "@/lib/api";
 import { AllevamentiAPI } from "@/lib/api";
 import type { WeeklySummary, Lotto } from "@/types";
 import ProductionChart from "@/components/ProductionChart";
+import EggsChart from "@/components/EggsChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings, Trash2 } from "lucide-react";
@@ -46,6 +47,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
     const [tradingDataAcquisti, setTradingDataAcquisti] = useState<any>(null); // Trading purchases data
     const [tradingDataVendite, setTradingDataVendite] = useState<any>(null); // Trading sales data
     const [productData, setProductData] = useState<WeeklySummary[]>([]); // Product-specific data for table
+    const [postiUovoIncubatoio, setPostiUovoIncubatoio] = useState<number>(387200);
 
     // Editing states for Tabelle Produzioni
     const [editingCell, setEditingCell] = useState<{ row: number, col: string } | null>(null);
@@ -484,6 +486,12 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                                         includeTradingData={includeTradingData}
                                         showPurchasesLine={includeTradingData && chartProductFilter !== 'all'}
                                     />
+                                    {chartProductFilter === 'all' && (
+                                        <EggsChart
+                                            chartData={chartData}
+                                            postiUovoIncubatoio={postiUovoIncubatoio}
+                                        />
+                                    )}
                                 </div>
 
                                 {/* Summary Cards */}
@@ -510,6 +518,23 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                                             </div>
                                         </CardContent>
                                     </Card>
+                                    {chartProductFilter === 'all' && (
+                                        <Card>
+                                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                                <CardTitle className="text-sm font-medium">Posti uovo incubatoio</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <input
+                                                    type="number"
+                                                    className="text-2xl font-bold w-full border-b border-gray-200 focus:border-gray-400 focus:outline-none bg-transparent"
+                                                    value={postiUovoIncubatoio}
+                                                    onChange={(e) => setPostiUovoIncubatoio(Number(e.target.value))}
+                                                    step={100}
+                                                    min={0}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    )}
                                 </div>
 
                                 {/* Weekly Table - Only shown when a specific product is selected */}

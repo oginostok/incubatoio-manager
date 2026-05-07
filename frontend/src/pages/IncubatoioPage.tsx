@@ -6,6 +6,8 @@ import EggStorageTotalsTable from "@/components/EggStorageTotalsTable";
 import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 import IncubationTable from "@/components/IncubationTable";
 import RegistroIncubazioniTable from "@/components/RegistroIncubazioniTable";
+import TrasferimentoTable from "@/components/TrasferimentoTable";
+import SchiusaPulciniTable from "@/components/SchiusaPulciniTable";
 
 interface IncubatoioPageProps {
     onNavigate: (page: string) => void;
@@ -103,34 +105,10 @@ export default function IncubatoioPage({ onNavigate }: IncubatoioPageProps) {
                     <RegistroIncubazioniTable />
                 )}
                 {section === "trasferimento" && (
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Trasferimento</h2>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                <p className="text-blue-700 text-lg">
-                                    ℹ️ Area in costruzione.
-                                </p>
-                                <p className="text-gray-600 mt-2">
-                                    Gestione trasferimenti tra incubatrici e sedi
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <TrasferimentoTable />
                 )}
                 {section === "schiusa" && (
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Schiusa Pulcini</h2>
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                <p className="text-blue-700 text-lg">
-                                    ℹ️ Area in costruzione.
-                                </p>
-                                <p className="text-gray-600 mt-2">
-                                    Impostazione dati reali di nascita per incubazioni avvenute 3 settimane fa
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <SchiusaPulciniTable />
                 )}
             </main>
         </div>

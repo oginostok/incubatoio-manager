@@ -13,6 +13,7 @@ class EggStorageCreate(BaseModel):
     prodotto: str
     nome: str
     origine: str
+    capannone: Optional[str] = ""
     numero: int
     eta: int
     arrivate_il: str
@@ -22,6 +23,7 @@ class EggStorageUpdate(BaseModel):
     prodotto: Optional[str] = None
     nome: Optional[str] = None
     origine: Optional[str] = None
+    capannone: Optional[str] = None
     numero: Optional[int] = None
     eta: Optional[int] = None
     arrivate_il: Optional[str] = None

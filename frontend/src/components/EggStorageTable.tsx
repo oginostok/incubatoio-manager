@@ -31,6 +31,7 @@ interface EggStorageEntry {
     prodotto: string;
     nome: string;
     origine: string;
+    capannone: string;
     numero: number;
     eta: number;
     arrivate_il: string;
@@ -66,6 +67,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
     const [formNumero, setFormNumero] = useState("");
     const [formEta, setFormEta] = useState("");
     const [formArrivateIl, setFormArrivateIl] = useState("");
+    const [formCapannone, setFormCapannone] = useState("");
     const [formNumeroDdt, setFormNumeroDdt] = useState("");
     const [formNewNome, setFormNewNome] = useState("");
     const [showNewNomeInput, setShowNewNomeInput] = useState(false);
@@ -95,7 +97,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
             const data: LottoData[] = await res.json();
             setLotti(data || []);
             // Extract unique allevamento names
-            const uniqueAllevamenti = [...new Set(data.map((l) => l.Allevamento))].sort();
+            const uniqueAllevamenti = [...new Set(data.map((l) => l.Allevamento))].filter(a => a !== "Persico").sort();
             setAllevamenti(uniqueAllevamenti);
         } catch (err) {
             console.error("Failed to load allevamenti:", err);
@@ -182,6 +184,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     prodotto: formProdotto,
                     nome: formNome,
                     origine: origine,
+                    capannone: formCapannone,
                     numero: parseInt(formNumero.replace(/\./g, ""), 10) || 0,
                     eta: parseInt(formEta, 10) || 0,
                     arrivate_il: formArrivateIl,
@@ -207,6 +210,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         setFormNome("");
         setFormOrigine("Acquisto");
         setFormAzienda("");
+        setFormCapannone("");
         setFormNumero("");
         setFormEta("");
         setFormArrivateIl("");
@@ -231,6 +235,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         setFormNome(entry.nome);
         setFormOrigine(origine);
         setFormAzienda(azienda);
+        setFormCapannone(entry.capannone || "");
         setFormNumero(entry.numero.toLocaleString("it-IT"));
         setFormEta(String(entry.eta));
         setFormArrivateIl(entry.arrivate_il);
@@ -257,6 +262,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     prodotto: formProdotto,
                     nome: formNome,
                     origine: origine,
+                    capannone: formCapannone,
                     numero: parseInt(formNumero.replace(/\./g, ""), 10) || 0,
                     eta: parseInt(formEta, 10) || 0,
                     arrivate_il: formArrivateIl,
@@ -332,7 +338,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     className="bg-amber-600 hover:bg-amber-700 text-white"
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Aggiungi partita
+                    Aggiungi Partita
                 </Button>
             </div>
 
@@ -349,6 +355,9 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                             </th>
                             <th className="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Origine
+                            </th>
+                            <th className="w-28 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Capannone
                             </th>
                             <th className="w-28 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Numero
@@ -370,8 +379,8 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     <tbody>
                         {entries.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                                    Nessuna partita presente. Clicca su "Aggiungi partita" per iniziare.
+                                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                                    Nessuna partita presente. Clicca su "Aggiungi Partita" per iniziare.
                                 </td>
                             </tr>
                         ) : (
@@ -391,6 +400,9 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                                     </td>
                                     <td className="px-4 py-3 text-gray-600">
                                         {entry.origine}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-600">
+                                        {entry.capannone || "—"}
                                     </td>
                                     <td className="px-4 py-3 text-right text-gray-700 font-mono">
                                         {formatNumber(entry.numero)}
@@ -552,7 +564,7 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                                 />
                             </div>
 
-                            {/* Età + Numero DDT (side by side) */}
+                            {/* Età + Capannone (side by side) */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -571,16 +583,30 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Numero DDT
+                                        Capannone
                                     </label>
                                     <input
                                         type="text"
-                                        value={formNumeroDdt}
-                                        onChange={(e) => setFormNumeroDdt(e.target.value)}
+                                        value={formCapannone}
+                                        onChange={(e) => setFormCapannone(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                                        placeholder="es. 12345"
+                                        placeholder="es. CAP 1"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Numero DDT */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Numero DDT
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formNumeroDdt}
+                                    onChange={(e) => setFormNumeroDdt(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                    placeholder="es. 12345"
+                                />
                             </div>
 
                             {/* Arrivate il */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Dna, Activity, ClipboardList } from "lucide-react";
+import { Settings, Dna, Activity, ClipboardList, Bird } from "lucide-react";
 import { GiRooster } from "react-icons/gi";
 import { AllevamentiAPI } from "@/lib/api";
 import type { Lotto, FarmStructure } from "@/types";
@@ -13,7 +13,14 @@ interface AllevamentiPageProps {
     onNavigate: (page: string) => void;
 }
 
-type Section = "stato" | "accasamenti" | "genetiche" | "scheda_settimanale";
+type Section = "stato" | "accasamenti" | "genetiche" | "scheda_settimanale" | "pollastra_accasamenti";
+
+// Fixed pollastra farm structure (same as in FarmStatusGrid)
+const POLLASTRA_FARMS: FarmStructure = {
+    "Persico":   [1, 2],
+    "Teramo":    [1],
+    "Montirone": [1, 2, 3],
+};
 
 export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
     const [section, setSection] = useState<Section>("stato");
@@ -21,7 +28,6 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
     const [farmStructure, setFarmStructure] = useState<FarmStructure>({});
     const [loading, setLoading] = useState(true);
 
-    // Fetch data on mount
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -41,11 +47,13 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
         fetchData();
     }, []);
 
-    // Refresh data after CRUD
     const refreshData = async () => {
         const lottiData = await AllevamentiAPI.getLotti();
         setLotti(lottiData);
     };
+
+    const normalLotti = lotti.filter(l => !l.Fase || l.Fase === null);
+    const pollastralotti = lotti.filter(l => l.Fase === 'pollastra');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
@@ -75,6 +83,16 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                 >
                     <Settings className="w-5 h-5" />
                     Impostazioni Accasamenti
+                </button>
+                <button
+                    onClick={() => setSection("pollastra_accasamenti")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${section === "pollastra_accasamenti"
+                        ? "bg-blue-100 text-blue-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                >
+                    <Bird className="w-5 h-5" />
+                    Impostazioni Pollastra
                 </button>
                 <button
                     onClick={() => setSection("genetiche")}
@@ -118,10 +136,25 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                         )}
                         {section === "accasamenti" && (
                             <AccasamentiTable
-                                lotti={lotti}
+                                lotti={normalLotti}
                                 farmStructure={farmStructure}
                                 onUpdate={refreshData}
                             />
+                        )}
+                        {section === "pollastra_accasamenti" && (
+                            <div>
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-1">Impostazioni Pollastra</h2>
+                                    <p className="text-gray-500 text-sm">Gestione accasamenti per Persico, Teramo, Montirone.</p>
+                                </div>
+                                <AccasamentiTable
+                                    lotti={pollastralotti}
+                                    farmStructure={POLLASTRA_FARMS}
+                                    onUpdate={refreshData}
+                                    fase="pollastra"
+                                    tableLabel="T010"
+                                />
+                            </div>
                         )}
                         {section === "genetiche" && (
                             <GeneticsSettingsTable />

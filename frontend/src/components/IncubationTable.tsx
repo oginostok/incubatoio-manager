@@ -15,6 +15,7 @@ interface IncubationBatch {
     prodotto: string;
     nome: string;
     origine: string;
+    capannone: string;
     uova_partita: number;
     uova_utilizzate: number;
     eta: number;
@@ -48,6 +49,7 @@ interface EggStorageEntry {
     prodotto: string;
     nome: string;
     origine: string;
+    capannone: string;
     eta: number;
     numero: number;
     arrivate_il: string;
@@ -63,6 +65,13 @@ const PRODUCT_COLORS: Record<string, string> = {
     "Pollo70": "bg-blue-100 text-blue-800 border-blue-300",
     "Color Yeald": "bg-red-100 text-red-800 border-red-300",
     "Ross": "bg-orange-100 text-orange-800 border-orange-300"
+};
+
+const PRODUCT_BG: Record<string, string> = {
+    "Granpollo":    "#dcfce7",
+    "Pollo70":      "#dbeafe",
+    "Color Yeald":  "#fee2e2",
+    "Ross":         "#ffedd5",
 };
 
 // Helper: Format number with dot separator (xxx.xxx)
@@ -99,6 +108,7 @@ export default function IncubationTable() {
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [confirmSaveId, setConfirmSaveId] = useState<number | null>(null);
+    const [createError, setCreateError] = useState<string | null>(null);
 
     // Egg selection modal state
     const [eggStorage, setEggStorage] = useState<EggStorageEntry[]>([]);
@@ -213,6 +223,7 @@ export default function IncubationTable() {
 
     // Create new incubation
     const handleCreateIncubation = async () => {
+        setCreateError(null);
         try {
             const payload = {
                 ...formData,
@@ -239,9 +250,13 @@ export default function IncubationTable() {
                     richiesta_color_yeald: 0,
                     richiesta_ross: 0
                 });
+            } else {
+                const err = await response.json().catch(() => null);
+                setCreateError(err?.detail || `Errore dal server (${response.status}). Riprova.`);
             }
         } catch (error) {
             console.error("Failed to create incubation", error);
+            setCreateError("Errore di rete. Verifica che il server sia attivo.");
         }
     };
 
@@ -297,6 +312,7 @@ export default function IncubationTable() {
                     prodotto: selectedEgg.prodotto,
                     nome: selectedEgg.nome,
                     origine: selectedEgg.origine,
+                    capannone: selectedEgg.capannone || "",
                     uova_partita: selectedEgg.numero,
                     eta: selectedEgg.eta
                 })
@@ -543,7 +559,7 @@ export default function IncubationTable() {
                             className="flex items-center gap-2 text-gray-700 hover:text-amber-700 font-medium"
                         >
                             {showRequestForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            Previsione animali
+                            Previsione Animali
                         </button>
 
                         {showRequestForm && (
@@ -600,22 +616,28 @@ export default function IncubationTable() {
                     </div>
 
                     {/* Actions */}
-                    <div className="p-4 bg-gray-50 flex justify-end gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setShowNewForm(false);
-                                setShowRequestForm(false);
-                            }}
-                        >
-                            Annulla
-                        </Button>
-                        <Button
-                            onClick={handleCreateIncubation}
-                            className="bg-amber-600 hover:bg-amber-700"
-                        >
-                            Crea Incubazione
-                        </Button>
+                    <div className="p-4 bg-gray-50 flex flex-col gap-2">
+                        {createError && (
+                            <p className="text-red-600 text-sm text-right">{createError}</p>
+                        )}
+                        <div className="flex justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setShowNewForm(false);
+                                    setShowRequestForm(false);
+                                    setCreateError(null);
+                                }}
+                            >
+                                Annulla
+                            </Button>
+                            <Button
+                                onClick={handleCreateIncubation}
+                                className="bg-amber-600 hover:bg-amber-700"
+                            >
+                                Crea Incubazione
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -915,6 +937,7 @@ export default function IncubationTable() {
                                                             <th className="px-2 py-1 text-left">Prodotto</th>
                                                             <th className="px-2 py-1 text-left">Nome</th>
                                                             <th className="px-2 py-1 text-left">Origine</th>
+                                                            <th className="px-2 py-1 text-left">Capannone</th>
                                                             <th className="px-2 py-1 text-center">Età</th>
                                                             <th className="px-2 py-1 text-right">Uova Disponibili</th>
                                                             <th className="px-2 py-1 text-center">Giacenza</th>
@@ -952,6 +975,7 @@ export default function IncubationTable() {
                                                                         </td>
                                                                         <td className="px-2 py-1">{egg.nome}</td>
                                                                         <td className="px-2 py-1 text-gray-600">{egg.origine}</td>
+                                                                        <td className="px-2 py-1 text-gray-600">{egg.capannone || "—"}</td>
                                                                         <td className="px-2 py-1 text-center">{egg.eta} sett.</td>
                                                                         <td className="px-2 py-1 text-right font-mono">{formatNumber(egg.remaining)}</td>
                                                                         <td className="px-2 py-1 text-center font-mono">{egg.giacenza} gg</td>
@@ -988,6 +1012,7 @@ export default function IncubationTable() {
                                                         <th className="px-2 py-2 text-left">Prodotto</th>
                                                         <th className="px-2 py-2 text-left">Nome</th>
                                                         <th className="px-2 py-2 text-left">Origine</th>
+                                                        <th className="px-2 py-2 text-left">Capannone</th>
                                                         <th className="px-2 py-2 text-right">Uova Partita</th>
                                                         <th className="px-2 py-2 text-right">Uova Utilizzate</th>
                                                         <th className="px-2 py-2 text-right">Uova Rimanenti</th>
@@ -1012,6 +1037,7 @@ export default function IncubationTable() {
                                                                 </td>
                                                                 <td className="px-2 py-2">{batch.nome}</td>
                                                                 <td className="px-2 py-2 text-gray-600">{batch.origine}</td>
+                                                                <td className="px-2 py-2 text-gray-600">{batch.capannone || "—"}</td>
                                                                 <td className="px-2 py-2 text-right font-mono">{formatNumber(batch.uova_partita)}</td>
                                                                 <td className="px-2 py-2 text-right">
                                                                     <div className="relative group">
@@ -1082,7 +1108,7 @@ export default function IncubationTable() {
                                                     })}
                                                     {/* Totals Row */}
                                                     <tr className="bg-gray-100 font-bold border-t-2">
-                                                        <td colSpan={4} className="px-2 py-2 text-right">Totale:</td>
+                                                        <td colSpan={5} className="px-2 py-2 text-right">Totale:</td>
                                                         <td className="px-2 py-2 text-right font-mono">
                                                             {formatNumber(incubation.batches.reduce((sum, b) => sum + (b.uova_utilizzate || 0), 0))}
                                                         </td>
@@ -1241,8 +1267,8 @@ export default function IncubationTable() {
                                             .filter(egg => egg.remaining > 0)
                                             .sort((a, b) => b.giacenza - a.giacenza)
                                             .map(egg => (
-                                                <option key={egg.id} value={egg.id}>
-                                                    {egg.prodotto} - {egg.nome} - {egg.origine} - {egg.eta} sett. - {formatNumber(egg.remaining)} uova [{egg.giacenza} Giorni]
+                                                <option key={egg.id} value={egg.id} style={{ backgroundColor: PRODUCT_BG[egg.prodotto] || "#ffffff" }}>
+                                                    {egg.prodotto} - {egg.nome} - {egg.origine}{egg.capannone ? ` - ${egg.capannone}` : ""} - {egg.eta} sett. - {formatNumber(egg.remaining)} uova [{egg.giacenza} Giorni]
                                                 </option>
                                             ));
                                     })()}

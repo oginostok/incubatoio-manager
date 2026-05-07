@@ -8,7 +8,13 @@ interface FarmStatusGridProps {
     onUpdate: () => void;
 }
 
-// Calculate age in weeks from start year/week
+// Fixed pollastra farm structure
+const POLLASTRA_FARMS: Record<string, number[]> = {
+    "Persico":   [1, 2],
+    "Teramo":    [1],
+    "Montirone": [1, 2, 3],
+};
+
 function calculateAgeWeeks(yearStart: number, weekStart: number): number {
     const today = new Date();
     const startDate = getDateFromYearWeek(yearStart, weekStart);
@@ -24,168 +30,177 @@ function getDateFromYearWeek(year: number, week: number): Date {
     return monday;
 }
 
+// Matches capannone by number (exact or "1A"/"1B" sub-sections)
+function matchesShed(capannone: string, shed: number): boolean {
+    const cap = String(capannone);
+    const shedStr = String(shed);
+    if (cap === shedStr) return true;
+    if (cap.startsWith(shedStr) && cap.length > shedStr.length && !/^\d/.test(cap[shedStr.length])) return true;
+    return false;
+}
+
 export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGridProps) {
     const [selectedShed, setSelectedShed] = useState<{ farm: string; shed: number } | null>(null);
+    const [selectedPollaShed, setSelectedPollaShed] = useState<{ farm: string; shed: number } | null>(null);
 
-    // Get active lotti for a specific farm/shed
-    const getActiveLotti = (farm: string, shed: number): Lotto[] => {
-        return lotti.filter(l => {
-            if (!l.Attivo || l.Allevamento !== farm) return false;
-            const cap = String(l.Capannone);
-            const shedStr = String(shed);
-            // Exact match or starts with (e.g., 1 -> 1A, 1B)
-            if (cap === shedStr) return true;
-            if (cap.startsWith(shedStr) && cap.length > shedStr.length && !/^\d/.test(cap[shedStr.length])) {
-                return true;
-            }
-            return false;
-        });
-    };
+    // Normal lotti (no fase)
+    const normalLotti = lotti.filter(l => !l.Fase || l.Fase === null);
+    // Pollastra lotti
+    const pollastralotti = lotti.filter(l => l.Fase === 'pollastra');
 
-    // Check if shed is productive (age >= 24 weeks)
-    const isProductive = (farm: string, shed: number): boolean => {
-        const activeLotti = getActiveLotti(farm, shed);
-        return activeLotti.some(l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24);
-    };
+    const getActiveLotti = (farm: string, shed: number, src: Lotto[]): Lotto[] =>
+        src.filter(l => l.Attivo && l.Allevamento === farm && matchesShed(l.Capannone, shed));
+
+    const isProductive = (farm: string, shed: number): boolean =>
+        getActiveLotti(farm, shed, normalLotti).some(
+            l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24
+        );
+
+    const isPollastraOccupied = (farm: string, shed: number): boolean =>
+        getActiveLotti(farm, shed, pollastralotti).length > 0;
 
     const sortedFarms = Object.keys(farmStructure).sort();
 
+    // Shared farm card renderer for normal farms
+    const renderNormalFarmCard = (farm: string) => {
+        const sheds = farmStructure[farm];
+        const currentFarmSelected = selectedShed?.farm === farm;
+
+        return (
+            <div
+                key={farm}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md"
+            >
+                <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    🏠 {farm}
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                    {sheds.map(shed => {
+                        const productive = isProductive(farm, shed);
+                        const isSelected = selectedShed?.farm === farm && selectedShed?.shed === shed;
+                        return (
+                            <button
+                                key={shed}
+                                onClick={() => {
+                                    if (productive) {
+                                        setSelectedShed(isSelected ? null : { farm, shed });
+                                        setSelectedPollaShed(null);
+                                    }
+                                }}
+                                disabled={!productive}
+                                className={`
+                                    px-6 py-4 rounded-xl font-semibold text-base transition-all min-w-[100px]
+                                    ${productive
+                                        ? isSelected
+                                            ? "bg-emerald-400 text-white shadow-lg scale-105 ring-4 ring-emerald-200"
+                                            : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 hover:shadow-md border-2 border-emerald-300"
+                                        : "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
+                                    }
+                                `}
+                            >
+                                {productive ? (isSelected ? "✓ " : "● ") : "○ "} Cap. {shed}
+                            </button>
+                        );
+                    })}
+                </div>
+                {currentFarmSelected && selectedShed && (
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                        <ShedDetailPanel
+                            lotti={getActiveLotti(selectedShed.farm, selectedShed.shed, normalLotti).filter(
+                                l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24
+                            )}
+                            onUpdate={onUpdate}
+                            onClose={() => setSelectedShed(null)}
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
+            {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Situazione Allevamenti</h2>
                 <p className="text-xs text-gray-400">V001</p>
                 <p className="text-gray-500">Clicca su un capannone verde per vedere i dettagli</p>
             </div>
 
-            {/* Farm Cards - Two Separate Columns for Independent Vertical Expansion */}
+            {/* Normal farms — two-column layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Left Column */}
                 <div className="flex flex-col gap-6">
-                    {sortedFarms.filter((_, index) => index % 2 === 0).map(farm => {
-                        const sheds = farmStructure[farm];
-                        const currentFarmSelected = selectedShed?.farm === farm;
+                    {sortedFarms.filter((_, i) => i % 2 === 0).map(renderNormalFarmCard)}
+                </div>
+                <div className="flex flex-col gap-6">
+                    {sortedFarms.filter((_, i) => i % 2 === 1).map(renderNormalFarmCard)}
+                </div>
+            </div>
 
-                        return (
-                            <div
-                                key={farm}
-                                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md"
-                            >
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                                    🏠 {farm}
-                                </h3>
-
-                                {/* Shed Buttons */}
-                                <div className="flex flex-wrap gap-3">
-                                    {sheds.map(shed => {
-                                        const productive = isProductive(farm, shed);
-                                        const isSelected = selectedShed?.farm === farm && selectedShed?.shed === shed;
-
-                                        return (
-                                            <button
-                                                key={shed}
-                                                onClick={() => {
-                                                    if (productive) {
-                                                        if (isSelected) {
-                                                            setSelectedShed(null);
-                                                        } else {
-                                                            setSelectedShed({ farm, shed });
-                                                        }
-                                                    }
-                                                }}
-                                                disabled={!productive}
-                                                className={`
-                                                    px-6 py-4 rounded-xl font-semibold text-base transition-all min-w-[100px]
-                                                    ${productive
-                                                        ? isSelected
-                                                            ? "bg-emerald-400 text-white shadow-lg scale-105 ring-4 ring-emerald-200"
-                                                            : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 hover:shadow-md border-2 border-emerald-300"
-                                                        : "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
-                                                    }
-                                                `}
-                                            >
-                                                {productive ? (isSelected ? "✓ " : "● ") : "○ "} Cap. {shed}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Shed Detail Panel */}
-                                {currentFarmSelected && selectedShed && (
-                                    <div className="mt-6 pt-6 border-t border-gray-100">
-                                        <ShedDetailPanel
-                                            lotti={getActiveLotti(selectedShed.farm, selectedShed.shed).filter(
-                                                l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24
-                                            )}
-                                            onUpdate={onUpdate}
-                                            onClose={() => setSelectedShed(null)}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+            {/* ── Fase Pollastra zone ── */}
+            <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-6 space-y-5">
+                <div>
+                    <h3 className="text-lg font-bold text-blue-800 flex items-center gap-2">
+                        🐣 Fase Pollastra
+                    </h3>
+                    <p className="text-xs text-blue-500 mt-0.5">Allevamenti W1–W20 · non produttivi</p>
                 </div>
 
-                {/* Right Column */}
-                <div className="flex flex-col gap-6">
-                    {sortedFarms.filter((_, index) => index % 2 === 1).map(farm => {
-                        const sheds = farmStructure[farm];
-                        const currentFarmSelected = selectedShed?.farm === farm;
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                    {Object.entries(POLLASTRA_FARMS).map(([farm, sheds]) => {
+                        const isFarmSelected = selectedPollaShed?.farm === farm;
 
                         return (
                             <div
                                 key={farm}
-                                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md"
+                                className="bg-white rounded-xl border border-blue-200 p-4 shadow-sm"
                             >
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                                    🏠 {farm}
-                                </h3>
-
-                                {/* Shed Buttons */}
-                                <div className="flex flex-wrap gap-3">
+                                <h4 className="text-sm font-semibold text-blue-700 mb-3">🏠 {farm}</h4>
+                                <div className="flex flex-wrap gap-2">
                                     {sheds.map(shed => {
-                                        const productive = isProductive(farm, shed);
-                                        const isSelected = selectedShed?.farm === farm && selectedShed?.shed === shed;
+                                        const occupied = isPollastraOccupied(farm, shed);
+                                        const isSelected = selectedPollaShed?.farm === farm && selectedPollaShed?.shed === shed;
+                                        const activeLotti = getActiveLotti(farm, shed, pollastralotti);
+                                        const age = occupied
+                                            ? calculateAgeWeeks(activeLotti[0].Anno_Start, activeLotti[0].Sett_Start)
+                                            : null;
 
                                         return (
                                             <button
                                                 key={shed}
                                                 onClick={() => {
-                                                    if (productive) {
-                                                        if (isSelected) {
-                                                            setSelectedShed(null);
-                                                        } else {
-                                                            setSelectedShed({ farm, shed });
-                                                        }
-                                                    }
+                                                    if (!occupied) return;
+                                                    setSelectedPollaShed(isSelected ? null : { farm, shed });
+                                                    setSelectedShed(null);
                                                 }}
-                                                disabled={!productive}
+                                                disabled={!occupied}
                                                 className={`
-                                                    px-6 py-4 rounded-xl font-semibold text-base transition-all min-w-[100px]
-                                                    ${productive
+                                                    px-4 py-3 rounded-xl font-semibold text-sm transition-all min-w-[90px] text-left
+                                                    ${occupied
                                                         ? isSelected
-                                                            ? "bg-emerald-400 text-white shadow-lg scale-105 ring-4 ring-emerald-200"
-                                                            : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 hover:shadow-md border-2 border-emerald-300"
-                                                        : "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
+                                                            ? "bg-blue-500 text-white shadow-md ring-4 ring-blue-200"
+                                                            : "bg-blue-100 text-blue-800 hover:bg-blue-200 border-2 border-blue-300"
+                                                        : "bg-gray-50 text-gray-400 cursor-not-allowed border-2 border-gray-200"
                                                     }
                                                 `}
                                             >
-                                                {productive ? (isSelected ? "✓ " : "● ") : "○ "} Cap. {shed}
+                                                <div>{occupied ? (isSelected ? "✓ " : "● ") : "○ "} Cap. {shed}</div>
+                                                <div className="text-[10px] mt-1 opacity-80">
+                                                    {occupied && age !== null ? `W${age} / 20` : " "}
+                                                </div>
                                             </button>
                                         );
                                     })}
                                 </div>
 
-                                {/* Shed Detail Panel */}
-                                {currentFarmSelected && selectedShed && (
-                                    <div className="mt-6 pt-6 border-t border-gray-100">
+                                {/* Detail panel for selected pollastra shed */}
+                                {isFarmSelected && selectedPollaShed && (
+                                    <div className="mt-4 pt-4 border-t border-blue-100">
                                         <ShedDetailPanel
-                                            lotti={getActiveLotti(selectedShed.farm, selectedShed.shed).filter(
-                                                l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24
-                                            )}
+                                            lotti={getActiveLotti(selectedPollaShed.farm, selectedPollaShed.shed, pollastralotti)}
                                             onUpdate={onUpdate}
-                                            onClose={() => setSelectedShed(null)}
+                                            onClose={() => setSelectedPollaShed(null)}
+                                            hideProduzione={true}
                                         />
                                     </div>
                                 )}

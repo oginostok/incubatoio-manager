@@ -104,6 +104,24 @@ export const TradingAPI = {
     },
 };
 
+// Scheda Settimanale Service
+export const SchedaAPI = {
+    save: async (payload: object) => {
+        const res = await api.post("/allevamenti/scheda", payload);
+        return res.data;
+    },
+    load: async (allevamento: string, capannone: string, anno: number, settimana: number) => {
+        try {
+            const res = await api.get("/allevamenti/scheda", {
+                params: { allevamento, capannone, anno, settimana },
+            });
+            return res.data ?? null;
+        } catch {
+            return null;
+        }
+    },
+};
+
 // Incubazioni Service Wrapper
 export const IncubazioniAPI = {
     deleteIncubation: async (id: number) => {

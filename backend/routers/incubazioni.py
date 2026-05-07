@@ -41,6 +41,7 @@ class BatchCreate(BaseModel):
     prodotto: str
     nome: str
     origine: str
+    capannone: Optional[str] = ""
     uova_partita: int
     eta: int
     quantita: Optional[int] = 0  # Deprecated, kept for compatibility
@@ -86,9 +87,11 @@ def get_incubations():
                 "used_ross": 0
             }
             for batch in batches:
+                if not batch.prodotto:
+                    continue
                 product_key = f"used_{batch.prodotto.lower().replace(' ', '_')}"
                 if product_key in totals:
-                    totals[product_key] += batch.quantita
+                    totals[product_key] += (batch.uova_utilizzate or 0)
             inc_dict.update(totals)
             result.append(inc_dict)
         return result
@@ -162,56 +165,6 @@ def get_incubation(incubation_id: int):
     finally:
         db.close()
 
-
-class IncubationUpdate(BaseModel):
-    pre_incubazione_ore: Optional[int] = None
-    partenza_macchine: Optional[str] = None
-    operatore: Optional[str] = None
-    incubatrici: Optional[str] = None
-    richiesta_granpollo: Optional[int] = None
-    richiesta_pollo70: Optional[int] = None
-    richiesta_color_yeald: Optional[int] = None
-    richiesta_ross: Optional[int] = None
-
-
-@router.put("/{incubation_id}")
-def update_incubation(incubation_id: int, data: IncubationUpdate):
-    """Update incubation details"""
-    db = SessionLocal()
-    try:
-        incubation = db.query(Incubation).filter(Incubation.id == incubation_id).first()
-        if not incubation:
-            raise HTTPException(status_code=404, detail="Incubation not found")
-        
-        # Update fields if provided
-        if data.pre_incubazione_ore is not None:
-            incubation.pre_incubazione_ore = data.pre_incubazione_ore
-        if data.partenza_macchine is not None:
-            incubation.partenza_macchine = data.partenza_macchine
-        if data.operatore is not None:
-            incubation.operatore = data.operatore
-        if data.incubatrici is not None:
-            incubation.incubatrici = data.incubatrici
-        if data.richiesta_granpollo is not None:
-            incubation.richiesta_granpollo = data.richiesta_granpollo
-        if data.richiesta_pollo70 is not None:
-            incubation.richiesta_pollo70 = data.richiesta_pollo70
-        if data.richiesta_color_yeald is not None:
-            incubation.richiesta_color_yeald = data.richiesta_color_yeald
-        if data.richiesta_ross is not None:
-            incubation.richiesta_ross = data.richiesta_ross
-        
-        db.commit()
-        db.refresh(incubation)
-        
-        result = incubation.to_dict()
-        batches = db.query(IncubationBatch).filter(
-            IncubationBatch.incubation_id == incubation_id
-        ).all()
-        result["batches"] = [b.to_dict() for b in batches]
-        return result
-    finally:
-        db.close()
 
 
 
@@ -316,6 +269,7 @@ def delete_incubation(incubation_id: int):
                             prodotto=batch.prodotto,
                             nome=batch.nome,
                             origine=batch.origine,
+                            capannone=batch.capannone or "",
                             numero=batch.uova_utilizzate,
                             eta=batch.eta,
                             arrivate_il=batch.data_arrivo,
@@ -355,6 +309,7 @@ def add_batch(incubation_id: int, data: BatchCreate):
             prodotto=data.prodotto,
             nome=data.nome,
             origine=data.origine,
+            capannone=data.capannone or "",
             uova_partita=data.uova_partita,
             uova_utilizzate=0,
             eta=data.eta,
@@ -508,6 +463,7 @@ def uncommit_incubation(incubation_id: int):
                         prodotto=batch.prodotto,
                         nome=batch.nome,
                         origine=batch.origine,
+                        capannone=batch.capannone or "",
                         numero=batch.uova_utilizzate,
                         eta=batch.eta,
                         arrivate_il=batch.data_arrivo,

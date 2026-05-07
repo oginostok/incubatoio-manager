@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from utils.helpers import seed_database
 from routers import production, allevamenti, production_tables_router, trading, genetics, settings, birth_rates, chick_planning, webhook_router, magazzino_uova, incubazioni, incubation_planning
+from routers import trattamenti, pesi
+from routers import trasferimento, schiusa
+from routers import scheda_settimanale
 import uvicorn
 
 app = FastAPI(title="Incubatoio Manager API")
@@ -34,6 +37,11 @@ app.include_router(webhook_router.router)
 app.include_router(magazzino_uova.router)
 app.include_router(incubazioni.router)
 app.include_router(incubation_planning.router)  # T017
+app.include_router(trattamenti.router)
+app.include_router(pesi.router)
+app.include_router(trasferimento.router)
+app.include_router(schiusa.router)
+app.include_router(scheda_settimanale.router)
 
 @app.on_event("startup")
 def startup_event():
