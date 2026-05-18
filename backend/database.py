@@ -780,7 +780,9 @@ def save_trading_data_bulk(tipo, updates_list):
 
 def get_vendita_assegnazioni_for_week(anno: int, settimana: int, prodotto: str = None):
     """Returns assegnazioni for all vendite of the given week, optionally filtered by product.
-    Returns list of dicts: {vendita_id, allevamento, quantita, azienda, prodotto}."""
+    Returns list of dicts: {vendita_id, allevamento, quantita, azienda, prodotto}.
+    Ghost vendita rows (quantita<=0) are excluded so the UI never shows
+    assegnazioni attached to a vendita the user can no longer see."""
     db = SessionLocal()
     try:
         q = (
@@ -788,6 +790,7 @@ def get_vendita_assegnazioni_for_week(anno: int, settimana: int, prodotto: str =
               .join(TradingData, TradingData.id == VenditaAssegnazione.vendita_id)
               .filter(TradingData.tipo == "vendita")
               .filter(TradingData.anno == anno, TradingData.settimana == settimana)
+              .filter(TradingData.quantita > 0)
         )
         if prodotto:
             q = q.filter(TradingData.prodotto == prodotto)

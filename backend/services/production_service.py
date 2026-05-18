@@ -325,6 +325,11 @@ class ProductionService:
                 vrow = vendita_rows_by_id.get(a.vendita_id)
                 if vrow is None:
                     continue
+                # Skip orphan assignments attached to ghost vendita rows
+                # (quantita<=0). Without this, the shed decurtation runs
+                # against assegnazioni the user can no longer see in T002.
+                if vrow.quantita <= 0:
+                    continue
                 if product_filter and vrow.prodotto != product_filter:
                     continue
                 assegnazioni_by_vendita.setdefault(a.vendita_id, []).append({

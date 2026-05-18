@@ -105,6 +105,9 @@ def load_assegnazioni_by_week_allev(prodotto: str):
               .join(TradingData, TradingData.id == VenditaAssegnazione.vendita_id)
               .filter(TradingData.tipo == "vendita")
               .filter(TradingData.prodotto == prodotto)
+              # Ignore ghost vendita rows (quantita<=0) — their orphan
+              # assegnazioni must not decurt the sheds.
+              .filter(TradingData.quantita > 0)
               .all()
         )
         agg: dict[tuple, int] = {}
