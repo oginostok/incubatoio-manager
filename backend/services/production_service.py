@@ -355,7 +355,10 @@ class ProductionService:
                 })
 
         # Subtract sales from each shed's production (per week).
-        # Pass 1: apply explicit assignments (user's choice wins).
+        # Only EXPLICIT user assignments touch the per-shed quantities — there
+        # is no automatic oldest-first fallback (per user request). The residue
+        # (vendite_totale - somma_assegnazioni) is subtracted at aggregate level
+        # in totale_netto, not attributed to any specific shed.
         for (anno, sett, allev), tot_assigned in assegnazioni_by_week_allev.items():
             details = production_data.get((anno, sett))
             if not details:
@@ -369,29 +372,6 @@ class ProductionService:
                 take = min(det["quantita"], remaining)
                 det["quantita"] -= take
                 remaining -= take
-
-        # Pass 2: distribute the un-assigned residue (total sales minus explicit
-        # assignments) across the remaining shed quantities, oldest-first by eta.
-        # After this, produzione_totale is net of ALL sales — the vendite column
-        # is a pure statistic that must NOT be subtracted again from totale_netto.
-        all_week_keys = set(production_data.keys()) | set(sales_map.keys())
-        for (year, week) in all_week_keys:
-            details = production_data.get((year, week)) or []
-            ven_for_week = sum(d['quantita'] for d in sales_map.get((year, week), []))
-            explicit_for_week = sum(
-                qty for (a, s, _), qty in assegnazioni_by_week_allev.items()
-                if (a, s) == (year, week)
-            )
-            unassigned = max(0, ven_for_week - explicit_for_week)
-            if unassigned <= 0 or not details:
-                continue
-            order = sorted(range(len(details)), key=lambda i: details[i].get('eta', 0))
-            for idx in order:
-                if unassigned <= 0:
-                    break
-                take = min(details[idx]['quantita'], unassigned)
-                details[idx]['quantita'] -= take
-                unassigned -= take
 
         # 8. AGGREGATE SUMMARY
         all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys())
@@ -408,10 +388,16 @@ class ProductionService:
             ven_details = sales_map.get((year, week), [])
             ven_total = sum(d['quantita'] for d in ven_details)
 
-            # produzione_totale is already net of vendite (both assigned and
-            # unassigned were subtracted from the shed details above), so the
-            # vendite column is a display-only statistic — do NOT re-subtract.
-            net_total = prod_total + acq_total
+            # produzione_totale already excludes vendite ASSIGNED to a shed
+            # (subtracted from the details above). The residue — vendite that
+            # the user has not attributed to any allevamento — must still be
+            # subtracted to keep the bilancio coherent.
+            explicit_assigned = sum(
+                qty for (a, s, _), qty in assegnazioni_by_week_allev.items()
+                if (a, s) == (year, week)
+            )
+            non_assegnato = max(0, ven_total - explicit_assigned)
+            net_total = prod_total + acq_total - non_assegnato
 
             summary.append({
                 "periodo": f"{year} - {week:02d}",

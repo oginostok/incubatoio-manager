@@ -82,19 +82,13 @@ def analyse_week(week: dict) -> dict:
 
     non_assegnato = max(0, vendite_total - sum(assegnato_per_allev.values()))
 
-    # Predicted netto applying the same rules the backend uses:
-    #   1. subtract explicit per shed
-    #   2. distribute non_assegnato oldest-first (lowest eta wins)
-    predicted_netto: dict[str, int] = {}
-    for allev, lordo in lordo_per_allev.items():
-        predicted_netto[allev] = max(0, lordo - assegnato_per_allev.get(allev, 0))
-    remaining = non_assegnato
-    for allev in sorted(predicted_netto, key=lambda a: eta_per_allev.get(a, 0)):
-        if remaining <= 0:
-            break
-        take = min(predicted_netto[allev], remaining)
-        predicted_netto[allev] -= take
-        remaining -= take
+    # Predicted netto: lordo - assegnato_esplicito. No automatic oldest-first
+    # distribution — the non-assigned residue is subtracted only at aggregate
+    # level (totale_netto), not attributed to a specific shed.
+    predicted_netto: dict[str, int] = {
+        allev: max(0, lordo - assegnato_per_allev.get(allev, 0))
+        for allev, lordo in lordo_per_allev.items()
+    }
 
     anomalie: list[str] = []
     if over_assign_vendite:
@@ -124,20 +118,24 @@ def analyse_week(week: dict) -> dict:
                 f"(lordo={l} assegnato={ass}, residuo_non_ass={non_assegnato})"
             )
 
-    # Cassa: somma_netto + vendite_totale deve essere uguale a somma_lordo
-    # (entro un certo errore se vendite > lordo totale — caso patologico).
+    # Bilancio: la sola decurtazione applicata ai sheds è quella delle
+    # assegnazioni esplicite. lordo - netto deve essere uguale alla somma
+    # delle assegnazioni (clampata al massimo del lordo per shed).
     s_lordo = sum(lordo_per_allev.values())
     s_netto = sum(netto_per_allev.values())
-    if s_lordo - s_netto != min(vendite_total, s_lordo):
+    s_assegnato_effettivo = sum(
+        min(assegnato_per_allev.get(allev, 0), lordo_per_allev.get(allev, 0))
+        for allev in lordo_per_allev
+    )
+    if s_lordo - s_netto != s_assegnato_effettivo:
         anomalie.append(
             f"BILANCIO non quadra: lordo {s_lordo} - netto {s_netto} = "
-            f"{s_lordo - s_netto} != vendite_assorbite={min(vendite_total, s_lordo)} "
-            f"(vendite_totale={vendite_total})"
+            f"{s_lordo - s_netto} != assegnato_effettivo {s_assegnato_effettivo}"
         )
 
-    # Aggregate sanity: API-level produzione_totale must equal sum of the
-    # per-allevamento `quantita`, and totale_netto must equal
-    # produzione_totale + acquisti_totale (vendite are display-only).
+    # Aggregate sanity:
+    #   produzione_totale  == somma dei dettagli (netto post-assegnazioni)
+    #   totale_netto       == produzione_totale + acquisti - vendite_non_assegnate
     prod_tot_api = week.get("produzione_totale", 0)
     if prod_tot_api != s_netto:
         anomalie.append(
@@ -145,11 +143,11 @@ def analyse_week(week: dict) -> dict:
         )
     acq_tot_api = week.get("acquisti_totale", 0)
     netto_api = week.get("totale_netto", 0)
-    expected_netto = prod_tot_api + acq_tot_api
+    expected_netto = prod_tot_api + acq_tot_api - non_assegnato
     if netto_api != expected_netto:
         anomalie.append(
-            f"AGGREGATO totale_netto={netto_api} != produzione+acquisti={expected_netto} "
-            f"(probabile doppia sottrazione delle vendite)"
+            f"AGGREGATO totale_netto={netto_api} != prod+acq-non_assegnate="
+            f"{expected_netto}"
         )
 
     return {
@@ -211,7 +209,8 @@ def main():
                       f"{fmt(d['predicted_netto'].get(allev, 0))} "
                       f"{fmt(d['netto_per_allev'].get(allev, 0))}")
             if d["non_assegnato"]:
-                print(f"    (non assegnato distribuito oldest-first: {d['non_assegnato']:,})".replace(",", "."))
+                print(f"    (non assegnato a nessun allevamento: {d['non_assegnato']:,}"
+                      f" → sottratto dal totale_netto)".replace(",", "."))
             for a in d["anomalie"]:
                 print(f"    ⚠ {a}")
                 n_anom += 1
