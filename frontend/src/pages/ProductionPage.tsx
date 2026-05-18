@@ -301,6 +301,10 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                         initialData[shedKey] = 0;
                         initialData[`${shedKey}_age`] = 0;
                     });
+                    // Initialize purchases bucket — without this the key is undefined
+                    // in weeks without a trading row and recharts' monotone interpolation
+                    // can dip the stacked area below zero.
+                    initialData[`acquisti_${chartProductFilter}`] = 0;
                     weeklyByShed.set(periodo, initialData);
                 }
 

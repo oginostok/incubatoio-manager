@@ -114,7 +114,7 @@ const CustomLegend = ({ lines, visibleKeys, onToggle, onToggleAll }: {
 
 export default function ProductionChart({ data, productFilter, includeTradingData: _includeTradingData = true, showPurchasesLine = true }: ProductionChartProps) {
     // Determine lines based on current filter
-    let lines: { key: string; name: string; color: string }[] = [];
+    let lines: { key: string; name: string; color: string; fillOpacity?: number }[] = [];
 
     if (productFilter === 'all') {
         const products = ['Granpollo', 'Pollo70', 'Color Yeald', 'Ross'];
@@ -135,11 +135,16 @@ export default function ProductionChart({ data, productFilter, includeTradingDat
         const shedArray = Array.from(shedKeys).sort();
         const baseColor = PRODUCT_LINE_COLORS[productFilter as keyof typeof PRODUCT_LINE_COLORS];
         const shades = generateShades(baseColor, Math.max(shedArray.length, 1));
-        lines = shedArray.map((shedKey, index) => ({
+        const shedLines = shedArray.map((shedKey, index) => ({
             key: shedKey,
             name: shedKey.replace(`${productFilter}_`, ''),
             color: shades[index] || baseColor
         }));
+        // Purchases band sits at the bottom of the stack — declared first so tooltip
+        // and totals include it, and the legend lists it explicitly.
+        lines = showPurchasesLine
+            ? [{ key: `acquisti_${productFilter}`, name: 'Acquisti', color: PURCHASES_LINE_COLOR, fillOpacity: 0.4 }, ...shedLines]
+            : shedLines;
     }
 
     const [visibleKeys, setVisibleKeys] = useState<Set<string>>(() => new Set(lines.map(l => l.key)));
@@ -248,18 +253,6 @@ export default function ProductionChart({ data, productFilter, includeTradingDat
                             wrapperStyle={{ paddingTop: '20px' }}
                             iconType="rect"
                         />
-                        {showPurchasesLine && productFilter !== 'all' && (
-                            <Area
-                                type="monotone"
-                                dataKey={`acquisti_${productFilter}`}
-                                stackId="1"
-                                stroke={PURCHASES_LINE_COLOR}
-                                fill={PURCHASES_LINE_COLOR}
-                                fillOpacity={0.4}
-                                strokeWidth={2}
-                                name="Acquisti"
-                            />
-                        )}
                         {lines.map((line) => (
                             <Area
                                 key={line.key}
@@ -268,7 +261,7 @@ export default function ProductionChart({ data, productFilter, includeTradingDat
                                 stackId="1"
                                 stroke={line.color}
                                 fill={line.color}
-                                fillOpacity={0.7}
+                                fillOpacity={line.fillOpacity ?? 0.7}
                                 name={line.name}
                             />
                         ))}
