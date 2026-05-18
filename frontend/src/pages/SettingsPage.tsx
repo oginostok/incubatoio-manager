@@ -80,7 +80,6 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps) {
                                     <h3 className="text-lg font-semibold text-gray-800">
                                         Assegna automaticamente le vendite
                                     </h3>
-                                    <p className="text-xs text-gray-400 mt-1">cycle_settings.auto_assign_sales</p>
                                 </div>
                                 <button
                                     onClick={toggleAutoAssign}

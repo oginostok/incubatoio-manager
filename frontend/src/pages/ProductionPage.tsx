@@ -398,6 +398,12 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                 >
                     Tabelle Produzioni
                 </button>
+                <button
+                    onClick={() => onNavigate("impostazioni")}
+                    className="w-full px-4 py-3 rounded-xl text-left transition-all text-gray-600 hover:bg-gray-100"
+                >
+                    Impostazioni
+                </button>
             </ResponsiveSidebar>
 
             {/* MAIN CONTENT */}
