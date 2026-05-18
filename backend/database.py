@@ -135,15 +135,19 @@ class GeneticGallo(Base):
 # --- CYCLE SETTINGS MODEL ---
 class CycleSettings(Base):
     __tablename__ = "cycle_settings"
-    
+
     id = Column(Integer, primary_key=True, default=1)
     eta_inizio_ciclo = Column(Integer, default=24)
     eta_fine_ciclo = Column(Integer, default=75)
-    
+    # When True the backend auto-distributes vendite non-assegnate
+    # using the "30-45 weeks first, youngest first" heuristic.
+    auto_assign_sales = Column(Boolean, default=False)
+
     def to_dict(self):
         return {
             "eta_inizio_ciclo": self.eta_inizio_ciclo,
-            "eta_fine_ciclo": self.eta_fine_ciclo
+            "eta_fine_ciclo": self.eta_fine_ciclo,
+            "auto_assign_sales": bool(self.auto_assign_sales),
         }
 
 # --- CYCLE WEEKLY DATA MODEL (Dati Avanzati) ---
@@ -591,6 +595,12 @@ def init_db():
         # Smaltite field migration for egg_storage
         try:
              conn.execute(text("ALTER TABLE egg_storage ADD COLUMN smaltite INTEGER DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
+        # auto_assign_sales toggle on cycle_settings
+        try:
+             conn.execute(text("ALTER TABLE cycle_settings ADD COLUMN auto_assign_sales BOOLEAN DEFAULT 0"))
              conn.commit()
         except Exception:
              pass
@@ -1213,12 +1223,14 @@ def update_cycle_settings(data):
         if not settings:
             settings = CycleSettings(id=1)
             db.add(settings)
-        
+
         if "eta_inizio_ciclo" in data:
             settings.eta_inizio_ciclo = data["eta_inizio_ciclo"]
         if "eta_fine_ciclo" in data:
             settings.eta_fine_ciclo = data["eta_fine_ciclo"]
-        
+        if "auto_assign_sales" in data:
+            settings.auto_assign_sales = bool(data["auto_assign_sales"])
+
         db.commit()
         db.refresh(settings)
         return settings.to_dict()

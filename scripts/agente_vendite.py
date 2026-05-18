@@ -40,7 +40,16 @@ def fetch_summary(base_url: str, prodotto: str):
     return r.json()
 
 
-def analyse_week(week: dict) -> dict:
+def fetch_settings(base_url: str) -> dict:
+    try:
+        r = requests.get(f"{base_url}/api/settings/cycle", timeout=15)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return {}
+
+
+def analyse_week(week: dict, auto_assign: bool = False) -> dict:
     """Returns a dict with the diagnostic numbers + a list of anomalies.
 
     Convention:
@@ -82,13 +91,25 @@ def analyse_week(week: dict) -> dict:
 
     non_assegnato = max(0, vendite_total - sum(assegnato_per_allev.values()))
 
-    # Predicted netto: lordo - assegnato_esplicito. No automatic oldest-first
-    # distribution — the non-assigned residue is subtracted only at aggregate
-    # level (totale_netto), not attributed to a specific shed.
+    # Pass 1 — explicit assignments win.
     predicted_netto: dict[str, int] = {
         allev: max(0, lordo - assegnato_per_allev.get(allev, 0))
         for allev, lordo in lordo_per_allev.items()
     }
+    # Pass 2 — only when auto_assign is enabled, distribute the residue with
+    # the 30-45-first / youngest-first rule. Matches production_service.
+    if auto_assign and non_assegnato > 0:
+        in_window = [a for a in predicted_netto if 30 <= eta_per_allev.get(a, 0) <= 45]
+        others = [a for a in predicted_netto if not (30 <= eta_per_allev.get(a, 0) <= 45)]
+        in_window.sort(key=lambda a: eta_per_allev.get(a, 0))
+        others.sort(key=lambda a: eta_per_allev.get(a, 0))
+        remaining = non_assegnato
+        for a in in_window + others:
+            if remaining <= 0:
+                break
+            take = min(predicted_netto[a], remaining)
+            predicted_netto[a] -= take
+            remaining -= take
 
     anomalie: list[str] = []
     if over_assign_vendite:
@@ -118,24 +139,29 @@ def analyse_week(week: dict) -> dict:
                 f"(lordo={l} assegnato={ass}, residuo_non_ass={non_assegnato})"
             )
 
-    # Bilancio: la sola decurtazione applicata ai sheds è quella delle
-    # assegnazioni esplicite. lordo - netto deve essere uguale alla somma
-    # delle assegnazioni (clampata al massimo del lordo per shed).
+    # Bilancio: lordo - netto deve essere uguale alle vendite assorbite.
+    # Con auto_assign OFF: solo le assegnazioni esplicite.
+    # Con auto_assign ON: anche la quota non assegnata viene assorbita
+    # (capped al lordo totale).
     s_lordo = sum(lordo_per_allev.values())
     s_netto = sum(netto_per_allev.values())
     s_assegnato_effettivo = sum(
         min(assegnato_per_allev.get(allev, 0), lordo_per_allev.get(allev, 0))
         for allev in lordo_per_allev
     )
-    if s_lordo - s_netto != s_assegnato_effettivo:
+    expected_absorbed = s_assegnato_effettivo
+    if auto_assign:
+        expected_absorbed = min(vendite_total, s_lordo)
+    if s_lordo - s_netto != expected_absorbed:
         anomalie.append(
             f"BILANCIO non quadra: lordo {s_lordo} - netto {s_netto} = "
-            f"{s_lordo - s_netto} != assegnato_effettivo {s_assegnato_effettivo}"
+            f"{s_lordo - s_netto} != assorbito_atteso {expected_absorbed} "
+            f"(auto_assign={'ON' if auto_assign else 'OFF'})"
         )
 
     # Aggregate sanity:
-    #   produzione_totale  == somma dei dettagli (netto post-assegnazioni)
-    #   totale_netto       == produzione_totale + acquisti - vendite_non_assegnate
+    #   produzione_totale  == somma dei dettagli
+    #   totale_netto       == prod + acq - (vendite NON assorbite dai sheds)
     prod_tot_api = week.get("produzione_totale", 0)
     if prod_tot_api != s_netto:
         anomalie.append(
@@ -143,10 +169,13 @@ def analyse_week(week: dict) -> dict:
         )
     acq_tot_api = week.get("acquisti_totale", 0)
     netto_api = week.get("totale_netto", 0)
-    expected_netto = prod_tot_api + acq_tot_api - non_assegnato
+    # vendite assorbite effettivamente dai sheds (capped sul lordo).
+    absorbed_actual = s_lordo - s_netto
+    non_absorbed = max(0, vendite_total - absorbed_actual)
+    expected_netto = prod_tot_api + acq_tot_api - non_absorbed
     if netto_api != expected_netto:
         anomalie.append(
-            f"AGGREGATO totale_netto={netto_api} != prod+acq-non_assegnate="
+            f"AGGREGATO totale_netto={netto_api} != prod+acq-non_assorbite="
             f"{expected_netto}"
         )
 
@@ -176,6 +205,9 @@ def main():
     args = parser.parse_args()
 
     target_products = [args.prodotto] if args.prodotto else PRODUCTS
+    settings = fetch_settings(args.url)
+    auto_assign = bool(settings.get("auto_assign_sales", False))
+    print(f"auto_assign_sales = {'ON' if auto_assign else 'OFF'}")
 
     grand_total_anomalies = 0
     for prodotto in target_products:
@@ -195,7 +227,7 @@ def main():
 
         n_anom = 0
         for week in weeks_with_sales:
-            d = analyse_week(week)
+            d = analyse_week(week, auto_assign=auto_assign)
             if args.only_anomalies and not d["anomalie"]:
                 continue
             print()

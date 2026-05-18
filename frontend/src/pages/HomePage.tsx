@@ -1,6 +1,6 @@
 import { GiFactory, GiRooster, GiNestEggs, GiChicken } from "react-icons/gi";
 import { FaTruck } from "react-icons/fa";
-import { Barcode } from "lucide-react";
+import { Barcode, Settings as SettingsIcon } from "lucide-react";
 
 interface HomePageProps {
     onNavigate: (page: string) => void;
@@ -87,6 +87,18 @@ export default function HomePage({ onNavigate, onLogout }: HomePageProps) {
                 >
                     <FaTruck className="w-12 h-12 text-teal-600 group-hover:scale-110 transition-transform" />
                     <span className="text-xl font-bold text-gray-700">TRASPORTI</span>
+                </button>
+
+                {/* IMPOSTAZIONI */}
+                <button
+                    onClick={() => onNavigate("impostazioni")}
+                    className="flex flex-col items-center justify-center gap-4 p-8 h-40
+                               bg-white rounded-2xl shadow-lg border-2 border-transparent
+                               hover:border-gray-400 hover:shadow-xl hover:scale-[1.02]
+                               transition-all duration-200 group"
+                >
+                    <SettingsIcon className="w-12 h-12 text-gray-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-xl font-bold text-gray-700">IMPOSTAZIONI</span>
                 </button>
 
 

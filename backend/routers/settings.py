@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 class CycleSettingsUpdate(BaseModel):
     eta_inizio_ciclo: int | None = None
     eta_fine_ciclo: int | None = None
+    auto_assign_sales: bool | None = None
 
 
 class PlanningTableSettingsUpdate(BaseModel):
@@ -31,7 +32,9 @@ def update_cycle_settings_endpoint(data: CycleSettingsUpdate):
         update_data["eta_inizio_ciclo"] = data.eta_inizio_ciclo
     if data.eta_fine_ciclo is not None:
         update_data["eta_fine_ciclo"] = data.eta_fine_ciclo
-    
+    if data.auto_assign_sales is not None:
+        update_data["auto_assign_sales"] = data.auto_assign_sales
+
     return update_cycle_settings(update_data)
 
 

@@ -14,6 +14,7 @@ from database import (
     get_trading_data,
     get_birth_rate,
     get_purchase_birth_rates,
+    get_cycle_settings,
     get_ross_clients,
     add_ross_client,
     delete_ross_client,
@@ -119,14 +120,17 @@ def load_assegnazioni_by_week_allev(prodotto: str):
         db.close()
 
 
-def compute_uova_remaining_per_entry(lotto_entries, uova_vendute: int, assegnazioni_for_week: dict):
+def compute_uova_remaining_per_entry(lotto_entries, uova_vendute: int, assegnazioni_for_week: dict,
+                                     auto_assign: bool = False):
     """For a given (year, week) returns a list of (entry, uova_remaining) — the
     eggs left per shed after subtracting sales.
 
     Rules:
       1. Apply explicit assignments first (per allevamento). The user's choice wins.
-      2. Distribute the unassigned residue (uova_vendute - sum(assegnazioni)) across
-         the lotti using the legacy heuristic (sort by eta ascending).
+      2. If auto_assign is True: distribute the unassigned residue using the
+         "30-45 weeks first, youngest first" heuristic. Otherwise the residue
+         is NOT attributed to any specific shed (totals stay coherent at the
+         T010 aggregate column `uova_vendute`).
 
     `assegnazioni_for_week`: dict[allevamento_key] -> qty (only for this week+product)
     """
@@ -148,12 +152,15 @@ def compute_uova_remaining_per_entry(lotto_entries, uova_vendute: int, assegnazi
             uova_after_explicit = uova_original
         result.append([entry, uova_after_explicit])
 
-    # Pass 2 — distribute unassigned remainder oldest-first (matches legacy behaviour).
+    # Pass 2 — optional auto distribution.
     explicit_total = sum((assegnazioni_for_week or {}).values())
     unassigned = max(0, uova_vendute - explicit_total)
-    if unassigned > 0:
-        order = sorted(range(len(result)), key=lambda i: lotto_entries[i].get('eta', 0))
-        for idx in order:
+    if auto_assign and unassigned > 0:
+        in_window = [i for i in range(len(result)) if 30 <= lotto_entries[i].get('eta', 0) <= 45]
+        others = [i for i in range(len(result)) if not (30 <= lotto_entries[i].get('eta', 0) <= 45)]
+        in_window.sort(key=lambda i: lotto_entries[i].get('eta', 0))
+        others.sort(key=lambda i: lotto_entries[i].get('eta', 0))
+        for idx in in_window + others:
             if unassigned <= 0:
                 break
             current = result[idx][1]
@@ -284,6 +291,7 @@ def get_ross_extended():
 
         # Preload sale→shed assignments once (used to deduct from the originating shed)
         assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+        auto_assign = bool(get_cycle_settings().get('auto_assign_sales'))
 
         # Generate 52 weeks starting from current+3
         weeks = generate_weeks(3, 52)
@@ -319,7 +327,7 @@ def get_ross_extended():
             assegnazioni_for_week = {
                 allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
             }
-            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week, auto_assign):
                 if uova_remaining > 0:
                     rate_data = get_birth_rate(entry['eta'], product)
                     rate = (rate_data['rate'] if rate_data else 82.0) / 100.0
@@ -440,6 +448,7 @@ def get_coloryeald_extended():
         client_data = get_coloryeald_client_data()
 
         assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+        auto_assign = bool(get_cycle_settings().get('auto_assign_sales'))
 
         weeks = generate_weeks(3, 52)
         
@@ -470,7 +479,7 @@ def get_coloryeald_extended():
             assegnazioni_for_week = {
                 allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
             }
-            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week, auto_assign):
                 if uova_remaining > 0:
                     birth_rate = get_birth_rate(product, entry['eta'])
                     rate = birth_rate / 100.0 if birth_rate else 0.84
@@ -609,6 +618,7 @@ def get_pollo70_extended():
         client_data = get_pollo70_client_data()
 
         assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+        auto_assign = bool(get_cycle_settings().get('auto_assign_sales'))
 
         weeks = generate_weeks(3, 52)
         
@@ -639,7 +649,7 @@ def get_pollo70_extended():
             assegnazioni_for_week = {
                 allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
             }
-            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week, auto_assign):
                 if uova_remaining > 0:
                     birth_rate = get_birth_rate(product, entry['eta'])
                     rate = birth_rate / 100.0 if birth_rate else 0.84
@@ -786,6 +796,7 @@ def get_granpollo_extended():
         client_data = get_granpollo_client_data()
 
         assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+        auto_assign = bool(get_cycle_settings().get('auto_assign_sales'))
 
         weeks = generate_weeks(3, 52)
         
@@ -817,7 +828,7 @@ def get_granpollo_extended():
             assegnazioni_for_week = {
                 allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
             }
-            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week, auto_assign):
                 if uova_remaining > 0:
                     eta = entry['eta']
                     rate_data = get_birth_rate(eta, product)
@@ -1009,6 +1020,7 @@ def get_planning_data(product: str):
 
     # 5b. Preload sale→shed assignments for this product
     assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+    auto_assign = bool(get_cycle_settings().get('auto_assign_sales'))
 
     # 6. Generate 52 weeks starting from current+3
     weeks = generate_weeks(3, 52)
@@ -1046,7 +1058,7 @@ def get_planning_data(product: str):
         assegnazioni_for_week = {
             allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
         }
-        for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+        for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week, auto_assign):
             if uova_remaining > 0:
                 eta = entry['eta']
                 rate_data = get_birth_rate(eta, product)
