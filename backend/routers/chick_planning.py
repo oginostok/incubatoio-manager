@@ -82,7 +82,7 @@ def generate_weeks(start_offset: int, num_weeks: int):
     """Generates weeks starting from current + offset."""
     current_year, current_week = get_current_week()
     start_year, start_week = normalize_year_week(current_year, current_week + start_offset)
-    
+
     weeks = []
     year, week = start_year, start_week
     for _ in range(num_weeks):
@@ -92,6 +92,73 @@ def generate_weeks(start_offset: int, num_weeks: int):
             week = 1
             year += 1
     return weeks
+
+
+def load_assegnazioni_by_week_allev(prodotto: str):
+    """Returns dict[(anno, settimana, allevamento)] -> total qty assigned to that shed
+    for vendite of the given product. Loaded once per request to avoid N+1."""
+    from database import SessionLocal, VenditaAssegnazione, TradingData
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(VenditaAssegnazione, TradingData)
+              .join(TradingData, TradingData.id == VenditaAssegnazione.vendita_id)
+              .filter(TradingData.tipo == "vendita")
+              .filter(TradingData.prodotto == prodotto)
+              .all()
+        )
+        agg: dict[tuple, int] = {}
+        for a, td in rows:
+            k = (td.anno, td.settimana, a.allevamento)
+            agg[k] = agg.get(k, 0) + a.quantita
+        return agg
+    finally:
+        db.close()
+
+
+def compute_uova_remaining_per_entry(lotto_entries, uova_vendute: int, assegnazioni_for_week: dict):
+    """For a given (year, week) returns a list of (entry, uova_remaining) — the
+    eggs left per shed after subtracting sales.
+
+    Rules:
+      1. Apply explicit assignments first (per allevamento). The user's choice wins.
+      2. Distribute the unassigned residue (uova_vendute - sum(assegnazioni)) across
+         the lotti using the legacy heuristic (sort by eta ascending).
+
+    `assegnazioni_for_week`: dict[allevamento_key] -> qty (only for this week+product)
+    """
+    if not lotto_entries:
+        return []
+
+    # Pass 1 — explicit assignments per shed. When multiple lotti share an allevamento,
+    # the assignment is consumed in order.
+    remaining_per_allev = dict(assegnazioni_for_week or {})
+    result = []
+    for entry in lotto_entries:
+        allev = entry.get('allevamento')
+        uova_original = entry.get('uova', 0)
+        if allev and remaining_per_allev.get(allev, 0) > 0:
+            take = min(remaining_per_allev[allev], uova_original)
+            remaining_per_allev[allev] -= take
+            uova_after_explicit = uova_original - take
+        else:
+            uova_after_explicit = uova_original
+        result.append([entry, uova_after_explicit])
+
+    # Pass 2 — distribute unassigned remainder oldest-first (matches legacy behaviour).
+    explicit_total = sum((assegnazioni_for_week or {}).values())
+    unassigned = max(0, uova_vendute - explicit_total)
+    if unassigned > 0:
+        order = sorted(range(len(result)), key=lambda i: lotto_entries[i].get('eta', 0))
+        for idx in order:
+            if unassigned <= 0:
+                break
+            current = result[idx][1]
+            take = min(current, unassigned)
+            result[idx][1] = current - take
+            unassigned -= take
+
+    return [(e, u) for e, u in result]
 
 
 # --- ROSS CLIENT ENDPOINTS (T013) - Must be BEFORE /{product} ---
@@ -211,7 +278,10 @@ def get_ross_extended():
         # Get Ross clients
         clients = get_ross_clients()
         client_data = get_ross_client_data()
-        
+
+        # Preload sale→shed assignments once (used to deduct from the originating shed)
+        assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+
         # Generate 52 weeks starting from current+3
         weeks = generate_weeks(3, 52)
         
@@ -226,8 +296,10 @@ def get_ross_extended():
             source_key = (source_year, source_week)
             
             # Get production data
+            # Sum the GROSS production from lotto_entries (production_map is already
+            # net of assignments and would double-count the deduction).
             prod_data = production_map.get(source_key, {})
-            uova_prodotte = prod_data.get('produzione_totale', 0)
+            uova_prodotte = sum(e.get('uova', 0) for e in lotto_details.get(source_key, []))
             uova_acquistate = purchases_map.get(source_key, 0)
             uova_vendute = sales_map.get(source_key, 0)
             
@@ -241,37 +313,15 @@ def get_ross_extended():
             # Calculate animali possibili (simplified for Ross)
             animali = 0
             lotto_entries = lotto_details.get(source_key, [])
-            
-            if uova_vendute > 0 and lotto_entries:
-                sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
-                remaining_sales = uova_vendute
-                
-                for entry in sorted_entries:
-                    eta = entry['eta']
-                    uova_original = entry['uova']
-                    
-                    if remaining_sales > 0:
-                        if remaining_sales >= uova_original:
-                            remaining_sales -= uova_original
-                            uova_remaining = 0
-                        else:
-                            uova_remaining = uova_original - remaining_sales
-                            remaining_sales = 0
-                    else:
-                        uova_remaining = uova_original
-                    
-                    if uova_remaining > 0:
-                        rate_data = get_birth_rate(eta, product)
-                        rate = (rate_data['rate'] if rate_data else 82.0) / 100.0
-                        animali += round(uova_remaining * rate)
-            else:
-                for entry in lotto_entries:
-                    eta = entry['eta']
-                    uova = entry['uova']
-                    rate_data = get_birth_rate(eta, product)
+            assegnazioni_for_week = {
+                allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
+            }
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+                if uova_remaining > 0:
+                    rate_data = get_birth_rate(entry['eta'], product)
                     rate = (rate_data['rate'] if rate_data else 82.0) / 100.0
-                    animali += round(uova * rate)
-            
+                    animali += round(uova_remaining * rate)
+
             if uova_acquistate > 0:
                 animali += round(uova_acquistate * purchase_rate)
             
@@ -385,7 +435,9 @@ def get_coloryeald_extended():
         
         clients = get_coloryeald_clients()
         client_data = get_coloryeald_client_data()
-        
+
+        assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+
         weeks = generate_weeks(3, 52)
         
         has_vendite = False
@@ -396,8 +448,10 @@ def get_coloryeald_extended():
             source_year, source_week = normalize_year_week(birth_year, birth_week - 3)
             source_key = (source_year, source_week)
             
+            # Sum the GROSS production from lotto_entries (production_map is already
+            # net of assignments and would double-count the deduction).
             prod_data = production_map.get(source_key, {})
-            uova_prodotte = prod_data.get('produzione_totale', 0)
+            uova_prodotte = sum(e.get('uova', 0) for e in lotto_details.get(source_key, []))
             uova_acquistate = purchases_map.get(source_key, 0)
             uova_vendute = sales_map.get(source_key, 0)
             
@@ -410,40 +464,17 @@ def get_coloryeald_extended():
             
             animali = 0
             lotto_entries = lotto_details.get(source_key, [])
-            
-            if uova_vendute > 0 and lotto_entries:
-                sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
-                remaining_sales = uova_vendute
-                
-                for entry in sorted_entries:
-                    eta = entry['eta']
-                    uova_original = entry['uova']
-                    
-                    if remaining_sales > 0:
-                        sell_from_this = min(uova_original, remaining_sales)
-                        uova_remaining = uova_original - sell_from_this
-                        remaining_sales -= sell_from_this
-                    else:
-                        uova_remaining = uova_original
-                    
-                    if uova_remaining > 0:
-                        birth_rate = get_birth_rate(product, eta)
-                        rate = birth_rate / 100.0 if birth_rate else 0.84
-                        animali += int(uova_remaining * rate)
-                
-                if uova_acquistate > 0:
-                    animali += int(uova_acquistate * purchase_rate)
-            else:
-                for entry in lotto_entries:
-                    eta = entry['eta']
-                    uova = entry['uova']
-                    birth_rate = get_birth_rate(product, eta)
+            assegnazioni_for_week = {
+                allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
+            }
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+                if uova_remaining > 0:
+                    birth_rate = get_birth_rate(product, entry['eta'])
                     rate = birth_rate / 100.0 if birth_rate else 0.84
-                    animali += int(uova * rate)
-                
-                if uova_acquistate > 0:
-                    animali += int(uova_acquistate * purchase_rate)
-            
+                    animali += int(uova_remaining * rate)
+            if uova_acquistate > 0:
+                animali += int(uova_acquistate * purchase_rate)
+
             animali_possibili = round(animali / 100) * 100
             
             client_values = {}
@@ -573,7 +604,9 @@ def get_pollo70_extended():
         
         clients = get_pollo70_clients()
         client_data = get_pollo70_client_data()
-        
+
+        assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+
         weeks = generate_weeks(3, 52)
         
         has_vendite = False
@@ -584,8 +617,10 @@ def get_pollo70_extended():
             source_year, source_week = normalize_year_week(birth_year, birth_week - 3)
             source_key = (source_year, source_week)
             
+            # Sum the GROSS production from lotto_entries (production_map is already
+            # net of assignments and would double-count the deduction).
             prod_data = production_map.get(source_key, {})
-            uova_prodotte = prod_data.get('produzione_totale', 0)
+            uova_prodotte = sum(e.get('uova', 0) for e in lotto_details.get(source_key, []))
             uova_acquistate = purchases_map.get(source_key, 0)
             uova_vendute = sales_map.get(source_key, 0)
             
@@ -598,40 +633,17 @@ def get_pollo70_extended():
             
             animali = 0
             lotto_entries = lotto_details.get(source_key, [])
-            
-            if uova_vendute > 0 and lotto_entries:
-                sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
-                remaining_sales = uova_vendute
-                
-                for entry in sorted_entries:
-                    eta = entry['eta']
-                    uova_original = entry['uova']
-                    
-                    if remaining_sales > 0:
-                        sell_from_this = min(uova_original, remaining_sales)
-                        uova_remaining = uova_original - sell_from_this
-                        remaining_sales -= sell_from_this
-                    else:
-                        uova_remaining = uova_original
-                    
-                    if uova_remaining > 0:
-                        birth_rate = get_birth_rate(product, eta)
-                        rate = birth_rate / 100.0 if birth_rate else 0.84
-                        animali += int(uova_remaining * rate)
-                
-                if uova_acquistate > 0:
-                    animali += int(uova_acquistate * purchase_rate)
-            else:
-                for entry in lotto_entries:
-                    eta = entry['eta']
-                    uova = entry['uova']
-                    birth_rate = get_birth_rate(product, eta)
+            assegnazioni_for_week = {
+                allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
+            }
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+                if uova_remaining > 0:
+                    birth_rate = get_birth_rate(product, entry['eta'])
                     rate = birth_rate / 100.0 if birth_rate else 0.84
-                    animali += int(uova * rate)
-                
-                if uova_acquistate > 0:
-                    animali += int(uova_acquistate * purchase_rate)
-            
+                    animali += int(uova_remaining * rate)
+            if uova_acquistate > 0:
+                animali += int(uova_acquistate * purchase_rate)
+
             animali_possibili = round(animali / 100) * 100
             
             client_values = {}
@@ -769,7 +781,9 @@ def get_granpollo_extended():
         
         clients = get_granpollo_clients()
         client_data = get_granpollo_client_data()
-        
+
+        assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+
         weeks = generate_weeks(3, 52)
         
         has_vendite = False
@@ -780,8 +794,10 @@ def get_granpollo_extended():
             source_year, source_week = normalize_year_week(birth_year, birth_week - 3)
             source_key = (source_year, source_week)
             
+            # Sum the GROSS production from lotto_entries (production_map is already
+            # net of assignments and would double-count the deduction).
             prod_data = production_map.get(source_key, {})
-            uova_prodotte = prod_data.get('produzione_totale', 0)
+            uova_prodotte = sum(e.get('uova', 0) for e in lotto_details.get(source_key, []))
             uova_acquistate = purchases_map.get(source_key, 0)
             uova_vendute = sales_map.get(source_key, 0)
             
@@ -795,49 +811,20 @@ def get_granpollo_extended():
             animali = 0
             animali_calc_details = []
             lotto_entries = lotto_details.get(source_key, [])
-            
-            if uova_vendute > 0 and lotto_entries:
-                sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
-                remaining_sales = uova_vendute
-                
-                for entry in sorted_entries:
+            assegnazioni_for_week = {
+                allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
+            }
+            for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+                if uova_remaining > 0:
                     eta = entry['eta']
-                    uova_original = entry['uova']
-                    allevamento = entry['allevamento']
-                    
-                    if remaining_sales > 0:
-                        sell_from_this = min(uova_original, remaining_sales)
-                        uova_remaining = uova_original - sell_from_this
-                        remaining_sales -= sell_from_this
-                    else:
-                        uova_remaining = uova_original
-                    
-                    if uova_remaining > 0:
-                        rate_data = get_birth_rate(eta, product)
-                        rate_percent = rate_data['rate'] if rate_data else 82.0
-                        rate = rate_percent / 100.0
-                        result_value = int(uova_remaining * rate)
-                        animali += result_value
-                        animali_calc_details.append({
-                            "source": allevamento,
-                            "uova": uova_remaining,
-                            "eta": eta,
-                            "rate_percent": rate_percent,
-                            "animali": result_value
-                        })
-            else:
-                for entry in lotto_entries:
-                    eta = entry['eta']
-                    uova = entry['uova']
-                    allevamento = entry['allevamento']
                     rate_data = get_birth_rate(eta, product)
                     rate_percent = rate_data['rate'] if rate_data else 82.0
                     rate = rate_percent / 100.0
-                    result_value = int(uova * rate)
+                    result_value = int(uova_remaining * rate)
                     animali += result_value
                     animali_calc_details.append({
-                        "source": allevamento,
-                        "uova": uova,
+                        "source": entry.get('allevamento', '?'),
+                        "uova": uova_remaining,
                         "eta": eta,
                         "rate_percent": rate_percent,
                         "animali": result_value
@@ -1016,7 +1003,10 @@ def get_planning_data(product: str):
     
     # 5. Get saved planning data
     planning_data = get_chick_planning(product)
-    
+
+    # 5b. Preload sale→shed assignments for this product
+    assegnazioni_map = load_assegnazioni_by_week_allev(db_product_name)
+
     # 6. Generate 52 weeks starting from current+3
     weeks = generate_weeks(3, 52)
     
@@ -1033,7 +1023,7 @@ def get_planning_data(product: str):
         
         # Get production data for source week
         prod_data = production_map.get(source_key, {})
-        uova_prodotte = prod_data.get('produzione_totale', 0)
+        uova_prodotte = sum(e.get('uova', 0) for e in lotto_details.get(source_key, []))
         uova_acquistate = purchases_map.get(source_key, 0)
         uova_vendute = sales_map.get(source_key, 0)
         
@@ -1050,60 +1040,20 @@ def get_planning_data(product: str):
         
         # From production (per-lotto with age)
         lotto_entries = lotto_details.get(source_key, [])
-        
-        # Subtract sales from production starting from lowest ages (applies to ALL products)
-        if uova_vendute > 0 and lotto_entries:
-            # Sort by age (ascending) - lowest age first for sales deduction
-            sorted_entries = sorted(lotto_entries, key=lambda x: x['eta'])
-            remaining_sales = uova_vendute
-            
-            for entry in sorted_entries:
+        assegnazioni_for_week = {
+            allev: qty for (a, s, allev), qty in assegnazioni_map.items() if (a, s) == source_key
+        }
+        for entry, uova_remaining in compute_uova_remaining_per_entry(lotto_entries, uova_vendute, assegnazioni_for_week):
+            if uova_remaining > 0:
                 eta = entry['eta']
-                uova_original = entry['uova']
-                allevamento = entry['allevamento']
-                
-                # Subtract sales from this batch
-                if remaining_sales > 0:
-                    if remaining_sales >= uova_original:
-                        # All eggs from this batch go to sales
-                        remaining_sales -= uova_original
-                        uova_remaining = 0
-                    else:
-                        # Only part of eggs go to sales
-                        uova_remaining = uova_original - remaining_sales
-                        remaining_sales = 0
-                else:
-                    uova_remaining = uova_original
-                
-                # Only calculate animali for remaining eggs
-                if uova_remaining > 0:
-                    rate_data = get_birth_rate(eta, product)
-                    rate_percent = rate_data['rate'] if rate_data else 82.0
-                    rate = rate_percent / 100.0
-                    result_value = round(uova_remaining * rate)
-                    animali += result_value
-                    animali_calc_details.append({
-                        "source": allevamento,
-                        "uova": uova_remaining,
-                        "eta": eta,
-                        "rate_percent": rate_percent,
-                        "animali": result_value
-                    })
-        else:
-            # No sales - standard logic
-            for entry in lotto_entries:
-                eta = entry['eta']
-                uova = entry['uova']
-                allevamento = entry['allevamento']
-                # Get birth rate from T008
                 rate_data = get_birth_rate(eta, product)
                 rate_percent = rate_data['rate'] if rate_data else 82.0
                 rate = rate_percent / 100.0
-                result_value = round(uova * rate)
+                result_value = round(uova_remaining * rate)
                 animali += result_value
                 animali_calc_details.append({
-                    "source": allevamento,
-                    "uova": uova,
+                    "source": entry.get('allevamento', '?'),
+                    "uova": uova_remaining,
                     "eta": eta,
                     "rate_percent": rate_percent,
                     "animali": result_value
