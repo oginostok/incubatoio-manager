@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Plus, Trash2, Check, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Check, X, Loader2, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 interface AccasamentiTableProps {
     lotti: Lotto[];
@@ -43,6 +43,11 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
     const [productionCurveOptions, setProductionCurveOptions] = useState<string[]>([]);
     const [gallinaOptions, setGallinaOptions] = useState<string[]>([]);
     const [galloOptions, setGalloOptions] = useState<string[]>([]);
+
+    const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
+    const [filterAllevamento, setFilterAllevamento] = useState('');
+    const [filterGallina, setFilterGallina] = useState('');
+    const [filterProdotto, setFilterProdotto] = useState('');
 
     // Cycle settings state
     const [etaInizioCiclo, setEtaInizioCiclo] = useState(24);
@@ -545,12 +550,50 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
         setDeleteConfirm({ show: false, lottoId: null });
     };
 
+    const toggleSort = (column: string) => {
+        setSortConfig(prev =>
+            prev?.column === column
+                ? { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+                : { column, direction: 'asc' }
+        );
+    };
+
+    const uniqueAllevamenti = [...new Set(lotti.filter(l => l.Attivo).map(l => l.Allevamento))].sort();
+    const uniqueGalline = [...new Set(lotti.filter(l => l.Attivo && l.Razza).map(l => l.Razza))].sort();
+    const uniqueProdotti = [...new Set(lotti.filter(l => l.Attivo && l.Prodotto).map(l => l.Prodotto))].sort();
+
     const activeLotti = lotti
         .filter(l => l.Attivo && l.id !== undefined && l.id !== null)
+        .filter(l => !filterAllevamento || l.Allevamento === filterAllevamento)
+        .filter(l => !filterGallina || l.Razza === filterGallina)
+        .filter(l => !filterProdotto || l.Prodotto === filterProdotto)
         .sort((a, b) => {
-            if (a.Anno_Start !== b.Anno_Start) return b.Anno_Start - a.Anno_Start;
-            return b.Sett_Start - a.Sett_Start;
+            if (!sortConfig) {
+                if (a.Anno_Start !== b.Anno_Start) return b.Anno_Start - a.Anno_Start;
+                return b.Sett_Start - a.Sett_Start;
+            }
+            const { column, direction } = sortConfig;
+            const mult = direction === 'asc' ? 1 : -1;
+            switch (column) {
+                case 'Allevamento': return mult * a.Allevamento.localeCompare(b.Allevamento);
+                case 'Capannone': return mult * a.Capannone.localeCompare(b.Capannone);
+                case 'Razza': return mult * (a.Razza || '').localeCompare(b.Razza || '');
+                case 'Prodotto': return mult * (a.Prodotto || '').localeCompare(b.Prodotto || '');
+                case 'Capi': return mult * (a.Capi - b.Capi);
+                case 'nascita': return mult * ((a.Anno_Start * 100 + a.Sett_Start) - (b.Anno_Start * 100 + b.Sett_Start));
+                case 'fineCiclo': return mult * getFineCiclo(a).localeCompare(getFineCiclo(b));
+                case 'etaFine': return mult * (getEtaFineCicloValue(a) - getEtaFineCicloValue(b));
+                case 'stato': return mult * getLottoStatus(a).label.localeCompare(getLottoStatus(b).label);
+                default: return 0;
+            }
         });
+
+    const sortIcon = (column: string) => {
+        if (sortConfig?.column !== column) return <ArrowUpDown className="w-3 h-3 text-gray-300 shrink-0" />;
+        return sortConfig.direction === 'asc'
+            ? <ArrowUp className="w-3 h-3 text-blue-500 shrink-0" />
+            : <ArrowDown className="w-3 h-3 text-blue-500 shrink-0" />;
+    };
 
     return (
         <div className="space-y-6">
@@ -586,10 +629,22 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                     <p className="text-xs text-gray-400">{tableLabel}</p>
                     <p className="text-gray-500">Gestisci tutti i lotti di allevamento - Doppio click per modificare</p>
                 </div>
-                <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Nuovo Accasamento
-                </Button>
+                <div className="flex items-center gap-2">
+                    {(filterAllevamento || filterGallina || filterProdotto) && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => { setFilterAllevamento(''); setFilterGallina(''); setFilterProdotto(''); }}
+                            className="text-xs gap-1"
+                        >
+                            <X className="w-3 h-3" /> Reset filtri
+                        </Button>
+                    )}
+                    <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Nuovo Accasamento
+                    </Button>
+                </div>
             </div>
 
             {/* Form for New Lotto */}
@@ -754,25 +809,82 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                         <table className="w-full table-fixed">
                             <thead className="bg-gray-50 border-b">
                                 <tr>
-                                    <th className="w-32 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Allevamento</th>
-                                    <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Cap.</th>
-                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Gallina</th>
+                                    <th className="w-32 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('Allevamento')}>
+                                        <div className="flex items-center justify-center gap-1">Allevamento {sortIcon('Allevamento')}</div>
+                                    </th>
+                                    <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('Capannone')}>
+                                        <div className="flex items-center justify-center gap-1">Cap. {sortIcon('Capannone')}</div>
+                                    </th>
+                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('Razza')}>
+                                        <div className="flex items-center justify-center gap-1">Gallina {sortIcon('Razza')}</div>
+                                    </th>
                                     <th className="w-32 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Gallo</th>
                                     <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Usa dati di:</th>
-                                    <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Prodotto</th>
-                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Capi</th>
-                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Inserire data nascita pulcini">Nascita Ripr.</th>
+                                    <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('Prodotto')}>
+                                        <div className="flex items-center justify-center gap-1">Prodotto {sortIcon('Prodotto')}</div>
+                                    </th>
+                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('Capi')}>
+                                        <div className="flex items-center justify-center gap-1">Capi {sortIcon('Capi')}</div>
+                                    </th>
+                                    <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" title="Inserire data nascita pulcini" onClick={() => toggleSort('nascita')}>
+                                        <div className="flex items-center justify-center gap-1">Nascita Ripr. {sortIcon('nascita')}</div>
+                                    </th>
                                     {fase !== "pollastra" && (
                                         <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase" title="Entrata in produzione del capannone. Questa impostazione è modificabile nel menu Impostazioni Genetiche">Inizio Ciclo</th>
                                     )}
-                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                                        {fase === "pollastra" ? "Trasferimento" : "Fine Ciclo"}
+                                    <th className="w-40 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('fineCiclo')}>
+                                        <div className="flex items-center justify-center gap-1">
+                                            {fase === "pollastra" ? "Trasferimento" : "Fine Ciclo"} {sortIcon('fineCiclo')}
+                                        </div>
                                     </th>
                                     {fase !== "pollastra" && (
-                                        <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Età Fine</th>
+                                        <th className="w-20 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('etaFine')}>
+                                            <div className="flex items-center justify-center gap-1">Età Fine {sortIcon('etaFine')}</div>
+                                        </th>
                                     )}
-                                    <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Stato</th>
+                                    <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none" onClick={() => toggleSort('stato')}>
+                                        <div className="flex items-center justify-center gap-1">Stato {sortIcon('stato')}</div>
+                                    </th>
                                     <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Azioni</th>
+                                </tr>
+                                <tr className="bg-white border-b">
+                                    <th className="px-2 pb-2">
+                                        <Select value={filterAllevamento || '__all__'} onValueChange={v => setFilterAllevamento(v === '__all__' ? '' : v)}>
+                                            <SelectTrigger className="h-7 text-xs font-normal">
+                                                <SelectValue placeholder="Tutti" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all__">Tutti</SelectItem>
+                                                {uniqueAllevamenti.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </th>
+                                    <th />
+                                    <th className="px-2 pb-2">
+                                        <Select value={filterGallina || '__all__'} onValueChange={v => setFilterGallina(v === '__all__' ? '' : v)}>
+                                            <SelectTrigger className="h-7 text-xs font-normal">
+                                                <SelectValue placeholder="Tutte" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all__">Tutte</SelectItem>
+                                                {uniqueGalline.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </th>
+                                    <th />
+                                    <th />
+                                    <th className="px-2 pb-2">
+                                        <Select value={filterProdotto || '__all__'} onValueChange={v => setFilterProdotto(v === '__all__' ? '' : v)}>
+                                            <SelectTrigger className="h-7 text-xs font-normal">
+                                                <SelectValue placeholder="Tutti" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__all__">Tutti</SelectItem>
+                                                {uniqueProdotti.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </th>
+                                    <th colSpan={fase !== "pollastra" ? 7 : 5} />
                                 </tr>
                             </thead>
                             <tbody className="divide-y">

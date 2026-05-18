@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Plus, X, Pencil } from "lucide-react";
+import { Plus, X, Pencil, Trash2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +36,7 @@ interface EggStorageEntry {
     eta: number;
     arrivate_il: string;
     numero_ddt?: string;
+    smaltite?: number;
 }
 
 interface LottoData {
@@ -72,6 +73,12 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
     const [formNewNome, setFormNewNome] = useState("");
     const [showNewNomeInput, setShowNewNomeInput] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // Smaltimento state
+    const [smaltimentoEntry, setSmaltimentoEntry] = useState<EggStorageEntry | null>(null);
+    const [smaltimentoQty, setSmaltimentoQty] = useState("");
+    const [smaltimentoSaving, setSmaltimentoSaving] = useState(false);
+    const [smaltimentoError, setSmaltimentoError] = useState("");
 
     // Fetch data
     useEffect(() => {
@@ -307,6 +314,35 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         setShowModal(true);
     };
 
+    const handleSmaltimento = async () => {
+        if (!smaltimentoEntry) return;
+        const qty = parseInt(smaltimentoQty.replace(/\./g, ""), 10);
+        if (!qty || qty <= 0) { setSmaltimentoError("Inserisci una quantità valida"); return; }
+        if (qty > smaltimentoEntry.numero) { setSmaltimentoError(`Massimo disponibile: ${formatNumber(smaltimentoEntry.numero)}`); return; }
+        setSmaltimentoSaving(true);
+        setSmaltimentoError("");
+        try {
+            const res = await fetch(`${API_BASE}/api/magazzino-uova/${smaltimentoEntry.id}/smaltimento`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quantita: qty })
+            });
+            if (res.ok) {
+                await fetchEntries();
+                setSmaltimentoEntry(null);
+                setSmaltimentoQty("");
+                onDataChange?.();
+            } else {
+                const err = await res.json();
+                setSmaltimentoError(err.detail || "Errore durante il smaltimento");
+            }
+        } catch {
+            setSmaltimentoError("Errore di connessione");
+        } finally {
+            setSmaltimentoSaving(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
@@ -315,8 +351,10 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
         );
     }
 
-    // Sort entries by Giacenza (days in storage) in descending order
+    // Sort entries: primary by Prodotto (A→Z), secondary by Giacenza (older first)
     const sortedEntries = [...entries].sort((a, b) => {
+        const byProdotto = (a.prodotto || "").localeCompare(b.prodotto || "");
+        if (byProdotto !== 0) return byProdotto;
         return calculateGiacenza(b.arrivate_il) - calculateGiacenza(a.arrivate_il);
     });
 
@@ -371,8 +409,10 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                             <th className="w-24 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Giacenza
                             </th>
+                            <th className="w-28 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Smaltite
+                            </th>
                             <th className="w-12 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-
                             </th>
                         </tr>
                     </thead>
@@ -418,8 +458,21 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                                             {calculateGiacenza(entry.arrivate_il)} gg
                                         </span>
                                     </td>
+                                    <td className="px-4 py-3 text-center font-mono text-sm">
+                                        {(entry.smaltite || 0) > 0
+                                            ? <span className="text-red-400">{formatNumber(entry.smaltite!)}</span>
+                                            : <span className="text-gray-300">—</span>
+                                        }
+                                    </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => { setSmaltimentoEntry(entry); setSmaltimentoQty(""); setSmaltimentoError(""); }}
+                                                className="text-orange-400 hover:text-orange-600 transition-colors"
+                                                title="Smaltisci uova"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                             <button
                                                 onClick={() => handleEdit(entry)}
                                                 className="text-blue-400 hover:text-blue-600 transition-colors"
@@ -435,6 +488,56 @@ export default function EggStorageTable({ showTooltips = true, onDataChange }: E
                     </tbody>
                 </table>
             </div>
+
+            {/* Smaltimento Modal */}
+            {smaltimentoEntry && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
+                        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-gray-800">Smaltisci uova</h3>
+                            <button onClick={() => setSmaltimentoEntry(null)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 space-y-1">
+                                <div><span className="font-medium">{smaltimentoEntry.nome}</span> — {smaltimentoEntry.origine}</div>
+                                <div>Disponibili: <span className="font-mono font-semibold text-gray-800">{formatNumber(smaltimentoEntry.numero)}</span> uova</div>
+                                {(smaltimentoEntry.smaltite || 0) > 0 && (
+                                    <div className="text-red-500">Già smaltite in precedenza: {formatNumber(smaltimentoEntry.smaltite!)}</div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Quantità da smaltire</label>
+                                <input
+                                    type="text"
+                                    value={smaltimentoQty}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(/\D/g, "");
+                                        const formatted = raw ? parseInt(raw, 10).toLocaleString("it-IT") : "";
+                                        setSmaltimentoQty(formatted);
+                                        setSmaltimentoError("");
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono"
+                                    placeholder="es. 180"
+                                    autoFocus
+                                />
+                                {smaltimentoError && <p className="text-red-500 text-xs mt-1">{smaltimentoError}</p>}
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                                <Button variant="outline" onClick={() => setSmaltimentoEntry(null)}>Annulla</Button>
+                                <Button
+                                    onClick={handleSmaltimento}
+                                    disabled={smaltimentoSaving || !smaltimentoQty}
+                                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                                >
+                                    {smaltimentoSaving ? "Salvataggio..." : "Conferma smaltimento"}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             {showModal && (

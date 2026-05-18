@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from database import get_egg_storage, add_egg_storage, update_egg_storage, delete_egg_storage
+from database import get_egg_storage, add_egg_storage, update_egg_storage, delete_egg_storage, smaltisci_uova
 
 router = APIRouter(
     prefix="/api/magazzino-uova",
@@ -18,6 +18,9 @@ class EggStorageCreate(BaseModel):
     eta: int
     arrivate_il: str
     numero_ddt: Optional[str] = ""
+
+class SmaltimentoCreate(BaseModel):
+    quantita: int
 
 class EggStorageUpdate(BaseModel):
     prodotto: Optional[str] = None
@@ -56,6 +59,19 @@ def update_entry(entry_id: int, entry: EggStorageUpdate):
         raise HTTPException(status_code=404, detail="Entry not found")
     
     return {"status": "ok", "message": "No changes"}
+
+
+@router.post("/{entry_id}/smaltimento")
+def smaltimento_entry(entry_id: int, data: SmaltimentoCreate):
+    """Registers egg disposal: deducts from numero, accumulates in smaltite."""
+    result, error = smaltisci_uova(entry_id, data.quantita)
+    if error == "not_found":
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if error == "invalid_quantity":
+        raise HTTPException(status_code=400, detail="La quantità deve essere maggiore di zero")
+    if error == "exceeds_available":
+        raise HTTPException(status_code=400, detail="Quantità superiore alle uova disponibili")
+    return {"status": "ok", "entry": result}
 
 
 @router.delete("/{entry_id}")

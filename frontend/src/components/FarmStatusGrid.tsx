@@ -30,6 +30,19 @@ function getDateFromYearWeek(year: number, week: number): Date {
     return monday;
 }
 
+function isLottoExpired(l: Lotto): boolean {
+    if (!l.Data_Fine_Prevista) return false;
+    const parts = l.Data_Fine_Prevista.split('/');
+    if (parts.length !== 2) return false;
+    const fineYear = parseInt(parts[0]);
+    const fineWeek = parseInt(parts[1]);
+    if (isNaN(fineYear) || isNaN(fineWeek)) return false;
+    // Cycle expires from the Monday of the week after fineWeek
+    const expiry = getDateFromYearWeek(fineYear, fineWeek);
+    expiry.setDate(expiry.getDate() + 7);
+    return new Date() >= expiry;
+}
+
 // Matches capannone by number (exact or "1A"/"1B" sub-sections)
 function matchesShed(capannone: string, shed: number): boolean {
     const cap = String(capannone);
@@ -53,11 +66,11 @@ export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGri
 
     const isProductive = (farm: string, shed: number): boolean =>
         getActiveLotti(farm, shed, normalLotti).some(
-            l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24
+            l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24 && !isLottoExpired(l)
         );
 
     const isPollastraOccupied = (farm: string, shed: number): boolean =>
-        getActiveLotti(farm, shed, pollastralotti).length > 0;
+        getActiveLotti(farm, shed, pollastralotti).some(l => !isLottoExpired(l));
 
     const sortedFarms = Object.keys(farmStructure).sort();
 

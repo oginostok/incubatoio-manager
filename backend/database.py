@@ -182,6 +182,7 @@ class EggStorage(Base):
     eta = Column(Integer, default=0)  # Age in weeks
     arrivate_il = Column(String)  # Date of arrival (YYYY-MM-DD)
     numero_ddt = Column(String, default="")  # DDT document number
+    smaltite = Column(Integer, default=0)  # Cumulative disposed/broken eggs
 
     def to_dict(self):
         return {
@@ -193,7 +194,8 @@ class EggStorage(Base):
             "numero": self.numero,
             "eta": self.eta,
             "arrivate_il": self.arrivate_il,
-            "numero_ddt": self.numero_ddt or ""
+            "numero_ddt": self.numero_ddt or "",
+            "smaltite": self.smaltite or 0
         }
 
 
@@ -572,6 +574,12 @@ def init_db():
         # Capannone field migration for egg_storage and incubation_batches
         try:
              conn.execute(text("ALTER TABLE egg_storage ADD COLUMN capannone VARCHAR DEFAULT ''"))
+             conn.commit()
+        except Exception:
+             pass
+        # Smaltite field migration for egg_storage
+        try:
+             conn.execute(text("ALTER TABLE egg_storage ADD COLUMN smaltite INTEGER DEFAULT 0"))
              conn.commit()
         except Exception:
              pass
@@ -1950,6 +1958,25 @@ def update_egg_storage(entry_id, data):
             db.refresh(entry)
             return entry.to_dict()
         return None
+    finally:
+        db.close()
+
+def smaltisci_uova(entry_id, quantita):
+    """Deducts disposed eggs from numero and accumulates in smaltite."""
+    db = SessionLocal()
+    try:
+        entry = db.query(EggStorage).filter(EggStorage.id == entry_id).first()
+        if not entry:
+            return None, "not_found"
+        if quantita <= 0:
+            return None, "invalid_quantity"
+        if quantita > entry.numero:
+            return None, "exceeds_available"
+        entry.numero -= quantita
+        entry.smaltite = (entry.smaltite or 0) + quantita
+        db.commit()
+        db.refresh(entry)
+        return entry.to_dict(), None
     finally:
         db.close()
 

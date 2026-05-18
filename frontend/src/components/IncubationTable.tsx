@@ -314,6 +314,7 @@ export default function IncubationTable() {
                     origine: selectedEgg.origine,
                     capannone: selectedEgg.capannone || "",
                     uova_partita: selectedEgg.numero,
+                    uova_utilizzate: selectedEgg.numero,
                     eta: selectedEgg.eta
                 })
             });
@@ -1043,7 +1044,7 @@ export default function IncubationTable() {
                                                                     <div className="relative group">
                                                                         <input
                                                                             type="number"
-                                                                            defaultValue={batch.uova_utilizzate || 0}
+                                                                            defaultValue={batch.uova_utilizzate || batch.uova_partita || 0}
                                                                             min={0}
                                                                             className={`w-20 px-2 py-1 text-right font-mono border rounded focus:ring-2 focus:ring-amber-500 ${(batch.uova_utilizzate || 0) > (batch.uova_partita || 0)
                                                                                 ? "border-red-500 border-2"

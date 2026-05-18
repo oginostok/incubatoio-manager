@@ -43,6 +43,7 @@ class BatchCreate(BaseModel):
     origine: str
     capannone: Optional[str] = ""
     uova_partita: int
+    uova_utilizzate: Optional[int] = None
     eta: int
     quantita: Optional[int] = 0  # Deprecated, kept for compatibility
 
@@ -311,7 +312,7 @@ def add_batch(incubation_id: int, data: BatchCreate):
             origine=data.origine,
             capannone=data.capannone or "",
             uova_partita=data.uova_partita,
-            uova_utilizzate=0,
+            uova_utilizzate=data.uova_utilizzate if data.uova_utilizzate is not None else data.uova_partita,
             eta=data.eta,
             data_arrivo=data_arrivo,
             storico_override=None,

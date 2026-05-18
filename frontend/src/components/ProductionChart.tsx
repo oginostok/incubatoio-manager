@@ -28,12 +28,16 @@ const generateShades = (baseColor: string, count: number): string[] => {
     const g = parseInt(baseColor.slice(3, 5), 16);
     const b = parseInt(baseColor.slice(5, 7), 16);
 
+    // Cap the lightest shade so it never blends fully into the white background.
+    const MAX_WHITE_BLEND = 0.65;
+    const denom = Math.max(count - 1, 1);
+
     const shades: string[] = [];
     for (let i = 0; i < count; i++) {
-        const factor = 1 - (i * 0.2);
-        const newR = Math.max(0, Math.min(255, Math.floor(r + (255 - r) * (1 - factor))));
-        const newG = Math.max(0, Math.min(255, Math.floor(g + (255 - g) * (1 - factor))));
-        const newB = Math.max(0, Math.min(255, Math.floor(b + (255 - b) * (1 - factor))));
+        const blend = count <= 1 ? 0 : (i / denom) * MAX_WHITE_BLEND;
+        const newR = Math.floor(r + (255 - r) * blend);
+        const newG = Math.floor(g + (255 - g) * blend);
+        const newB = Math.floor(b + (255 - b) * blend);
         shades.push(`#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`);
     }
     return shades;
