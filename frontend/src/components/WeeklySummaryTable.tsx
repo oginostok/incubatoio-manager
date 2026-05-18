@@ -70,15 +70,14 @@ function SaleAllocationEditor({ sale, week, onSaved }: SaleAllocationEditorProps
             const items = Object.entries(values)
                 .map(([allevamento, q]) => ({ allevamento, quantita: parseInt(q) || 0 }))
                 .filter(it => it.quantita > 0);
+            if (sale.vendita_id === undefined) {
+                throw new Error("vendita_id mancante — ricarica la pagina");
+            }
             const res = await fetch(`${API_BASE_URL}/api/trading/vendite/assegnazioni`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    anno: week.anno,
-                    settimana: week.settimana,
-                    prodotto: sale.prodotto || week.dettagli_produzione[0]?.prodotto || "",
-                    azienda: sale.azienda || "Generica",
-                    razza: "",
+                    vendita_id: sale.vendita_id,
                     items,
                 }),
             });

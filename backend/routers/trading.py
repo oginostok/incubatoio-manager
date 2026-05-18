@@ -36,9 +36,11 @@ class AssegnazioneItem(BaseModel):
     quantita: int
 
 class AssegnazioniBulkUpdate(BaseModel):
-    anno: int
-    settimana: int
-    prodotto: str
+    vendita_id: Optional[int] = None  # preferred path: UI passes the id from dettagli_vendite
+    # Fallback identification when vendita_id is unknown (kept for backwards compat):
+    anno: Optional[int] = None
+    settimana: Optional[int] = None
+    prodotto: Optional[str] = None
     azienda: Optional[str] = "Generica"
     razza: Optional[str] = ""
     items: List[AssegnazioneItem]
@@ -199,13 +201,20 @@ def list_assegnazioni(anno: int, settimana: int, prodotto: Optional[str] = None)
 
 @router.put("/vendite/assegnazioni")
 def update_assegnazioni(payload: AssegnazioniBulkUpdate):
-    """Replaces (in-toto) the shed allocations for a given week+product vendita.
-    Resolves/creates the trading_data row if missing — keeps the API simple from
-    the UI: the user only knows the week+product, not the underlying vendita_id."""
+    """Replaces (in-toto) the shed allocations for a vendita row.
+    Preferred: pass vendita_id (UI already has it from /production/summary).
+    Fallback: identify by (anno, settimana, prodotto, azienda, razza) — used
+    only by legacy callers; does NOT create new vendita rows anymore (creating
+    them silently led to ghost rows that broke the round-trip)."""
     for it in payload.items:
         if it.quantita < 0:
             raise HTTPException(status_code=400, detail="Le quantità delle assegnazioni non possono essere negative.")
-    try:
+
+    vendita_id = payload.vendita_id
+    if vendita_id is None:
+        # Fallback lookup. All four key fields are required to disambiguate.
+        if not (payload.anno and payload.settimana and payload.prodotto):
+            raise HTTPException(status_code=400, detail="Manca vendita_id (oppure anno/settimana/prodotto per ricerca).")
         vendita_id = find_or_create_vendita(
             anno=payload.anno,
             settimana=payload.settimana,
@@ -213,7 +222,56 @@ def update_assegnazioni(payload: AssegnazioniBulkUpdate):
             azienda=payload.azienda or "Generica",
             razza=payload.razza or "",
         )
+    try:
         replace_assegnazioni_for_vendita(vendita_id, [it.model_dump() for it in payload.items])
         return {"status": "success", "vendita_id": vendita_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/vendite/assegnazioni/cleanup-ghosts")
+def cleanup_ghost_assegnazioni():
+    """One-off cleanup: ghost trading_data rows (quantita=0, tipo='vendita')
+    were created by an older version of PUT /vendite/assegnazioni when the
+    razza key didn't match. Re-points orphan VenditaAssegnazione rows from
+    the ghost row onto the real T005 row with same (anno, sett, prodotto,
+    azienda) and deletes the ghosts. Safe to run repeatedly."""
+    from database import SessionLocal, TradingData, VenditaAssegnazione
+    db = SessionLocal()
+    try:
+        ghosts = (
+            db.query(TradingData)
+              .filter(TradingData.tipo == "vendita", TradingData.quantita == 0)
+              .all()
+        )
+        moved = 0
+        deleted = 0
+        for g in ghosts:
+            real = (
+                db.query(TradingData)
+                  .filter(
+                      TradingData.tipo == "vendita",
+                      TradingData.anno == g.anno,
+                      TradingData.settimana == g.settimana,
+                      TradingData.prodotto == g.prodotto,
+                      TradingData.azienda == g.azienda,
+                      TradingData.quantita > 0,
+                      TradingData.id != g.id,
+                  )
+                  .first()
+            )
+            if real:
+                upd = (
+                    db.query(VenditaAssegnazione)
+                      .filter(VenditaAssegnazione.vendita_id == g.id)
+                      .update({"vendita_id": real.id})
+                )
+                moved += upd
+            else:
+                db.query(VenditaAssegnazione).filter(VenditaAssegnazione.vendita_id == g.id).delete()
+            db.delete(g)
+            deleted += 1
+        db.commit()
+        return {"status": "ok", "ghosts_deleted": deleted, "assegnazioni_moved": moved}
+    finally:
+        db.close()
