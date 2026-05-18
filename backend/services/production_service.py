@@ -15,7 +15,8 @@ from database import (
     save_production_cache_bulk,
     get_cycle_settings,
     SessionLocal,
-    Lotto
+    Lotto,
+    VenditaAssegnazione,
 )
 
 
@@ -282,6 +283,7 @@ class ProductionService:
             production_data[key].append({
                 "allevamento": entry.get('allevamento', f"Lotto {lotto_id}"),
                 "quantita": entry['uova'],
+                "quantita_lorda": entry['uova'],  # preserved before sales-assignment decurtation
                 "eta": entry.get('eta', 0),
                 "prodotto": entry['prodotto'],
                 "razza": razza_info.get('razza', ''),
@@ -310,6 +312,30 @@ class ProductionService:
                     "quantita": row.quantita
                 })
 
+        # Map vendita_id -> trading row (needed to enrich assegnazioni with azienda/prodotto)
+        vendita_rows_by_id = {row.id: row for row in trading_ven}
+        # Pre-load all assegnazioni in one query (avoid N+1).
+        # assegnazioni_by_week[(anno, settimana)] = list of dicts
+        # assegnazioni_by_week_allev[(anno, settimana, allevamento)] = total qty (used to decurt sheds)
+        assegnazioni_by_vendita: Dict[int, List[Dict]] = {}
+        assegnazioni_by_week_allev: Dict[tuple, int] = {}
+        db = SessionLocal()
+        try:
+            for a in db.query(VenditaAssegnazione).all():
+                vrow = vendita_rows_by_id.get(a.vendita_id)
+                if vrow is None:
+                    continue
+                if product_filter and vrow.prodotto != product_filter:
+                    continue
+                assegnazioni_by_vendita.setdefault(a.vendita_id, []).append({
+                    "allevamento": a.allevamento,
+                    "quantita": a.quantita,
+                })
+                k = (vrow.anno, vrow.settimana, a.allevamento)
+                assegnazioni_by_week_allev[k] = assegnazioni_by_week_allev.get(k, 0) + a.quantita
+        finally:
+            db.close()
+
         for row in trading_ven:
             if row.quantita > 0 and (not product_filter or row.prodotto == product_filter):
                 k = (row.anno, row.settimana)
@@ -318,9 +344,27 @@ class ProductionService:
                 sales_map[k].append({
                     "azienda": row.azienda,
                     "prodotto": row.prodotto,
-                    "quantita": row.quantita
+                    "quantita": row.quantita,
+                    "vendita_id": row.id,
+                    "assegnazioni": assegnazioni_by_vendita.get(row.id, []),
                 })
-        
+
+        # Subtract assigned sales from each shed's production (per week).
+        # Operates on production_data in-place: clamps at 0 to avoid negatives.
+        for (anno, sett, allev), tot_assigned in assegnazioni_by_week_allev.items():
+            details = production_data.get((anno, sett))
+            if not details:
+                continue
+            remaining = tot_assigned
+            for det in details:
+                if remaining <= 0:
+                    break
+                if det.get("allevamento") != allev:
+                    continue
+                take = min(det["quantita"], remaining)
+                det["quantita"] -= take
+                remaining -= take
+
         # 8. AGGREGATE SUMMARY
         all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys())
         sorted_keys = sorted(list(all_keys))

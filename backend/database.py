@@ -69,7 +69,7 @@ class TradingConfig(Base):
 
 class TradingData(Base):
     __tablename__ = "trading_data"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     anno = Column(Integer)
     settimana = Column(Integer)
@@ -77,6 +77,17 @@ class TradingData(Base):
     azienda = Column(String)
     prodotto = Column(String)
     razza = Column(String, default="")
+    quantita = Column(Integer, default=0)
+
+class VenditaAssegnazione(Base):
+    """Maps how many eggs of a single trading_data (vendita) row come from
+    each productive shed. Lets G001 subtract sales from the originating shed
+    rather than the global total."""
+    __tablename__ = "vendita_assegnazione"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vendita_id = Column(Integer, index=True)  # FK trading_data.id (tipo='vendita')
+    allevamento = Column(String, index=True)  # "Allevamento Capannone" e.g. "Tonengo 5"
     quantita = Column(Integer, default=0)
 
 # --- PRODUCTION CACHE MODEL (as per RULES.md) ---
@@ -763,6 +774,87 @@ def save_trading_data_bulk(tipo, updates_list):
                 )
                 db.add(new_rec)
         db.commit()
+    finally:
+        db.close()
+
+
+def get_vendita_assegnazioni_for_week(anno: int, settimana: int, prodotto: str = None):
+    """Returns assegnazioni for all vendite of the given week, optionally filtered by product.
+    Returns list of dicts: {vendita_id, allevamento, quantita, azienda, prodotto}."""
+    db = SessionLocal()
+    try:
+        q = (
+            db.query(VenditaAssegnazione, TradingData)
+              .join(TradingData, TradingData.id == VenditaAssegnazione.vendita_id)
+              .filter(TradingData.tipo == "vendita")
+              .filter(TradingData.anno == anno, TradingData.settimana == settimana)
+        )
+        if prodotto:
+            q = q.filter(TradingData.prodotto == prodotto)
+        out = []
+        for a, td in q.all():
+            out.append({
+                "id": a.id,
+                "vendita_id": a.vendita_id,
+                "allevamento": a.allevamento,
+                "quantita": a.quantita,
+                "azienda": td.azienda,
+                "prodotto": td.prodotto,
+            })
+        return out
+    finally:
+        db.close()
+
+
+def get_assegnazioni_for_vendita(vendita_id: int):
+    db = SessionLocal()
+    try:
+        rows = db.query(VenditaAssegnazione).filter(VenditaAssegnazione.vendita_id == vendita_id).all()
+        return [{"allevamento": r.allevamento, "quantita": r.quantita} for r in rows]
+    finally:
+        db.close()
+
+
+def replace_assegnazioni_for_vendita(vendita_id: int, items: list):
+    """Replaces (in-toto) the assignments for a vendita.
+    items: list of {allevamento, quantita}. Zero/negative quantita entries are dropped."""
+    db = SessionLocal()
+    try:
+        db.query(VenditaAssegnazione).filter(VenditaAssegnazione.vendita_id == vendita_id).delete()
+        for it in items:
+            q = int(it.get("quantita") or 0)
+            allev = (it.get("allevamento") or "").strip()
+            if q <= 0 or not allev:
+                continue
+            db.add(VenditaAssegnazione(vendita_id=vendita_id, allevamento=allev, quantita=q))
+        db.commit()
+    finally:
+        db.close()
+
+
+def find_or_create_vendita(anno: int, settimana: int, prodotto: str, azienda: str = "Generica", razza: str = ""):
+    """Returns the trading_data id of a vendita row for the given key, creating an empty one if missing.
+    Used when assigning sheds to a sale that didn't yet have a TradingData row."""
+    db = SessionLocal()
+    try:
+        rec = db.query(TradingData).filter(
+            TradingData.tipo == "vendita",
+            TradingData.anno == anno,
+            TradingData.settimana == settimana,
+            TradingData.prodotto == prodotto,
+            TradingData.azienda == azienda,
+            TradingData.razza == razza,
+        ).first()
+        if rec:
+            return rec.id
+        rec = TradingData(
+            tipo="vendita", anno=anno, settimana=settimana,
+            prodotto=prodotto, azienda=azienda, razza=razza, quantita=0
+        )
+        db.add(rec)
+        db.commit()
+        db.refresh(rec)
+        return rec.id
     finally:
         db.close()
 

@@ -256,7 +256,7 @@ export default function ProductionChart({ data, productFilter, includeTradingDat
                         {lines.map((line) => (
                             <Area
                                 key={line.key}
-                                type="linear"
+                                type="monotone"
                                 dataKey={line.key}
                                 stackId="1"
                                 stroke={line.color}

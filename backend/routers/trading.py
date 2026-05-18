@@ -7,7 +7,10 @@ from database import (
     update_trading_config,
     delete_trading_config,
     get_trading_data,
-    save_trading_data_bulk
+    save_trading_data_bulk,
+    get_vendita_assegnazioni_for_week,
+    replace_assegnazioni_for_vendita,
+    find_or_create_vendita,
 )
 from datetime import date
 
@@ -27,6 +30,18 @@ class TradingConfigUpdate(BaseModel):
 
 class TradingDataUpdate(BaseModel):
     updates: List[dict]  # List of {anno, settimana, azienda, prodotto, razza, quantita}
+
+class AssegnazioneItem(BaseModel):
+    allevamento: str
+    quantita: int
+
+class AssegnazioniBulkUpdate(BaseModel):
+    anno: int
+    settimana: int
+    prodotto: str
+    azienda: Optional[str] = "Generica"
+    razza: Optional[str] = ""
+    items: List[AssegnazioneItem]
 
 # Helper function to get current week
 def get_current_week():
@@ -156,8 +171,49 @@ def update_data(tipo: str, payload: TradingDataUpdate):
     Bulk update trading data.
     Expects: {updates: [{anno, settimana, azienda, prodotto, razza, quantita}, ...]}
     """
+    # Reject negative quantities — they were being abused to mark sales in the
+    # purchases sheet, which broke per-shed accounting downstream.
+    for upd in payload.updates:
+        if (upd.get("quantita") or 0) < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Non sono ammessi valori negativi. Se sono vendite, compilare la tabella sottostante."
+            )
     try:
         save_trading_data_bulk(tipo, payload.updates)
         return {"status": "success", "message": f"{len(payload.updates)} records updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- VENDITA → ALLEVAMENTO ASSIGNMENTS ---
+
+@router.get("/vendite/assegnazioni")
+def list_assegnazioni(anno: int, settimana: int, prodotto: Optional[str] = None):
+    """Returns all sale-shed assignments for the given week, optionally filtered by product."""
+    try:
+        return get_vendita_assegnazioni_for_week(anno, settimana, prodotto)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/vendite/assegnazioni")
+def update_assegnazioni(payload: AssegnazioniBulkUpdate):
+    """Replaces (in-toto) the shed allocations for a given week+product vendita.
+    Resolves/creates the trading_data row if missing — keeps the API simple from
+    the UI: the user only knows the week+product, not the underlying vendita_id."""
+    for it in payload.items:
+        if it.quantita < 0:
+            raise HTTPException(status_code=400, detail="Le quantità delle assegnazioni non possono essere negative.")
+    try:
+        vendita_id = find_or_create_vendita(
+            anno=payload.anno,
+            settimana=payload.settimana,
+            prodotto=payload.prodotto,
+            azienda=payload.azienda or "Generica",
+            razza=payload.razza or "",
+        )
+        replace_assegnazioni_for_vendita(vendita_id, [it.model_dump() for it in payload.items])
+        return {"status": "success", "vendita_id": vendita_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

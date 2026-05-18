@@ -159,24 +159,32 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
         initialLoad();
     }, []);
 
-    // Fetch product-specific data when a product is selected
-    useEffect(() => {
-        if (chartProductFilter !== 'all') {
-            const fetchProductData = async () => {
-                try {
-                    const result = await fetch(`${API_BASE_URL}/api/production/summary?product=${encodeURIComponent(chartProductFilter)}`);
-                    const json = await result.json();
-                    setProductData(json);
-                } catch (error) {
-                    console.error("Failed to fetch product data", error);
-                    setProductData([]);
-                }
-            };
-            fetchProductData();
-        } else {
+    const fetchProductData = async () => {
+        if (chartProductFilter === 'all') {
+            setProductData([]);
+            return;
+        }
+        try {
+            const result = await fetch(`${API_BASE_URL}/api/production/summary?product=${encodeURIComponent(chartProductFilter)}`);
+            const json = await result.json();
+            setProductData(json);
+        } catch (error) {
+            console.error("Failed to fetch product data", error);
             setProductData([]);
         }
+    };
+
+    // Fetch product-specific data when a product is selected
+    useEffect(() => {
+        fetchProductData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [chartProductFilter]);
+
+    // After mutations (e.g. saving vendita assegnazioni) we want both the global
+    // summary (chart) and the per-product summary (table T002) refreshed.
+    const refreshAfterMutation = async () => {
+        await Promise.all([refreshAllData(), fetchProductData()]);
+    };
 
     // Transform data for chart - group by product or by shed
     const chartData = useMemo((): any[] => {
@@ -554,6 +562,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                                                 return true;
                                             })}
                                             includeTradingData={includeTradingData}
+                                            onUpdate={refreshAfterMutation}
                                         />
                                     </div>
                                 )}

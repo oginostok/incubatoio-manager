@@ -1,6 +1,7 @@
 export interface ProductionDetail {
     allevamento: string;
-    quantita: number;
+    quantita: number;        // net of shed assignments to sales
+    quantita_lorda?: number; // production before subtracting assigned sales
     eta: number;
     prodotto: string;
     razza?: string;
@@ -12,9 +13,17 @@ export interface PurchaseDetail {
     quantita: number;
 }
 
+export interface AssegnazioneVendita {
+    allevamento: string;
+    quantita: number;
+}
+
 export interface SaleDetail {
     azienda: string;
     quantita: number;
+    prodotto?: string;
+    vendita_id?: number;
+    assegnazioni?: AssegnazioneVendita[];
 }
 
 export interface WeeklySummary {

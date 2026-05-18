@@ -94,6 +94,17 @@ export default function TradingTable({ tipo, onUpdate }: TradingTableProps) {
 
             const quantita = parseInt(editValue) || 0;
 
+            if (quantita < 0) {
+                alert("Non sono ammessi valori negativi. Se sono vendite, compilare la tabella sottostante.");
+                setCellStatus(prev => {
+                    const next = { ...prev };
+                    delete next[cellKey];
+                    return next;
+                });
+                setEditingCell(null);
+                return;
+            }
+
             // Call API to update
             await TradingAPI.updateData(tipo, [{
                 anno,
