@@ -273,6 +273,7 @@ class IncubationBatch(Base):
     data_arrivo = Column(String, default="")  # Arrival date from EggStorage
     storico_override = Column(Float)  # User-overridden storico value (nullable)
     quantita = Column(Integer)  # Deprecated, kept for backwards compatibility
+    preparata = Column(Boolean, default=False)  # Flag set when operators prepare the batch
 
     def to_dict(self):
         return {
@@ -288,7 +289,8 @@ class IncubationBatch(Base):
             "eta": self.eta,
             "data_arrivo": self.data_arrivo,
             "storico_override": self.storico_override,
-            "quantita": self.quantita
+            "quantita": self.quantita,
+            "preparata": bool(self.preparata),
         }
 
 
@@ -437,6 +439,34 @@ class SchedaSettimanaleRecord(Base):
             "peso_galli_atteso": self.peso_galli_atteso,
             "note": self.note or "",
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+# --- MANUAL PRODUCTION ADJUSTMENT MODEL ---
+# Righe manuali aggiunte dentro al "Dettaglio Vendite" di T002.
+# Rappresentano uova che incrementano la produzione di una settimana
+# specifica (es. uova prese da inventario esterno). Sommate a
+# produzione_totale e quindi a totale_netto.
+class ManualProductionAdjustment(Base):
+    __tablename__ = "manual_production_adjustments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    anno = Column(Integer, index=True)
+    settimana = Column(Integer, index=True)
+    prodotto = Column(String, default="")  # vuoto = applicabile a tutti i prodotti
+    descrizione = Column(String, default="")
+    quantita = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "anno": self.anno,
+            "settimana": self.settimana,
+            "prodotto": self.prodotto or "",
+            "descrizione": self.descrizione or "",
+            "quantita": self.quantita or 0,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 
@@ -609,6 +639,12 @@ def init_db():
              conn.commit()
         except Exception:
              pass
+        # preparata flag on incubation_batches (update 2026-05-19)
+        try:
+             conn.execute(text("ALTER TABLE incubation_batches ADD COLUMN preparata BOOLEAN DEFAULT 0"))
+             conn.commit()
+        except Exception:
+             pass
 
 def get_db():
     """Yields a database session."""
@@ -748,6 +784,23 @@ def get_trading_data(tipo):
     try:
         # Returns raw list of objs
         return db.query(TradingData).filter(TradingData.tipo == tipo).all()
+    finally:
+        db.close()
+
+
+def get_manual_adjustments(product_filter: str = None):
+    """Returns ManualProductionAdjustment rows, optionally filtered by product."""
+    db = SessionLocal()
+    try:
+        q = db.query(ManualProductionAdjustment)
+        if product_filter:
+            # Empty prodotto means the row applies to all products
+            q = q.filter(
+                (ManualProductionAdjustment.prodotto == product_filter)
+                | (ManualProductionAdjustment.prodotto == "")
+                | (ManualProductionAdjustment.prodotto.is_(None))
+            )
+        return q.all()
     finally:
         db.close()
 

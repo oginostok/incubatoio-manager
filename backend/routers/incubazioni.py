@@ -51,6 +51,7 @@ class BatchCreate(BaseModel):
 class BatchUpdate(BaseModel):
     uova_utilizzate: Optional[int] = None
     storico_override: Optional[float] = None
+    preparata: Optional[bool] = None
 
 
 # --- Helper Functions ---
@@ -349,7 +350,11 @@ def update_batch(incubation_id: int, batch_id: int, data: BatchUpdate):
         # Update storico_override
         if data.storico_override is not None:
             batch.storico_override = data.storico_override
-        
+
+        # Update preparata flag (operator preparation status)
+        if data.preparata is not None:
+            batch.preparata = data.preparata
+
         db.commit()
         db.refresh(batch)
         return batch.to_dict()

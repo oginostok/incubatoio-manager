@@ -3,7 +3,7 @@
  * Component for managing egg incubations
  */
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Clock, User, Settings2, ChevronDown, ChevronUp, Trash2, Egg, Save, Pencil } from "lucide-react";
+import { Plus, Calendar, Clock, User, Settings2, ChevronDown, ChevronUp, Trash2, Egg, Save, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
 
@@ -21,6 +21,7 @@ interface IncubationBatch {
     eta: number;
     storico_override: number | null;
     quantita: number;
+    preparata?: boolean;
 }
 
 interface Incubation {
@@ -328,8 +329,8 @@ export default function IncubationTable() {
         }
     };
 
-    // Update batch field (uova_utilizzate or storico_override)
-    const handleUpdateBatch = async (incubationId: number, batchId: number, field: string, value: number) => {
+    // Update batch field (uova_utilizzate, storico_override or preparata)
+    const handleUpdateBatch = async (incubationId: number, batchId: number, field: string, value: number | boolean) => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/incubazioni/${incubationId}/batches/${batchId}`, {
                 method: "PATCH",
@@ -688,6 +689,15 @@ export default function IncubationTable() {
                                             {incubation.stato === "in_corso" ? "In Corso" :
                                                 incubation.stato === "completata" ? "Completata" : incubation.stato}
                                         </span>
+                                        {incubation.batches && incubation.batches.length > 0 && incubation.batches.every(b => b.preparata) && (
+                                            <span
+                                                className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 border border-green-300"
+                                                title="Tutte le partite sono state preparate dagli operatori"
+                                            >
+                                                <Check className="w-3.5 h-3.5" />
+                                                Preparata
+                                            </span>
+                                        )}
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -928,46 +938,54 @@ export default function IncubationTable() {
                                     </div>
 
                                     {/* Available Storage Table */}
-                                    {!incubation.committed && eggStorage.length > 0 && (
-                                        <div className="bg-blue-50 p-3 rounded-lg">
-                                            <h4 className="text-sm font-medium text-blue-800 mb-2">Magazzino Disponibile:</h4>
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-sm">
-                                                    <thead>
-                                                        <tr className="bg-blue-100">
-                                                            <th className="px-2 py-1 text-left">Prodotto</th>
-                                                            <th className="px-2 py-1 text-left">Nome</th>
-                                                            <th className="px-2 py-1 text-left">Origine</th>
-                                                            <th className="px-2 py-1 text-left">Capannone</th>
-                                                            <th className="px-2 py-1 text-center">Età</th>
-                                                            <th className="px-2 py-1 text-right">Uova Disponibili</th>
-                                                            <th className="px-2 py-1 text-center">Giacenza</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {(() => {
-                                                            // Calculate remaining and giacenza, then sort by giacenza descending
-                                                            const calculateGiacenza = (arrivateIl: string): number => {
-                                                                const arrivalDate = new Date(arrivateIl);
-                                                                const today = new Date();
-                                                                return Math.floor((today.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
-                                                            };
+                                    {!incubation.committed && eggStorage.length > 0 && (() => {
+                                        const calculateGiacenza = (arrivateIl: string): number => {
+                                            const arrivalDate = new Date(arrivateIl);
+                                            const today = new Date();
+                                            return Math.floor((today.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24));
+                                        };
 
-                                                            return eggStorage
-                                                                .map(egg => {
-                                                                    const usedFromStorage = (incubation.batches || []).reduce((sum, batch) => {
-                                                                        if (batch.egg_storage_id === egg.id) {
-                                                                            return sum + (batch.uova_utilizzate || 0);
-                                                                        }
-                                                                        return sum;
-                                                                    }, 0);
-                                                                    const remaining = egg.numero - usedFromStorage;
-                                                                    const giacenza = calculateGiacenza(egg.arrivate_il);
-                                                                    return { ...egg, remaining, giacenza };
-                                                                })
-                                                                .filter(egg => egg.remaining > 0)
-                                                                .sort((a, b) => b.giacenza - a.giacenza)
-                                                                .map(egg => (
+                                        const enriched = eggStorage
+                                            .map(egg => {
+                                                const usedFromStorage = (incubation.batches || []).reduce((sum, batch) => {
+                                                    if (batch.egg_storage_id === egg.id) {
+                                                        return sum + (batch.uova_utilizzate || 0);
+                                                    }
+                                                    return sum;
+                                                }, 0);
+                                                const remaining = egg.numero - usedFromStorage;
+                                                const giacenza = calculateGiacenza(egg.arrivate_il);
+                                                return { ...egg, remaining, giacenza };
+                                            })
+                                            .filter(egg => egg.remaining > 0)
+                                            .sort((a, b) => b.giacenza - a.giacenza);
+
+                                        const productTotals = ["Granpollo", "Pollo70", "Color Yeald", "Ross"].map(prodotto => ({
+                                            prodotto,
+                                            total: enriched
+                                                .filter(egg => egg.prodotto === prodotto)
+                                                .reduce((sum, egg) => sum + egg.remaining, 0)
+                                        }));
+
+                                        return (
+                                            <div className="flex flex-col lg:flex-row gap-3">
+                                                <div className="bg-blue-50 p-3 rounded-lg flex-1 min-w-0">
+                                                    <h4 className="text-sm font-medium text-blue-800 mb-2">Magazzino Disponibile:</h4>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-sm">
+                                                            <thead>
+                                                                <tr className="bg-blue-100">
+                                                                    <th className="px-2 py-1 text-left">Prodotto</th>
+                                                                    <th className="px-2 py-1 text-left">Nome</th>
+                                                                    <th className="px-2 py-1 text-left">Origine</th>
+                                                                    <th className="px-2 py-1 text-left">Capannone</th>
+                                                                    <th className="px-2 py-1 text-center">Età</th>
+                                                                    <th className="px-2 py-1 text-right">Uova Disponibili</th>
+                                                                    <th className="px-2 py-1 text-center">Giacenza</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {enriched.map(egg => (
                                                                     <tr key={egg.id} className="border-b border-blue-200 hover:bg-blue-100">
                                                                         <td className="px-2 py-1">
                                                                             <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS[egg.prodotto] || "bg-gray-100"}`}>
@@ -981,13 +999,37 @@ export default function IncubationTable() {
                                                                         <td className="px-2 py-1 text-right font-mono">{formatNumber(egg.remaining)}</td>
                                                                         <td className="px-2 py-1 text-center font-mono">{egg.giacenza} gg</td>
                                                                     </tr>
-                                                                ));
-                                                        })()}
-                                                    </tbody>
-                                                </table>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-blue-50 p-3 rounded-lg lg:w-64 shrink-0">
+                                                    <h4 className="text-sm font-medium text-blue-800 mb-2">Uova totali in Magazzino:</h4>
+                                                    <table className="w-full text-sm">
+                                                        <thead>
+                                                            <tr className="bg-blue-100">
+                                                                <th className="px-2 py-1 text-left">Prodotto</th>
+                                                                <th className="px-2 py-1 text-right">Uova</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {productTotals.map(({ prodotto, total }) => (
+                                                                <tr key={prodotto} className="border-b border-blue-200">
+                                                                    <td className="px-2 py-1">
+                                                                        <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS[prodotto] || "bg-gray-100"}`}>
+                                                                            {prodotto}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-2 py-1 text-right font-mono font-semibold">{formatNumber(total)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
 
                                     {/* Add Eggs Button */}
                                     {!incubation.committed && (
@@ -1020,6 +1062,7 @@ export default function IncubationTable() {
                                                         <th className="px-2 py-2 text-center">Età</th>
                                                         <th className="px-2 py-2 text-right">Storico %</th>
                                                         <th className="px-2 py-2 text-right">Prev. Animali</th>
+                                                        <th className="px-2 py-2 text-center">Preparate</th>
                                                         {!incubation.committed && <th className="px-2 py-2 text-center w-10"></th>}
                                                     </tr>
                                                 </thead>
@@ -1093,6 +1136,15 @@ export default function IncubationTable() {
                                                                     />
                                                                 </td>
                                                                 <td className="px-2 py-2 text-right font-mono font-bold text-green-700">{formatNumber(previsioneAnimali)}</td>
+                                                                <td className="px-2 py-2 text-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={!!batch.preparata}
+                                                                        onChange={(e) => handleUpdateBatch(incubation.id, batch.id, "preparata", e.target.checked)}
+                                                                        className="w-4 h-4 accent-green-600 cursor-pointer"
+                                                                        title={batch.preparata ? "Partita preparata" : "Segna come preparata"}
+                                                                    />
+                                                                </td>
                                                                 {!incubation.committed && (
                                                                     <td className="px-2 py-2 text-center">
                                                                         <button
@@ -1119,6 +1171,9 @@ export default function IncubationTable() {
                                                                 const storico = getStorico(b.prodotto, b.eta, b.storico_override);
                                                                 return sum + Math.round((b.uova_utilizzate || 0) * (storico / 100));
                                                             }, 0))}
+                                                        </td>
+                                                        <td className="px-2 py-2 text-center text-xs font-mono text-gray-600">
+                                                            {incubation.batches.filter(b => b.preparata).length}/{incubation.batches.length}
                                                         </td>
                                                         {!incubation.committed && <td></td>}
                                                     </tr>

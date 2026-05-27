@@ -568,6 +568,7 @@ export default function ProductionPage({ onNavigate }: ProductionPageProps) {
                                                 return true;
                                             })}
                                             includeTradingData={includeTradingData}
+                                            productFilter={chartProductFilter}
                                             onUpdate={refreshAfterMutation}
                                         />
                                     </div>

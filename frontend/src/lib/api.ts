@@ -132,5 +132,32 @@ export const IncubazioniAPI = {
         const res = await api.post(`/incubazioni/${id}/uncommit`);
         return res.data;
     },
+    updateBatch: async (
+        incubationId: number,
+        batchId: number,
+        updates: { uova_utilizzate?: number; storico_override?: number; preparata?: boolean }
+    ) => {
+        const res = await api.patch(`/incubazioni/${incubationId}/batches/${batchId}`, updates);
+        return res.data;
+    },
+};
+
+// Manual Production Adjustments Service Wrapper
+export const ManualAdjustmentsAPI = {
+    create: async (payload: { anno: number; settimana: number; prodotto?: string; descrizione?: string; quantita: number }) => {
+        const res = await api.post("/production/manual-adjustments", payload);
+        return res.data;
+    },
+    update: async (
+        id: number,
+        payload: { prodotto?: string; descrizione?: string; quantita?: number }
+    ) => {
+        const res = await api.patch(`/production/manual-adjustments/${id}`, payload);
+        return res.data;
+    },
+    remove: async (id: number) => {
+        const res = await api.delete(`/production/manual-adjustments/${id}`);
+        return res.data;
+    },
 };
 

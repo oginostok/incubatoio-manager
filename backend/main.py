@@ -5,6 +5,7 @@ from routers import production, allevamenti, production_tables_router, trading, 
 from routers import trattamenti, pesi
 from routers import trasferimento, schiusa
 from routers import scheda_settimanale
+from routers import manual_adjustments
 import uvicorn
 
 app = FastAPI(title="Incubatoio Manager API")
@@ -42,6 +43,7 @@ app.include_router(pesi.router)
 app.include_router(trasferimento.router)
 app.include_router(schiusa.router)
 app.include_router(scheda_settimanale.router)
+app.include_router(manual_adjustments.router)
 
 @app.on_event("startup")
 def startup_event():

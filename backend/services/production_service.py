@@ -14,6 +14,7 @@ from database import (
     get_valid_cache,
     save_production_cache_bulk,
     get_cycle_settings,
+    get_manual_adjustments,
     SessionLocal,
     Lotto,
     VenditaAssegnazione,
@@ -399,8 +400,23 @@ class ProductionService:
                     details[idx]['quantita'] -= take
                     remaining -= take
 
+        # 7.5. MANUAL PRODUCTION ADJUSTMENTS
+        # Righe manuali inserite via "Dettaglio Vendite" T002. Si sommano alla
+        # produzione (e quindi al totale netto) della settimana corrispondente.
+        adjustments_map: Dict[tuple, List[Dict]] = {}
+        for adj in get_manual_adjustments(product_filter):
+            k = (adj.anno, adj.settimana)
+            adjustments_map.setdefault(k, []).append({
+                "id": adj.id,
+                "anno": adj.anno,
+                "settimana": adj.settimana,
+                "prodotto": adj.prodotto or "",
+                "descrizione": adj.descrizione or "",
+                "quantita": adj.quantita or 0,
+            })
+
         # 8. AGGREGATE SUMMARY
-        all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys())
+        all_keys = set(production_data.keys()) | set(purchases_map.keys()) | set(sales_map.keys()) | set(adjustments_map.keys())
         sorted_keys = sorted(list(all_keys))
 
         summary = []
@@ -414,24 +430,29 @@ class ProductionService:
             ven_details = sales_map.get((year, week), [])
             ven_total = sum(d['quantita'] for d in ven_details)
 
+            manual_details = adjustments_map.get((year, week), [])
+            manual_total = sum(d['quantita'] for d in manual_details)
+
             # produzione_totale already reflects the vendite subtracted from
             # the shed details (explicit + optional auto-assign). The residue
             # that no shed absorbed must still be removed from totale_netto.
             absorbed = sum(d.get('quantita_lorda', d['quantita']) - d['quantita'] for d in prod_details)
             non_assegnato = max(0, ven_total - absorbed)
-            net_total = prod_total + acq_total - non_assegnato
+            # Le righe manuali si sommano direttamente a produzione e totale netto.
+            net_total = prod_total + manual_total + acq_total - non_assegnato
 
             summary.append({
                 "periodo": f"{year} - {week:02d}",
                 "anno": year,
                 "settimana": week,
-                "produzione_totale": prod_total,
+                "produzione_totale": prod_total + manual_total,
                 "acquisti_totale": acq_total,
                 "vendite_totale": ven_total,
                 "totale_netto": net_total,
                 "dettagli_produzione": prod_details,
                 "dettagli_acquisti": acq_details,
-                "dettagli_vendite": ven_details
+                "dettagli_vendite": ven_details,
+                "dettagli_manuali": manual_details,
             })
-        
+
         return summary

@@ -26,6 +26,15 @@ export interface SaleDetail {
     assegnazioni?: AssegnazioneVendita[];
 }
 
+export interface ManualAdjustment {
+    id: number;
+    anno: number;
+    settimana: number;
+    prodotto: string;
+    descrizione: string;
+    quantita: number;
+}
+
 export interface WeeklySummary {
     periodo: string;
     anno: number;
@@ -37,6 +46,7 @@ export interface WeeklySummary {
     dettagli_produzione: ProductionDetail[];
     dettagli_acquisti: PurchaseDetail[];
     dettagli_vendite: SaleDetail[];
+    dettagli_manuali?: ManualAdjustment[];
 }
 
 // Allevamenti Types
