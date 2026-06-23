@@ -1533,6 +1533,234 @@ def seed_purchase_birth_rates():
     finally:
         db.close()
 
+# --- NATO SU FERTILE MODEL (T018 - Media Nato su Fertile per Allevamento x Tipo) ---
+import os, json
+from datetime import datetime as _dt
+
+class NatoFertileCell(Base):
+    __tablename__ = "nato_fertile_cells"
+
+    id = Column(Integer, primary_key=True, index=True)
+    allevamento = Column(String, index=True)
+    tipo = Column(String, index=True)
+    valore = Column(Float)          # percentuale media nato/fertile (es. 92.52)
+    n_partite = Column(Integer, default=0)  # numero partite su cui è calcolata la media (riferimento)
+    updated_at = Column(String, default=lambda: _dt.utcnow().isoformat())
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "allevamento": self.allevamento,
+            "tipo": self.tipo,
+            "valore": self.valore,
+            "n_partite": self.n_partite,
+            "updated_at": self.updated_at,
+        }
+
+
+def _load_nato_fertile_seed():
+    """Carica il file seed con i dati storici calcolati (allevamento x tipo)."""
+    path = os.path.join(os.path.dirname(__file__), "data", "nato_fertile_seed.json")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def seed_nato_fertile():
+    """Popola la tabella nato_fertile_cells con i valori di default calcolati dallo storico.
+    Esegue il seed una sola volta (se già presenti dati non sovrascrive le modifiche manuali)."""
+    db = SessionLocal()
+    try:
+        existing = db.query(NatoFertileCell).first()
+        if existing:
+            return  # già seminato, non sovrascrivere editing manuale
+        seed = _load_nato_fertile_seed()
+        for c in seed["cells"]:
+            db.add(NatoFertileCell(
+                allevamento=c["allevamento"],
+                tipo=c["tipo"],
+                valore=c["valore"],
+                n_partite=c.get("n", 0),
+            ))
+        db.commit()
+        print(f"Seeded nato su fertile: {len(seed['cells'])} celle")
+    finally:
+        db.close()
+
+
+def get_nato_fertile():
+    """Restituisce le celle + gli assi ordinati (tipi e allevamenti) per costruire la matrice."""
+    db = SessionLocal()
+    try:
+        cells = [c.to_dict() for c in db.query(NatoFertileCell).all()]
+    finally:
+        db.close()
+    # Ordinamento assi: usa l'ordine del seed (per volume), poi aggiunge eventuali nuovi inseriti a mano
+    try:
+        seed = _load_nato_fertile_seed()
+        tipi_order = seed.get("tipi_order", [])
+        alle_order = seed.get("allevamenti_order", [])
+    except Exception:
+        tipi_order, alle_order = [], []
+    tipi = list(tipi_order) + sorted({c["tipo"] for c in cells} - set(tipi_order))
+    allevamenti = list(alle_order) + sorted({c["allevamento"] for c in cells} - set(alle_order))
+    return {"cells": cells, "tipi": tipi, "allevamenti": allevamenti}
+
+
+def update_nato_fertile(allevamento: str, tipo: str, valore):
+    """Aggiorna (o crea) il valore di una cella allevamento x tipo. valore=None elimina la cella."""
+    db = SessionLocal()
+    try:
+        record = db.query(NatoFertileCell).filter(
+            NatoFertileCell.allevamento == allevamento,
+            NatoFertileCell.tipo == tipo,
+        ).first()
+        if valore is None or valore == "":
+            if record:
+                db.delete(record)
+                db.commit()
+            return None
+        if record:
+            record.valore = float(valore)
+            record.updated_at = _dt.utcnow().isoformat()
+        else:
+            record = NatoFertileCell(allevamento=allevamento, tipo=tipo, valore=float(valore), n_partite=0)
+            db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+# --- NATO SF OVERRIDE PER BATCH (T018b - Nato su fertile previsto per partita trasferita) ---
+class NatoSfBatchOverride(Base):
+    __tablename__ = "nato_sf_batch_overrides"
+
+    id = Column(Integer, primary_key=True, index=True)
+    batch_id = Column(Integer, index=True, unique=True)
+    valore = Column(Float)  # percentuale (es. 92.52)
+
+    def to_dict(self):
+        return {"batch_id": self.batch_id, "valore": self.valore}
+
+
+def get_nato_sf_overrides():
+    """Restituisce gli override Nato SF come dict {batch_id: valore}."""
+    db = SessionLocal()
+    try:
+        return {o.batch_id: o.valore for o in db.query(NatoSfBatchOverride).all()}
+    finally:
+        db.close()
+
+
+def update_nato_sf_override(batch_id: int, valore):
+    """Upsert/elimina l'override Nato SF per una partita (valore=None elimina)."""
+    db = SessionLocal()
+    try:
+        record = db.query(NatoSfBatchOverride).filter(NatoSfBatchOverride.batch_id == batch_id).first()
+        if valore is None or valore == "":
+            if record:
+                db.delete(record)
+                db.commit()
+            return None
+        if record:
+            record.valore = float(valore)
+        else:
+            record = NatoSfBatchOverride(batch_id=batch_id, valore=float(valore))
+            db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+# --- POLLASTRA FARMS (Allevamenti pollastra configurabili) ---
+class PollastraFarm(Base):
+    __tablename__ = "pollastra_farms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, unique=True, index=True)
+    n_capannoni = Column(Integer, default=1)
+
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome, "n_capannoni": self.n_capannoni}
+
+
+def seed_pollastra_farms():
+    """Popola gli allevamenti pollastra di default una sola volta."""
+    db = SessionLocal()
+    try:
+        if db.query(PollastraFarm).first():
+            return
+        defaults = [
+            ("Persico", 2),
+            ("Teramo", 1),
+            ("Montirone", 3),
+            ("Ora Agricola - Mondovì", 1),
+        ]
+        for nome, n in defaults:
+            db.add(PollastraFarm(nome=nome, n_capannoni=n))
+        db.commit()
+        print(f"Seeded pollastra farms: {len(defaults)} allevamenti")
+    finally:
+        db.close()
+
+
+def get_pollastra_farms():
+    """Restituisce gli allevamenti pollastra ordinati per nome."""
+    db = SessionLocal()
+    try:
+        return [f.to_dict() for f in db.query(PollastraFarm).order_by(PollastraFarm.nome).all()]
+    finally:
+        db.close()
+
+
+def add_pollastra_farm(nome: str, n_capannoni: int = 1):
+    db = SessionLocal()
+    try:
+        existing = db.query(PollastraFarm).filter(PollastraFarm.nome == nome).first()
+        if existing:
+            return None
+        record = PollastraFarm(nome=nome, n_capannoni=max(1, int(n_capannoni)))
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+def update_pollastra_farm(farm_id: int, nome=None, n_capannoni=None):
+    db = SessionLocal()
+    try:
+        record = db.query(PollastraFarm).filter(PollastraFarm.id == farm_id).first()
+        if not record:
+            return None
+        if nome is not None and nome.strip():
+            record.nome = nome.strip()
+        if n_capannoni is not None:
+            record.n_capannoni = max(1, int(n_capannoni))
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+def delete_pollastra_farm(farm_id: int):
+    db = SessionLocal()
+    try:
+        record = db.query(PollastraFarm).filter(PollastraFarm.id == farm_id).first()
+        if record:
+            db.delete(record)
+            db.commit()
+            return True
+        return False
+    finally:
+        db.close()
+
+
 # --- CHICK PLANNING MODEL (T010 - Pianificazione Nascite) ---
 class ChickPlanning(Base):
     __tablename__ = "chick_planning"

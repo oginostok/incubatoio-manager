@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 import { Plus, Calendar, ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { NatoFertileAPI } from '@/lib/api';
+
+// Mapping nome partita -> TIPO della matrice Nato su Fertile
+const TIPO_ALIASES: Record<string, string> = {
+    'COLOR YEALD': 'CY',
+    'COLORYEALD': 'CY',
+};
+const natoSfKey = (a: string, t: string) => `${a}|||${t}`;
+
+// Nato su Fertile di default quando non c'è né valore in matrice né override:
+// usato per i calcoli e mostrato in grigio finché l'utente non lo modifica.
+const DEFAULT_NATO_SF = 93;
 
 interface IncubationBatch {
     id: number;
@@ -67,6 +80,12 @@ export default function TrasferimentoTable() {
     const [editRows, setEditRows] = useState<Record<number, Record<number, string>>>({});
     const [saving, setSaving] = useState<number | null>(null);
 
+    // Nato su Fertile previsto: valori matrice (default) + override per partita
+    const [natoSfMatrix, setNatoSfMatrix] = useState<Record<string, number>>({});
+    const [natoSfOverrides, setNatoSfOverrides] = useState<Record<number, number>>({});
+    const [natoSfEdit, setNatoSfEdit] = useState<Record<number, string>>({});
+    const [natoSfStatus, setNatoSfStatus] = useState<Record<number, 'saving' | 'success' | 'error'>>({});
+
     const load = async () => {
         try {
             const [trasRes, incRes] = await Promise.all([
@@ -80,7 +99,77 @@ export default function TrasferimentoTable() {
         } catch { /* ignore */ }
     };
 
-    useEffect(() => { load(); }, []);
+    const loadNatoSf = async () => {
+        try {
+            const [matrix, overrides] = await Promise.all([
+                NatoFertileAPI.getMatrix(),
+                NatoFertileAPI.getBatchOverrides(),
+            ]);
+            const m: Record<string, number> = {};
+            matrix.cells.forEach(c => { m[natoSfKey(c.allevamento, c.tipo)] = c.valore; });
+            setNatoSfMatrix(m);
+            setNatoSfOverrides(overrides);
+        } catch { /* ignore */ }
+    };
+
+    useEffect(() => { load(); loadNatoSf(); }, []);
+
+    // TIPO della partita per la matrice (es. "Color Yeald" -> "CY")
+    const batchTipo = (b: IncubationBatch): string => {
+        const t = (b.nome || '').trim().toUpperCase();
+        return TIPO_ALIASES[t] || t;
+    };
+
+    // ALLEVAMENTO della partita: origine (senza "Acquisto - ") + capannone se presente
+    const batchAllevamentoCandidates = (b: IncubationBatch): string[] => {
+        const origine = (b.origine || '').trim().toUpperCase().replace(/^ACQUISTO\s*-\s*/, '').trim();
+        const cap = (b.capannone || '').trim();
+        const cands: string[] = [];
+        if (cap) cands.push(`${origine} ${cap}`.toUpperCase());
+        cands.push(origine);
+        return cands;
+    };
+
+    // Valore Nato SF di default dalla matrice (undefined se nessun match)
+    const natoSfDefault = (b: IncubationBatch): number | undefined => {
+        const tipo = batchTipo(b);
+        for (const a of batchAllevamentoCandidates(b)) {
+            const v = natoSfMatrix[natoSfKey(a, tipo)];
+            if (v !== undefined) return v;
+        }
+        return undefined;
+    };
+
+    // Valore effettivo Nato SF: override per partita, altrimenti default matrice
+    const natoSfEffective = (b: IncubationBatch): number | undefined => {
+        const ov = natoSfOverrides[b.id];
+        return ov !== undefined ? ov : natoSfDefault(b);
+    };
+
+    // Salvataggio on-blur del Nato SF previsto per una partita
+    const saveNatoSf = async (batchId: number) => {
+        const raw = natoSfEdit[batchId];
+        setNatoSfEdit(prev => { const n = { ...prev }; delete n[batchId]; return n; });
+        if (raw === undefined) return; // nessuna modifica
+        const cleaned = raw.replace('%', '').replace(',', '.').trim();
+        const parsed = cleaned === '' ? null : parseFloat(cleaned);
+        if (cleaned !== '' && isNaN(parsed as number)) return;
+        setNatoSfStatus(s => ({ ...s, [batchId]: 'saving' }));
+        try {
+            await NatoFertileAPI.updateBatchOverride(batchId, parsed);
+            setNatoSfOverrides(prev => {
+                const n = { ...prev };
+                if (parsed === null) delete n[batchId];
+                else n[batchId] = parsed;
+                return n;
+            });
+            setNatoSfStatus(s => ({ ...s, [batchId]: 'success' }));
+            setTimeout(() => setNatoSfStatus(s => { const n = { ...s }; delete n[batchId]; return n; }), 1000);
+        } catch {
+            setNatoSfStatus(s => ({ ...s, [batchId]: 'error' }));
+            setTimeout(() => setNatoSfStatus(s => { const n = { ...s }; delete n[batchId]; return n; }), 2000);
+        }
+    };
 
     // Build per-incubation maps
     const trasfByIncId: Record<number, Trasferimento[]> = {};
@@ -373,6 +462,19 @@ export default function TrasferimentoTable() {
                                                             <th className="px-3 py-2 text-right">Uova Trasferite</th>
                                                             <th className="px-3 py-2 text-right">Chiaro</th>
                                                             <th className="px-3 py-2 text-right">% Trasf.</th>
+                                                            <th className="px-3 py-2 text-right">
+                                                                <TooltipProvider delayDuration={100}>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <span className="cursor-help border-b border-dotted border-gray-400">
+                                                                                Nato SF
+                                                                            </span>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>Nato Su fertile</TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </th>
+                                                            <th className="px-3 py-2 text-right">Pulcini Previsti</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -422,13 +524,57 @@ export default function TrasferimentoTable() {
                                                                     <td className="px-3 py-2 text-right font-mono text-blue-600">
                                                                         {pct !== null ? `${pct}%` : '—'}
                                                                     </td>
+                                                                    {(() => {
+                                                                        const effective = natoSfEffective(batch);
+                                                                        const editing = natoSfEdit[batch.id];
+                                                                        const hasRealValue = effective !== undefined;
+                                                                        // Quando non c'è un valore reale mostriamo il default (93) in grigio.
+                                                                        const isDefaultShown = !hasRealValue && editing === undefined;
+                                                                        const inputValue = editing !== undefined
+                                                                            ? editing
+                                                                            : (hasRealValue ? effective.toFixed(2) : DEFAULT_NATO_SF.toFixed(2));
+                                                                        const parsedEdit = editing !== undefined
+                                                                            ? parseFloat(editing.replace(',', '.'))
+                                                                            : NaN;
+                                                                        const effNum = !isNaN(parsedEdit)
+                                                                            ? parsedEdit
+                                                                            : (hasRealValue ? effective : DEFAULT_NATO_SF);
+                                                                        const pulcini = (uoveTrasf !== null && effNum !== undefined)
+                                                                            ? Math.round(uoveTrasf * effNum / 100)
+                                                                            : null;
+                                                                        const st = natoSfStatus[batch.id];
+                                                                        return (
+                                                                            <>
+                                                                                <td className="px-3 py-2 text-right">
+                                                                                    <div className="flex items-center justify-end gap-1">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            inputMode="decimal"
+                                                                                            className={`w-20 px-2 py-1 border border-gray-300 rounded text-right font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${isDefaultShown ? 'text-gray-400' : 'text-gray-900'}`}
+                                                                                            value={inputValue}
+                                                                                            onChange={e => setNatoSfEdit(prev => ({ ...prev, [batch.id]: e.target.value }))}
+                                                                                            onBlur={() => saveNatoSf(batch.id)}
+                                                                                            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                                                                            placeholder="—"
+                                                                                        />
+                                                                                        <span className="text-gray-400 text-xs w-3">
+                                                                                            {st === 'saving' ? '…' : st === 'success' ? '✓' : st === 'error' ? '✗' : '%'}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-3 py-2 text-right font-mono text-green-700 font-semibold">
+                                                                                    {pulcini !== null ? formatNumber(pulcini) : '—'}
+                                                                                </td>
+                                                                            </>
+                                                                        );
+                                                                    })()}
                                                                 </tr>
                                                             );
                                                         })}
 
                                                         {/* Totals row (only if >1 batch) */}
                                                         {inc.batches.length > 1 && (() => {
-                                                            let totInc = 0, totTrasf = 0, totCh = 0;
+                                                            let totInc = 0, totTrasf = 0, totCh = 0, totPulcini = 0;
                                                             for (const b of inc.batches) {
                                                                 const uoveInc = b.uova_utilizzate || b.uova_partita;
                                                                 const lv = editRows[incId]?.[b.id];
@@ -438,6 +584,11 @@ export default function TrasferimentoTable() {
                                                                 totInc += uoveInc;
                                                                 totTrasf += ut;
                                                                 totCh += Math.max(0, uoveInc - ut);
+                                                                // Pulcini previsti = uova trasferite x nato su fertile previsto
+                                                                const edit = natoSfEdit[b.id];
+                                                                const parsedEdit = edit !== undefined ? parseFloat(edit.replace(',', '.')) : NaN;
+                                                                const effNum = !isNaN(parsedEdit) ? parsedEdit : (natoSfEffective(b) ?? DEFAULT_NATO_SF);
+                                                                if (dv !== '' && effNum !== undefined) totPulcini += Math.round(ut * effNum / 100);
                                                             }
                                                             const pctTot = totInc > 0 ? (totTrasf / totInc * 100).toFixed(1) : null;
                                                             return (
@@ -448,6 +599,10 @@ export default function TrasferimentoTable() {
                                                                     <td className="px-3 py-2 text-right font-mono text-red-500">{formatNumber(totCh)}</td>
                                                                     <td className="px-3 py-2 text-right font-mono text-blue-600">
                                                                         {pctTot ? `${pctTot}%` : '—'}
+                                                                    </td>
+                                                                    <td className="px-3 py-2"></td>
+                                                                    <td className="px-3 py-2 text-right font-mono text-green-700">
+                                                                        {totPulcini > 0 ? formatNumber(totPulcini) : '—'}
                                                                     </td>
                                                                 </tr>
                                                             );

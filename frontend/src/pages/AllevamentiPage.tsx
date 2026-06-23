@@ -7,6 +7,8 @@ import { FarmStatusGrid } from "@/components/FarmStatusGrid";
 import { AccasamentiTable } from "@/components/AccasamentiTable";
 import { GeneticsSettingsTable } from "@/components/GeneticsSettingsTable";
 import { SchedaSettimanale } from "@/components/SchedaSettimanale";
+import PollastraFarmsSettings from "@/components/PollastraFarmsSettings";
+import { PollastraFarmsAPI } from "@/lib/api";
 import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
 interface AllevamentiPageProps {
@@ -15,29 +17,25 @@ interface AllevamentiPageProps {
 
 type Section = "stato" | "accasamenti" | "genetiche" | "scheda_settimanale" | "pollastra_accasamenti";
 
-// Fixed pollastra farm structure (same as in FarmStatusGrid)
-const POLLASTRA_FARMS: FarmStructure = {
-    "Persico":   [1, 2],
-    "Teramo":    [1],
-    "Montirone": [1, 2, 3],
-};
-
 export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
     const [section, setSection] = useState<Section>("stato");
     const [lotti, setLotti] = useState<Lotto[]>([]);
     const [farmStructure, setFarmStructure] = useState<FarmStructure>({});
+    const [pollastraStructure, setPollastraStructure] = useState<FarmStructure>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [lottiData, farmsData] = await Promise.all([
+                const [lottiData, farmsData, pollastraData] = await Promise.all([
                     AllevamentiAPI.getLotti(),
                     AllevamentiAPI.getFarmStructure(),
+                    PollastraFarmsAPI.getAll(),
                 ]);
                 setLotti(lottiData);
                 setFarmStructure(farmsData);
+                setPollastraStructure(pollastraData.structure);
             } catch (error) {
                 console.error("Failed to fetch allevamenti data", error);
             } finally {
@@ -46,6 +44,15 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
         };
         fetchData();
     }, []);
+
+    const refreshPollastraFarms = async () => {
+        try {
+            const data = await PollastraFarmsAPI.getAll();
+            setPollastraStructure(data.structure);
+        } catch (error) {
+            console.error("Failed to refresh pollastra farms", error);
+        }
+    };
 
     const refreshData = async () => {
         const lottiData = await AllevamentiAPI.getLotti();
@@ -131,6 +138,7 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                             <FarmStatusGrid
                                 lotti={lotti}
                                 farmStructure={farmStructure}
+                                pollastraStructure={pollastraStructure}
                                 onUpdate={refreshData}
                             />
                         )}
@@ -145,11 +153,12 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                             <div>
                                 <div className="mb-6">
                                     <h2 className="text-2xl font-bold text-gray-800 mb-1">Impostazioni Pollastra</h2>
-                                    <p className="text-gray-500 text-sm">Gestione accasamenti per Persico, Teramo, Montirone.</p>
+                                    <p className="text-gray-500 text-sm">Gestione allevamenti e accasamenti pollastra.</p>
                                 </div>
+                                <PollastraFarmsSettings onChanged={refreshPollastraFarms} />
                                 <AccasamentiTable
                                     lotti={pollastralotti}
-                                    farmStructure={POLLASTRA_FARMS}
+                                    farmStructure={pollastraStructure}
                                     onUpdate={refreshData}
                                     fase="pollastra"
                                     tableLabel="T010"

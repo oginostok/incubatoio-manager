@@ -36,3 +36,9 @@ venv.bak/
 # IDE
 .vscode
 .idea
+
+# Backup locali del sito
+Backup/
+
+# Backup locali del database
+*.db.local-backup-*

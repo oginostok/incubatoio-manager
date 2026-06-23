@@ -52,6 +52,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
     // Cycle settings state
     const [etaInizioCiclo, setEtaInizioCiclo] = useState(24);
     const [etaFineCiclo, setEtaFineCiclo] = useState(64);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<LottoCreate>({
         Allevamento: Object.keys(farmStructure)[0] || "",
@@ -107,10 +108,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                 setEtaInizioCiclo(settingsData.eta_inizio_ciclo || 24);
                 setEtaFineCiclo(settingsData.eta_fine_ciclo || 64);
 
-                // Set default form values if options exist
-                if (gallinaSet.size > 0) {
-                    setFormData(prev => ({ ...prev, Razza: Array.from(gallinaSet)[0] }));
-                }
+                // Gallina e Gallo sono entrambi opzionali: nessun default impostato
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             }
@@ -507,13 +505,19 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        // Almeno uno tra Gallo e Gallina deve essere selezionato
+        if (!formData.Razza && !formData.Razza_Gallo) {
+            setFormError("Almeno uno tra Gallo e Gallina deve essere selezionato");
+            return;
+        }
+        setFormError(null);
         try {
             await AllevamentiAPI.createLotto(formData);
             setShowForm(false);
             setFormData({
                 Allevamento: Object.keys(farmStructure)[0] || "",
                 Capannone: "1",
-                Razza: gallinaOptions[0] || "",
+                Razza: "",
                 Razza_Gallo: "",
                 Prodotto: PRODUCT_OPTIONS[0],
                 Capi: 10000,
@@ -685,11 +689,11 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                                 <div>
                                     <label className="text-sm font-medium block mb-2">Gallina</label>
                                     <Select
-                                        value={formData.Razza}
-                                        onValueChange={(val) => setFormData({ ...formData, Razza: val })}
+                                        value={formData.Razza || ""}
+                                        onValueChange={(val) => { setFormData({ ...formData, Razza: val }); setFormError(null); }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue placeholder="Opzionale" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {gallinaOptions.map((g: string) => (
@@ -760,7 +764,7 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                                     <label className="text-sm font-medium block mb-2">Gallo</label>
                                     <Select
                                         value={formData.Razza_Gallo || ""}
-                                        onValueChange={(val) => setFormData({ ...formData, Razza_Gallo: val })}
+                                        onValueChange={(val) => { setFormData({ ...formData, Razza_Gallo: val }); setFormError(null); }}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Opzionale" />
@@ -791,9 +795,16 @@ export function AccasamentiTable({ lotti, farmStructure, onUpdate, fase, tableLa
                                 </div>
                             </div>
 
+                            {formError && (
+                                <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                    <span>⚠️</span>
+                                    <span>{formError}</span>
+                                </div>
+                            )}
+
                             <div className="flex gap-2">
                                 <Button type="submit">Aggiungi</Button>
-                                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                                <Button type="button" variant="outline" onClick={() => { setShowForm(false); setFormError(null); }}>
                                     Annulla
                                 </Button>
                             </div>

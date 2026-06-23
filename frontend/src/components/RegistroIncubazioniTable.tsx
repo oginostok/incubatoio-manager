@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Pencil } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { IncubazioniAPI } from "@/lib/api";
 
@@ -59,6 +59,43 @@ export default function RegistroIncubazioniTable() {
     const [incubations, setIncubations] = useState<Incubation[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<number | null>(null);
+
+    // Modifica richieste (pulcini richiesti per categoria) anche dopo il commit
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editVals, setEditVals] = useState<{ gp: number; p70: number; cy: number; ross: number }>(
+        { gp: 0, p70: 0, cy: 0, ross: 0 }
+    );
+    const [savingEdit, setSavingEdit] = useState(false);
+
+    const startEditRichieste = (inc: Incubation) => {
+        setEditingId(inc.id);
+        setEditVals({
+            gp: inc.richiesta_granpollo || 0,
+            p70: inc.richiesta_pollo70 || 0,
+            cy: inc.richiesta_color_yeald || 0,
+            ross: inc.richiesta_ross || 0,
+        });
+        setExpandedId(inc.id);
+    };
+
+    const saveRichieste = async (id: number) => {
+        setSavingEdit(true);
+        try {
+            await IncubazioniAPI.updateIncubation(id, {
+                richiesta_granpollo: editVals.gp,
+                richiesta_pollo70: editVals.p70,
+                richiesta_color_yeald: editVals.cy,
+                richiesta_ross: editVals.ross,
+            });
+            setEditingId(null);
+            await fetchIncubations();
+        } catch (err) {
+            console.error("Failed to update richieste", err);
+            alert("Errore nel salvataggio delle richieste. Riprova.");
+        } finally {
+            setSavingEdit(false);
+        }
+    };
 
     useEffect(() => {
         fetchIncubations();
@@ -134,11 +171,17 @@ export default function RegistroIncubazioniTable() {
                             return acc;
                         }, {} as Record<string, number>);
 
-                        // Calculate difference (previsti - richiesti)
-                        const diffGranpollo = (previstiPerProdotto["Granpollo"] || 0) - (incubation.richiesta_granpollo || 0);
-                        const diffPollo70 = (previstiPerProdotto["Pollo70"] || 0) - (incubation.richiesta_pollo70 || 0);
-                        const diffColorYeald = (previstiPerProdotto["Color Yeald"] || 0) - (incubation.richiesta_color_yeald || 0);
-                        const diffRoss = (previstiPerProdotto["Ross"] || 0) - (incubation.richiesta_ross || 0);
+                        // Animali richiesti per prodotto
+                        const richiestiPerProdotto: Record<string, number> = {
+                            "Granpollo": incubation.richiesta_granpollo || 0,
+                            "Pollo70": incubation.richiesta_pollo70 || 0,
+                            "Color Yeald": incubation.richiesta_color_yeald || 0,
+                            "Ross": incubation.richiesta_ross || 0,
+                        };
+                        // Prodotti da mostrare: quelli con una richiesta o con animali previsti
+                        const prodottiPresenti = PRODUCT_ORDER.filter(
+                            p => (richiestiPerProdotto[p] || 0) > 0 || (previstiPerProdotto[p] || 0) > 0
+                        );
 
                         return (
                             <div
@@ -159,6 +202,36 @@ export default function RegistroIncubazioniTable() {
                                                 Uova <span className="font-mono font-semibold">[{formatNumber(totalUova)}]</span> -
                                                 Pulcini <span className="font-mono font-semibold text-green-700">[{formatNumber(totalPulcini)}]</span>
                                             </p>
+
+                                            {/* Animali richiesti vs previsti — sempre visibile, per prodotto */}
+                                            {prodottiPresenti.length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    {prodottiPresenti.map(prod => {
+                                                        const rich = richiestiPerProdotto[prod] || 0;
+                                                        const prev = previstiPerProdotto[prod] || 0;
+                                                        const diff = prev - rich;
+                                                        return (
+                                                            <div
+                                                                key={prod}
+                                                                className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 text-xs"
+                                                                onClick={e => e.stopPropagation()}
+                                                            >
+                                                                <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS[prod] || "bg-gray-100"}`}>{prod}</span>
+                                                                <span className="text-gray-500">Rich.</span>
+                                                                <span className="font-mono font-medium">{formatNumber(rich)}</span>
+                                                                <span className="text-gray-400">→</span>
+                                                                <span className="text-gray-500">Prev.</span>
+                                                                <span className="font-mono font-medium text-green-700">{formatNumber(prev)}</span>
+                                                                {rich > 0 && (
+                                                                    <span className={`font-mono font-semibold ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                        ({diff >= 0 ? '+' : ''}{formatNumber(diff)})
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {expandedId === incubation.id ? (
@@ -193,59 +266,50 @@ export default function RegistroIncubazioniTable() {
                                             </div>
                                         </div>
 
-                                        {/* Richiesta Animali */}
-                                        {(incubation.richiesta_granpollo > 0 || incubation.richiesta_pollo70 > 0 ||
-                                            incubation.richiesta_color_yeald > 0 || incubation.richiesta_ross > 0) && (
-                                                <div className="mb-4 bg-amber-50 p-3 rounded-lg">
-                                                    <h4 className="text-sm font-medium text-amber-800 mb-2">Richiesta vs Previsti:</h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                                        {incubation.richiesta_granpollo > 0 && (
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS["Granpollo"]}`}>Granpollo</span>
-                                                                <span className="font-mono">{formatNumber(incubation.richiesta_granpollo)}</span>
-                                                                <span className="text-gray-400">→</span>
-                                                                <span className="font-mono">{formatNumber(previstiPerProdotto["Granpollo"] || 0)}</span>
-                                                                <span className={`font-mono font-semibold ${diffGranpollo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    ({diffGranpollo >= 0 ? '+' : ''}{formatNumber(diffGranpollo)})
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        {incubation.richiesta_pollo70 > 0 && (
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS["Pollo70"]}`}>Pollo70</span>
-                                                                <span className="font-mono">{formatNumber(incubation.richiesta_pollo70)}</span>
-                                                                <span className="text-gray-400">→</span>
-                                                                <span className="font-mono">{formatNumber(previstiPerProdotto["Pollo70"] || 0)}</span>
-                                                                <span className={`font-mono font-semibold ${diffPollo70 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    ({diffPollo70 >= 0 ? '+' : ''}{formatNumber(diffPollo70)})
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        {incubation.richiesta_color_yeald > 0 && (
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS["Color Yeald"]}`}>Color Yeald</span>
-                                                                <span className="font-mono">{formatNumber(incubation.richiesta_color_yeald)}</span>
-                                                                <span className="text-gray-400">→</span>
-                                                                <span className="font-mono">{formatNumber(previstiPerProdotto["Color Yeald"] || 0)}</span>
-                                                                <span className={`font-mono font-semibold ${diffColorYeald >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    ({diffColorYeald >= 0 ? '+' : ''}{formatNumber(diffColorYeald)})
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        {incubation.richiesta_ross > 0 && (
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className={`px-2 py-0.5 rounded text-xs ${PRODUCT_COLORS["Ross"]}`}>Ross</span>
-                                                                <span className="font-mono">{formatNumber(incubation.richiesta_ross)}</span>
-                                                                <span className="text-gray-400">→</span>
-                                                                <span className="font-mono">{formatNumber(previstiPerProdotto["Ross"] || 0)}</span>
-                                                                <span className={`font-mono font-semibold ${diffRoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    ({diffRoss >= 0 ? '+' : ''}{formatNumber(diffRoss)})
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                        {/* Modifica richieste (pulcini richiesti per categoria) */}
+                                        {editingId === incubation.id && (
+                                            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <h4 className="text-sm font-medium text-blue-800 mb-3 flex items-center gap-2">
+                                                    <Pencil className="w-4 h-4" />
+                                                    Pulcini richiesti per categoria
+                                                </h4>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    {([
+                                                        { key: "gp" as const, label: "Granpollo" },
+                                                        { key: "p70" as const, label: "Pollo70" },
+                                                        { key: "cy" as const, label: "Color Yeald" },
+                                                        { key: "ross" as const, label: "Ross" },
+                                                    ]).map(({ key, label }) => (
+                                                        <div key={key} className={`p-2 rounded-lg border ${PRODUCT_COLORS[label] || "bg-gray-100"}`}>
+                                                            <label className="block text-xs font-medium mb-1">{label}</label>
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                value={editVals[key] || ""}
+                                                                onChange={e => setEditVals(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded text-right font-mono text-sm text-gray-900"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            )}
+                                                <div className="flex justify-end gap-2 mt-3">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setEditingId(null); }}
+                                                        className="px-3 py-1.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        Annulla
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); saveRichieste(incubation.id); }}
+                                                        disabled={savingEdit}
+                                                        className="px-3 py-1.5 text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        {savingEdit ? "Salvataggio..." : "Salva Richieste"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Batches Table */}
                                         {incubation.batches && incubation.batches.length > 0 && (
@@ -306,6 +370,15 @@ export default function RegistroIncubazioniTable() {
                                         )}
 
                                         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200">
+                                            {editingId !== incubation.id && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); startEditRichieste(incubation); }}
+                                                    className="px-4 py-2 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                    Modifica Richieste
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={async (e) => {
                                                     e.stopPropagation();

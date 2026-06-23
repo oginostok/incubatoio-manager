@@ -6,6 +6,8 @@ from routers import trattamenti, pesi
 from routers import trasferimento, schiusa
 from routers import scheda_settimanale
 from routers import manual_adjustments
+from routers import nato_fertile
+from routers import pollastra_farms
 import uvicorn
 
 app = FastAPI(title="Incubatoio Manager API")
@@ -44,6 +46,8 @@ app.include_router(trasferimento.router)
 app.include_router(schiusa.router)
 app.include_router(scheda_settimanale.router)
 app.include_router(manual_adjustments.router)
+app.include_router(nato_fertile.router)  # T018
+app.include_router(pollastra_farms.router)
 
 @app.on_event("startup")
 def startup_event():

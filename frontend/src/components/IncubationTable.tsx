@@ -225,6 +225,19 @@ export default function IncubationTable() {
     // Create new incubation
     const handleCreateIncubation = async () => {
         setCreateError(null);
+
+        // Le richieste di pulcini per categoria sono obbligatorie: almeno una > 0
+        const totaleRichieste =
+            (formData.richiesta_granpollo || 0) +
+            (formData.richiesta_pollo70 || 0) +
+            (formData.richiesta_color_yeald || 0) +
+            (formData.richiesta_ross || 0);
+        if (totaleRichieste <= 0) {
+            setCreateError("Devono essere inserite richieste di pulcini");
+            setShowRequestForm(true);
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
@@ -620,7 +633,10 @@ export default function IncubationTable() {
                     {/* Actions */}
                     <div className="p-4 bg-gray-50 flex flex-col gap-2">
                         {createError && (
-                            <p className="text-red-600 text-sm text-right">{createError}</p>
+                            <div className="flex items-center gap-2 bg-red-50 border border-red-300 text-red-700 rounded-lg px-3 py-2 text-sm font-medium">
+                                <span>⚠️</span>
+                                <span>{createError}</span>
+                            </div>
                         )}
                         <div className="flex justify-end gap-3">
                             <Button

@@ -1,0 +1,439 @@
+{
+ "tipi_order": [
+  "CY",
+  "ROSS",
+  "PELATO LABEL",
+  "PLUS",
+  "EUREKA",
+  "RUSTIC",
+  "BLA",
+  "PELATI ROSSI",
+  "PELATI BIANCHI",
+  "BR",
+  "PELATO",
+  "NERI PESANTI",
+  "ERMELLINATI",
+  "RANGER GOLD",
+  "ROSSI LABEL",
+  "K",
+  "BLA PLUS"
+ ],
+ "allevamenti_order": [
+  "GALLINELLA",
+  "CORTEFRANCA",
+  "PASSIRANO",
+  "AIA",
+  "MUSSANO",
+  "TONENGO",
+  "BOYE",
+  "AMADORI",
+  "TARANTASCA",
+  "TONENGO 2",
+  "FERRINI",
+  "FILENI",
+  "TONENGO 5",
+  "GRANJA",
+  "CAPETTA",
+  "FRANCIA",
+  "TONENGO 6",
+  "PERROT",
+  "GALSA",
+  "AUSTRIA",
+  "BOYE'",
+  "ORA",
+  "SPAGNA",
+  "VILLAFRANCA",
+  "MARTINI",
+  "NUTREA",
+  "FERRINI X NOI",
+  "ORA C/L",
+  "AMADORI CLASSIC",
+  "TOSCANO C/L"
+ ],
+ "cells": [
+  {
+   "allevamento": "AIA",
+   "tipo": "ROSS",
+   "valore": 93.82,
+   "n": 87
+  },
+  {
+   "allevamento": "AMADORI",
+   "tipo": "BLA",
+   "valore": 86.15,
+   "n": 7
+  },
+  {
+   "allevamento": "AMADORI",
+   "tipo": "RANGER GOLD",
+   "valore": 93.87,
+   "n": 21
+  },
+  {
+   "allevamento": "AMADORI",
+   "tipo": "ROSS",
+   "valore": 94.57,
+   "n": 1
+  },
+  {
+   "allevamento": "AMADORI CLASSIC",
+   "tipo": "RANGER GOLD",
+   "valore": 96.41,
+   "n": 1
+  },
+  {
+   "allevamento": "AUSTRIA",
+   "tipo": "BLA",
+   "valore": 91.27,
+   "n": 4
+  },
+  {
+   "allevamento": "BOYE",
+   "tipo": "PELATO LABEL",
+   "valore": 93.33,
+   "n": 48
+  },
+  {
+   "allevamento": "BOYE",
+   "tipo": "ROSS",
+   "valore": 95.85,
+   "n": 4
+  },
+  {
+   "allevamento": "BOYE'",
+   "tipo": "PELATO LABEL",
+   "valore": 92.7,
+   "n": 3
+  },
+  {
+   "allevamento": "CAPETTA",
+   "tipo": "ROSS",
+   "valore": 93.52,
+   "n": 12
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "BLA",
+   "valore": 95.36,
+   "n": 23
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "BR",
+   "valore": 89.61,
+   "n": 45
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "CY",
+   "valore": 94.15,
+   "n": 62
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "PELATO",
+   "valore": 91.07,
+   "n": 42
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "PELATO LABEL",
+   "valore": 91.48,
+   "n": 47
+  },
+  {
+   "allevamento": "CORTEFRANCA",
+   "tipo": "ROSS",
+   "valore": 92.65,
+   "n": 26
+  },
+  {
+   "allevamento": "FERRINI",
+   "tipo": "ROSS",
+   "valore": 93.09,
+   "n": 22
+  },
+  {
+   "allevamento": "FERRINI X NOI",
+   "tipo": "ROSS",
+   "valore": 93.07,
+   "n": 1
+  },
+  {
+   "allevamento": "FILENI",
+   "tipo": "BLA",
+   "valore": 95.65,
+   "n": 4
+  },
+  {
+   "allevamento": "FILENI",
+   "tipo": "PELATI ROSSI",
+   "valore": 96.08,
+   "n": 16
+  },
+  {
+   "allevamento": "FRANCIA",
+   "tipo": "BLA",
+   "valore": 94.58,
+   "n": 11
+  },
+  {
+   "allevamento": "FRANCIA",
+   "tipo": "BLA PLUS",
+   "valore": 93.49,
+   "n": 1
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "CY",
+   "valore": 95.23,
+   "n": 49
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "ERMELLINATI",
+   "valore": 88.79,
+   "n": 34
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "EUREKA",
+   "valore": 88.72,
+   "n": 53
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "K",
+   "valore": 92.54,
+   "n": 10
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "NERI PESANTI",
+   "valore": 89.22,
+   "n": 35
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "PELATI ROSSI",
+   "valore": 89.18,
+   "n": 41
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "PELATO LABEL",
+   "valore": 87.37,
+   "n": 9
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "PLUS",
+   "valore": 92.27,
+   "n": 78
+  },
+  {
+   "allevamento": "GALLINELLA",
+   "tipo": "ROSSI LABEL",
+   "valore": 89.96,
+   "n": 12
+  },
+  {
+   "allevamento": "GALSA",
+   "tipo": "CY",
+   "valore": 94.63,
+   "n": 2
+  },
+  {
+   "allevamento": "GALSA",
+   "tipo": "PLUS",
+   "valore": 91.08,
+   "n": 2
+  },
+  {
+   "allevamento": "GRANJA",
+   "tipo": "CY",
+   "valore": 93.61,
+   "n": 10
+  },
+  {
+   "allevamento": "GRANJA",
+   "tipo": "PELATO LABEL",
+   "valore": 83.85,
+   "n": 1
+  },
+  {
+   "allevamento": "GRANJA",
+   "tipo": "PLUS",
+   "valore": 90.19,
+   "n": 2
+  },
+  {
+   "allevamento": "MARTINI",
+   "tipo": "ROSS",
+   "valore": 95.34,
+   "n": 2
+  },
+  {
+   "allevamento": "MUSSANO",
+   "tipo": "EUREKA",
+   "valore": 86.42,
+   "n": 46
+  },
+  {
+   "allevamento": "MUSSANO",
+   "tipo": "PELATO",
+   "valore": 95.51,
+   "n": 1
+  },
+  {
+   "allevamento": "MUSSANO",
+   "tipo": "PELATO LABEL",
+   "valore": 94.85,
+   "n": 29
+  },
+  {
+   "allevamento": "NUTREA",
+   "tipo": "BLA",
+   "valore": 96.2,
+   "n": 2
+  },
+  {
+   "allevamento": "ORA",
+   "tipo": "ROSS",
+   "valore": 92.13,
+   "n": 3
+  },
+  {
+   "allevamento": "ORA C/L",
+   "tipo": "ROSS",
+   "valore": 92.79,
+   "n": 1
+  },
+  {
+   "allevamento": "PASSIRANO",
+   "tipo": "CY",
+   "valore": 93.58,
+   "n": 20
+  },
+  {
+   "allevamento": "PASSIRANO",
+   "tipo": "PELATI BIANCHI",
+   "valore": 89.55,
+   "n": 2
+  },
+  {
+   "allevamento": "PASSIRANO",
+   "tipo": "PLUS",
+   "valore": 93.41,
+   "n": 37
+  },
+  {
+   "allevamento": "PASSIRANO",
+   "tipo": "RUSTIC",
+   "valore": 92.29,
+   "n": 41
+  },
+  {
+   "allevamento": "PERROT",
+   "tipo": "BLA",
+   "valore": 93.14,
+   "n": 6
+  },
+  {
+   "allevamento": "SPAGNA",
+   "tipo": "CY",
+   "valore": 93.93,
+   "n": 1
+  },
+  {
+   "allevamento": "SPAGNA",
+   "tipo": "PELATO LABEL",
+   "valore": 89.85,
+   "n": 1
+  },
+  {
+   "allevamento": "SPAGNA",
+   "tipo": "PLUS",
+   "valore": 89.82,
+   "n": 1
+  },
+  {
+   "allevamento": "TARANTASCA",
+   "tipo": "EUREKA",
+   "valore": 86.8,
+   "n": 21
+  },
+  {
+   "allevamento": "TARANTASCA",
+   "tipo": "PELATI BIANCHI",
+   "valore": 92.23,
+   "n": 6
+  },
+  {
+   "allevamento": "TONENGO",
+   "tipo": "CY",
+   "valore": 95.79,
+   "n": 2
+  },
+  {
+   "allevamento": "TONENGO",
+   "tipo": "PELATI BIANCHI",
+   "valore": 91.43,
+   "n": 48
+  },
+  {
+   "allevamento": "TONENGO",
+   "tipo": "RANGER GOLD",
+   "valore": 87.76,
+   "n": 2
+  },
+  {
+   "allevamento": "TONENGO",
+   "tipo": "RUSTIC",
+   "valore": 89.52,
+   "n": 16
+  },
+  {
+   "allevamento": "TONENGO 2",
+   "tipo": "CY",
+   "valore": 95.52,
+   "n": 18
+  },
+  {
+   "allevamento": "TONENGO 2",
+   "tipo": "PLUS",
+   "valore": 95.66,
+   "n": 8
+  },
+  {
+   "allevamento": "TONENGO 5",
+   "tipo": "RUSTIC",
+   "valore": 91.98,
+   "n": 13
+  },
+  {
+   "allevamento": "TONENGO 6",
+   "tipo": "RUSTIC",
+   "valore": 91.89,
+   "n": 9
+  },
+  {
+   "allevamento": "TOSCANO C/L",
+   "tipo": "ROSS",
+   "valore": 96.35,
+   "n": 1
+  },
+  {
+   "allevamento": "VILLAFRANCA",
+   "tipo": "CY",
+   "valore": 95.75,
+   "n": 1
+  },
+  {
+   "allevamento": "VILLAFRANCA",
+   "tipo": "PLUS",
+   "valore": 94.7,
+   "n": 1
+  }
+ ]
+}

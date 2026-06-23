@@ -134,6 +134,10 @@ def get_farm_structure():
     all_lotti = get_lotti()
     structure = {}
     for lotto in all_lotti:
+        # Gli allevamenti in fase pollastra sono gestiti separatamente:
+        # non devono comparire nella struttura degli allevamenti normali.
+        if lotto.get("Fase") == "pollastra":
+            continue
         farm = lotto.get("Allevamento")
         cap = str(lotto.get("Capannone", ""))
         if not farm or not cap:

@@ -5,15 +5,9 @@ import { ShedDetailPanel } from "./ShedDetailPanel";
 interface FarmStatusGridProps {
     lotti: Lotto[];
     farmStructure: FarmStructure;
+    pollastraStructure?: FarmStructure;
     onUpdate: () => void;
 }
-
-// Fixed pollastra farm structure
-const POLLASTRA_FARMS: Record<string, number[]> = {
-    "Persico":   [1, 2],
-    "Teramo":    [1],
-    "Montirone": [1, 2, 3],
-};
 
 function calculateAgeWeeks(yearStart: number, weekStart: number): number {
     const today = new Date();
@@ -43,6 +37,12 @@ function isLottoExpired(l: Lotto): boolean {
     return new Date() >= expiry;
 }
 
+// True quando la settimana di start del lotto è già arrivata.
+// Gli accasamenti programmati nel futuro non sono ancora "in corso".
+function hasStarted(l: Lotto): boolean {
+    return new Date() >= getDateFromYearWeek(l.Anno_Start, l.Sett_Start);
+}
+
 // Matches capannone by number (exact or "1A"/"1B" sub-sections)
 function matchesShed(capannone: string, shed: number): boolean {
     const cap = String(capannone);
@@ -52,7 +52,8 @@ function matchesShed(capannone: string, shed: number): boolean {
     return false;
 }
 
-export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGridProps) {
+export function FarmStatusGrid({ lotti, farmStructure, pollastraStructure, onUpdate }: FarmStatusGridProps) {
+    const POLLASTRA_FARMS: Record<string, number[]> = pollastraStructure ?? {};
     const [selectedShed, setSelectedShed] = useState<{ farm: string; shed: number } | null>(null);
     const [selectedPollaShed, setSelectedPollaShed] = useState<{ farm: string; shed: number } | null>(null);
 
@@ -69,8 +70,9 @@ export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGri
             l => calculateAgeWeeks(l.Anno_Start, l.Sett_Start) >= 24 && !isLottoExpired(l)
         );
 
-    const isPollastraOccupied = (farm: string, shed: number): boolean =>
-        getActiveLotti(farm, shed, pollastralotti).some(l => !isLottoExpired(l));
+    // Lotti pollastra realmente in corso in un capannone: attivi, già partiti e non scaduti.
+    const getRunningPollastra = (farm: string, shed: number): Lotto[] =>
+        getActiveLotti(farm, shed, pollastralotti).filter(l => hasStarted(l) && !isLottoExpired(l));
 
     const sortedFarms = Object.keys(farmStructure).sort();
 
@@ -171,11 +173,11 @@ export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGri
                                 <h4 className="text-sm font-semibold text-blue-700 mb-3">🏠 {farm}</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {sheds.map(shed => {
-                                        const occupied = isPollastraOccupied(farm, shed);
+                                        const runningLotti = getRunningPollastra(farm, shed);
+                                        const occupied = runningLotti.length > 0;
                                         const isSelected = selectedPollaShed?.farm === farm && selectedPollaShed?.shed === shed;
-                                        const activeLotti = getActiveLotti(farm, shed, pollastralotti);
                                         const age = occupied
-                                            ? calculateAgeWeeks(activeLotti[0].Anno_Start, activeLotti[0].Sett_Start)
+                                            ? calculateAgeWeeks(runningLotti[0].Anno_Start, runningLotti[0].Sett_Start)
                                             : null;
 
                                         return (
@@ -210,7 +212,7 @@ export function FarmStatusGrid({ lotti, farmStructure, onUpdate }: FarmStatusGri
                                 {isFarmSelected && selectedPollaShed && (
                                     <div className="mt-4 pt-4 border-t border-blue-100">
                                         <ShedDetailPanel
-                                            lotti={getActiveLotti(selectedPollaShed.farm, selectedPollaShed.shed, pollastralotti)}
+                                            lotti={getRunningPollastra(selectedPollaShed.farm, selectedPollaShed.shed)}
                                             onUpdate={onUpdate}
                                             onClose={() => setSelectedPollaShed(null)}
                                             hideProduzione={true}

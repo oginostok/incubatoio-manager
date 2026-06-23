@@ -39,6 +39,37 @@ export const ProductionTablesAPI = {
     },
 };
 
+// Nato su Fertile Service Wrapper (T018)
+export interface NatoFertileCell {
+    allevamento: string;
+    tipo: string;
+    valore: number;
+    n_partite: number;
+}
+export interface NatoFertileMatrix {
+    cells: NatoFertileCell[];
+    tipi: string[];
+    allevamenti: string[];
+}
+export const NatoFertileAPI = {
+    getMatrix: async (): Promise<NatoFertileMatrix> => {
+        const res = await api.get("/nato-fertile");
+        return res.data;
+    },
+    updateCell: async (allevamento: string, tipo: string, valore: number | null) => {
+        const res = await api.put("/nato-fertile", { allevamento, tipo, valore });
+        return res.data;
+    },
+    getBatchOverrides: async (): Promise<Record<number, number>> => {
+        const res = await api.get("/nato-fertile/batch-overrides");
+        return res.data.data || {};
+    },
+    updateBatchOverride: async (batch_id: number, valore: number | null) => {
+        const res = await api.put("/nato-fertile/batch-override", { batch_id, valore });
+        return res.data;
+    },
+};
+
 // Allevamenti Service Wrapper
 export const AllevamentiAPI = {
     // Get all lotti
@@ -132,12 +163,49 @@ export const IncubazioniAPI = {
         const res = await api.post(`/incubazioni/${id}/uncommit`);
         return res.data;
     },
+    updateIncubation: async (
+        id: number,
+        updates: {
+            richiesta_granpollo?: number;
+            richiesta_pollo70?: number;
+            richiesta_color_yeald?: number;
+            richiesta_ross?: number;
+        }
+    ) => {
+        const res = await api.put(`/incubazioni/${id}`, updates);
+        return res.data;
+    },
     updateBatch: async (
         incubationId: number,
         batchId: number,
         updates: { uova_utilizzate?: number; storico_override?: number; preparata?: boolean }
     ) => {
         const res = await api.patch(`/incubazioni/${incubationId}/batches/${batchId}`, updates);
+        return res.data;
+    },
+};
+
+// Pollastra Farms Service Wrapper (allevamenti pollastra configurabili)
+export interface PollastraFarm {
+    id: number;
+    nome: string;
+    n_capannoni: number;
+}
+export const PollastraFarmsAPI = {
+    getAll: async (): Promise<{ farms: PollastraFarm[]; structure: Record<string, number[]> }> => {
+        const res = await api.get("/pollastra-farms");
+        return res.data;
+    },
+    add: async (nome: string, n_capannoni: number) => {
+        const res = await api.post("/pollastra-farms", { nome, n_capannoni });
+        return res.data;
+    },
+    update: async (id: number, payload: { nome?: string; n_capannoni?: number }) => {
+        const res = await api.put(`/pollastra-farms/${id}`, payload);
+        return res.data;
+    },
+    remove: async (id: number) => {
+        const res = await api.delete(`/pollastra-farms/${id}`);
         return res.data;
     },
 };
