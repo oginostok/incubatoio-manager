@@ -100,6 +100,11 @@ export default function HomePage({ onNavigate, onLogout }: HomePageProps) {
             >
                 Esci
             </button>
+
+            {/* Footer versione */}
+            <p className="mt-10 text-xs text-gray-400">
+                Avicore.it versione {__APP_VERSION__}
+            </p>
         </div>
     );
 }
