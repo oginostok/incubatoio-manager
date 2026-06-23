@@ -32,6 +32,10 @@ interface Incubation {
     data_schiusa: string;
     incubatrici: string | null;
     operatore: string | null;
+    richiesta_granpollo: number;
+    richiesta_pollo70: number;
+    richiesta_color_yeald: number;
+    richiesta_ross: number;
     batches: IncubationBatch[];
 }
 
@@ -50,6 +54,9 @@ const PRODUCT_COLORS: Record<string, string> = {
     "Color Yeald": "bg-red-100 text-red-800 border-red-300",
     "Ross": "bg-orange-100 text-orange-800 border-orange-300",
 };
+
+// Ordine di visualizzazione dei prodotti nelle tabelle/riepiloghi
+const PRODUCT_ORDER = ["Granpollo", "Pollo70", "Ross", "Color Yeald"];
 
 const formatNumber = (n: number) =>
     n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -368,6 +375,30 @@ export default function TrasferimentoTable() {
                             ? (totalTrasferite / totalIncubate * 100).toFixed(1)
                             : null;
 
+                        // Pulcini previsti per prodotto = somma (uova trasferite × Nato SF%) delle partite del prodotto
+                        const previstiPerProdotto: Record<string, number> = {};
+                        for (const b of inc.batches) {
+                            const lv = editRows[incId]?.[b.id];
+                            const er = trasfByBatch[b.id];
+                            const dv = lv !== undefined ? lv : (er ? String(er.n_uova_trasferite) : '');
+                            if (dv === '') continue;
+                            const ut = Number(dv) || 0;
+                            const edit = natoSfEdit[b.id];
+                            const parsedEdit = edit !== undefined ? parseFloat(edit.replace(',', '.')) : NaN;
+                            const effNum = !isNaN(parsedEdit) ? parsedEdit : (natoSfEffective(b) ?? DEFAULT_NATO_SF);
+                            previstiPerProdotto[b.prodotto] = (previstiPerProdotto[b.prodotto] || 0) + Math.round(ut * effNum / 100);
+                        }
+                        // Richieste per prodotto: le stesse inserite in fase di incubazione
+                        const richiestiPerProdotto: Record<string, number> = {
+                            "Granpollo": inc.richiesta_granpollo || 0,
+                            "Pollo70": inc.richiesta_pollo70 || 0,
+                            "Color Yeald": inc.richiesta_color_yeald || 0,
+                            "Ross": inc.richiesta_ross || 0,
+                        };
+                        const prodottiPresenti = PRODUCT_ORDER.filter(
+                            p => (richiestiPerProdotto[p] || 0) > 0 || (previstiPerProdotto[p] || 0) > 0
+                        );
+
                         return (
                             <div
                                 key={incId}
@@ -422,6 +453,36 @@ export default function TrasferimentoTable() {
                                             }
                                         </div>
                                     </div>
+
+                                    {/* Richiesti vs previsti per prodotto — sempre visibile */}
+                                    {prodottiPresenti.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {prodottiPresenti.map(prod => {
+                                                const rich = richiestiPerProdotto[prod] || 0;
+                                                const prev = previstiPerProdotto[prod] || 0;
+                                                const diff = prev - rich;
+                                                return (
+                                                    <div
+                                                        key={prod}
+                                                        className="flex items-center gap-1.5 bg-white/70 border border-amber-200 rounded-lg px-2.5 py-1 text-xs"
+                                                        onClick={e => e.stopPropagation()}
+                                                    >
+                                                        <span className={`px-2 py-0.5 rounded text-xs border ${PRODUCT_COLORS[prod] || "bg-gray-100"}`}>{prod}</span>
+                                                        <span className="text-gray-500">Rich.</span>
+                                                        <span className="font-mono font-medium">{formatNumber(rich)}</span>
+                                                        <span className="text-gray-400">→</span>
+                                                        <span className="text-gray-500">Prev.</span>
+                                                        <span className="font-mono font-medium text-green-700">{formatNumber(prev)}</span>
+                                                        {rich > 0 && (
+                                                            <span className={`font-mono font-semibold ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                ({diff >= 0 ? '+' : ''}{formatNumber(diff)})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Expanded body */}
@@ -478,7 +539,18 @@ export default function TrasferimentoTable() {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {inc.batches.map(batch => {
+                                                        {[...inc.batches]
+                                                            .sort((a, b) => {
+                                                                // 1) Prodotto (ordine fisso), 2) Nome, 3) Origine, 4) Capannone
+                                                                const p = PRODUCT_ORDER.indexOf(a.prodotto) - PRODUCT_ORDER.indexOf(b.prodotto);
+                                                                if (p !== 0) return p;
+                                                                const n = (a.nome || '').localeCompare(b.nome || '', 'it', { sensitivity: 'base' });
+                                                                if (n !== 0) return n;
+                                                                const o = (a.origine || '').localeCompare(b.origine || '', 'it', { sensitivity: 'base' });
+                                                                if (o !== 0) return o;
+                                                                return (a.capannone || '').localeCompare(b.capannone || '', 'it', { numeric: true, sensitivity: 'base' });
+                                                            })
+                                                            .map(batch => {
                                                             const uoveIncubate = batch.uova_utilizzate || batch.uova_partita;
                                                             const localVal = editRows[incId]?.[batch.id];
                                                             const existingRec = trasfByBatch[batch.id];
