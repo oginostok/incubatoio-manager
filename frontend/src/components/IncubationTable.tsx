@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Plus, Calendar, Clock, User, Settings2, ChevronDown, ChevronUp, Trash2, Egg, Save, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
+import { useTableSort, sortRows, SortableTh } from "@/lib/tableSort";
 
 // Types
 interface IncubationBatch {
@@ -19,6 +20,7 @@ interface IncubationBatch {
     uova_partita: number;
     uova_utilizzate: number;
     eta: number;
+    data_arrivo?: string;
     storico_override: number | null;
     quantita: number;
     preparata?: boolean;
@@ -101,6 +103,14 @@ const getTodayDate = (): string => {
     return today.toISOString().split("T")[0];
 };
 
+// Helper: giorni di giacenza in magazzino (da data arrivo a oggi)
+const giacenzaDays = (dataArrivo?: string): number | null => {
+    if (!dataArrivo) return null;
+    const start = new Date(dataArrivo);
+    if (isNaN(start.getTime())) return null;
+    return Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+};
+
 export default function IncubationTable() {
     const [incubations, setIncubations] = useState<Incubation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -131,6 +141,9 @@ export default function IncubationTable() {
 
     // Birth rates from T008 - format: {week: {product: rate}}
     const [birthRates, setBirthRates] = useState<Record<number, Record<string, number>>>({});
+
+    // Ordinamento tabella "Partite Utilizzate"
+    const batchSort = useTableSort();
 
     // Form state for new incubation
     const [formData, setFormData] = useState({
@@ -1068,26 +1081,47 @@ export default function IncubationTable() {
                                             <table className="w-full text-sm">
                                                 <thead>
                                                     <tr className="bg-gray-100">
-                                                        <th className="px-2 py-2 text-left">Prodotto</th>
-                                                        <th className="px-2 py-2 text-left">Nome</th>
-                                                        <th className="px-2 py-2 text-left">Origine</th>
-                                                        <th className="px-2 py-2 text-left">Capannone</th>
-                                                        <th className="px-2 py-2 text-right">Uova Partita</th>
-                                                        <th className="px-2 py-2 text-right">Uova Utilizzate</th>
-                                                        <th className="px-2 py-2 text-right">Uova Rimanenti</th>
-                                                        <th className="px-2 py-2 text-center">Età</th>
-                                                        <th className="px-2 py-2 text-right">Storico %</th>
-                                                        <th className="px-2 py-2 text-right">Prev. Animali</th>
-                                                        <th className="px-2 py-2 text-center">Preparate</th>
+                                                        <SortableTh label="Prodotto" sortKey="prodotto" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Nome" sortKey="nome" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Origine" sortKey="origine" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Capannone" sortKey="capannone" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Uova Partita" sortKey="uova_partita" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Uova Utilizzate" sortKey="uova_utilizzate" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Giacenza" sortKey="giacenza" align="center" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Uova Rimanenti" sortKey="uova_rimanenti" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Età" sortKey="eta" align="center" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Storico %" sortKey="storico" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Prev. Animali" sortKey="prev_animali" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
+                                                        <SortableTh label="Preparate" sortKey="preparata" align="center" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-2 py-2" />
                                                         {!incubation.committed && <th className="px-2 py-2 text-center w-10"></th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {incubation.batches.map(batch => {
-                                                        const storico = getStorico(batch.prodotto, batch.eta, batch.storico_override);
-                                                        const uovaRimanenti = (batch.uova_partita || 0) - (batch.uova_utilizzate || 0);
-                                                        const previsioneAnimali = Math.round((batch.uova_utilizzate || 0) * (storico / 100));
-
+                                                    {sortRows(
+                                                        incubation.batches.map(batch => {
+                                                            const storico = getStorico(batch.prodotto, batch.eta, batch.storico_override);
+                                                            const uovaRimanenti = (batch.uova_partita || 0) - (batch.uova_utilizzate || 0);
+                                                            const previsioneAnimali = Math.round((batch.uova_utilizzate || 0) * (storico / 100));
+                                                            const giacenza = giacenzaDays(batch.data_arrivo);
+                                                            return { batch, storico, uovaRimanenti, previsioneAnimali, giacenza };
+                                                        }),
+                                                        batchSort.sortKey,
+                                                        batchSort.sortDir,
+                                                        {
+                                                            prodotto: r => r.batch.prodotto,
+                                                            nome: r => r.batch.nome,
+                                                            origine: r => r.batch.origine,
+                                                            capannone: r => r.batch.capannone,
+                                                            uova_partita: r => r.batch.uova_partita,
+                                                            uova_utilizzate: r => r.batch.uova_utilizzate,
+                                                            giacenza: r => r.giacenza,
+                                                            uova_rimanenti: r => r.uovaRimanenti,
+                                                            eta: r => r.batch.eta,
+                                                            storico: r => r.storico,
+                                                            prev_animali: r => r.previsioneAnimali,
+                                                            preparata: r => !!r.batch.preparata,
+                                                        }
+                                                    ).map(({ batch, storico, uovaRimanenti, previsioneAnimali, giacenza }) => {
                                                         return (
                                                             <tr key={batch.id} className="border-b hover:bg-gray-50">
                                                                 <td className="px-2 py-2">
@@ -1128,6 +1162,7 @@ export default function IncubationTable() {
                                                                         )}
                                                                     </div>
                                                                 </td>
+                                                                <td className="px-2 py-2 text-center font-mono">{giacenza !== null ? `${giacenza} gg` : "—"}</td>
                                                                 <td className="px-2 py-2 text-right font-mono text-gray-600">{formatNumber(uovaRimanenti)}</td>
                                                                 <td className="px-2 py-2 text-center">{batch.eta} sett.</td>
                                                                 <td className="px-2 py-2 text-right">
@@ -1181,7 +1216,7 @@ export default function IncubationTable() {
                                                         <td className="px-2 py-2 text-right font-mono">
                                                             {formatNumber(incubation.batches.reduce((sum, b) => sum + (b.uova_utilizzate || 0), 0))}
                                                         </td>
-                                                        <td colSpan={3} className="px-2 py-2"></td>
+                                                        <td colSpan={4} className="px-2 py-2"></td>
                                                         <td className="px-2 py-2 text-right font-mono text-green-700">
                                                             {formatNumber(incubation.batches.reduce((sum, b) => {
                                                                 const storico = getStorico(b.prodotto, b.eta, b.storico_override);

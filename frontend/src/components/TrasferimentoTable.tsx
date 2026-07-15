@@ -4,6 +4,7 @@ import { Plus, Calendar, ChevronDown, ChevronUp, Trash2, X } from 'lucide-react'
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { NatoFertileAPI } from '@/lib/api';
+import { useTableSort, sortRows, SortableTh } from '@/lib/tableSort';
 
 // Mapping nome partita -> TIPO della matrice Nato su Fertile
 const TIPO_ALIASES: Record<string, string> = {
@@ -24,6 +25,7 @@ interface IncubationBatch {
     capannone: string;
     uova_partita: number;
     uova_utilizzate: number;
+    data_arrivo?: string;
 }
 
 interface Incubation {
@@ -70,6 +72,15 @@ const formatDateDisplay = (dateStr: string): string => {
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
+// Giorni di giacenza in magazzino: da data arrivo uova a data incubazione
+const giacenzaDays = (dataArrivo: string | undefined, dataIncubazione: string): number | null => {
+    if (!dataArrivo) return null;
+    const start = new Date(dataArrivo);
+    const end = new Date(dataIncubazione);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+    return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+};
+
 export default function TrasferimentoTable() {
     const [incubazioni, setIncubazioni] = useState<Incubation[]>([]);
     const [trasferimenti, setTrasferimenti] = useState<Trasferimento[]>([]);
@@ -92,6 +103,9 @@ export default function TrasferimentoTable() {
     const [natoSfOverrides, setNatoSfOverrides] = useState<Record<number, number>>({});
     const [natoSfEdit, setNatoSfEdit] = useState<Record<number, string>>({});
     const [natoSfStatus, setNatoSfStatus] = useState<Record<number, 'saving' | 'success' | 'error'>>({});
+
+    // Ordinamento tabella partite
+    const batchSort = useTableSort();
 
     const load = async () => {
         try {
@@ -515,33 +529,70 @@ export default function TrasferimentoTable() {
                                                 <table className="w-full text-sm">
                                                     <thead>
                                                         <tr className="bg-gray-100">
-                                                            <th className="px-3 py-2 text-left">Prodotto</th>
-                                                            <th className="px-3 py-2 text-left">Nome</th>
-                                                            <th className="px-3 py-2 text-left">Origine</th>
-                                                            <th className="px-3 py-2 text-left">Capannone</th>
-                                                            <th className="px-3 py-2 text-right">Uova Incubate</th>
-                                                            <th className="px-3 py-2 text-right">Uova Trasferite</th>
-                                                            <th className="px-3 py-2 text-right">Chiaro</th>
-                                                            <th className="px-3 py-2 text-right">% Trasf.</th>
-                                                            <th className="px-3 py-2 text-right">
-                                                                <TooltipProvider delayDuration={100}>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <span className="cursor-help border-b border-dotted border-gray-400">
-                                                                                Nato SF
-                                                                            </span>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>Nato Su fertile</TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                            </th>
-                                                            <th className="px-3 py-2 text-right">Pulcini Previsti</th>
+                                                            <SortableTh label="Prodotto" sortKey="prodotto" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Nome" sortKey="nome" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Origine" sortKey="origine" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Capannone" sortKey="capannone" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Uova Incubate" sortKey="uova_incubate" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Giacenza" sortKey="giacenza" align="center" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Uova Trasferite" sortKey="uova_trasferite" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Chiaro" sortKey="chiaro" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="% Trasf." sortKey="pct" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh
+                                                                label={
+                                                                    <TooltipProvider delayDuration={100}>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <span className="cursor-help border-b border-dotted border-gray-400">
+                                                                                    Nato SF
+                                                                                </span>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent>Nato Su fertile</TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                }
+                                                                sortKey="nato_sf" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2"
+                                                            />
+                                                            <SortableTh label="Pulcini Previsti" sortKey="pulcini" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {[...inc.batches]
-                                                            .sort((a, b) => {
-                                                                // 1) Prodotto (ordine fisso), 2) Nome, 3) Origine, 4) Capannone
+                                                        {(() => {
+                                                            const rows = inc.batches.map(batch => {
+                                                                const uoveIncubate = batch.uova_utilizzate || batch.uova_partita;
+                                                                const localVal = editRows[incId]?.[batch.id];
+                                                                const existingRec = trasfByBatch[batch.id];
+                                                                const displayVal = localVal !== undefined
+                                                                    ? localVal
+                                                                    : (existingRec ? String(existingRec.n_uova_trasferite) : '');
+
+                                                                const uoveTrasf = displayVal !== '' ? Number(displayVal) : null;
+                                                                const chiaro = uoveTrasf !== null ? Math.max(0, uoveIncubate - uoveTrasf) : null;
+                                                                const pctNum = uoveTrasf !== null && uoveIncubate > 0
+                                                                    ? uoveTrasf / uoveIncubate * 100
+                                                                    : null;
+
+                                                                const effective = natoSfEffective(batch);
+                                                                const editing = natoSfEdit[batch.id];
+                                                                const hasRealValue = effective !== undefined;
+                                                                const parsedEdit = editing !== undefined
+                                                                    ? parseFloat(editing.replace(',', '.'))
+                                                                    : NaN;
+                                                                const effNum = !isNaN(parsedEdit)
+                                                                    ? parsedEdit
+                                                                    : (hasRealValue ? effective : DEFAULT_NATO_SF);
+                                                                const pulcini = (uoveTrasf !== null && effNum !== undefined)
+                                                                    ? Math.round(uoveTrasf * effNum / 100)
+                                                                    : null;
+
+                                                                const giacenza = giacenzaDays(batch.data_arrivo, inc.data_incubazione);
+
+                                                                return { batch, uoveIncubate, displayVal, uoveTrasf, chiaro, pctNum, effective, editing, hasRealValue, effNum, pulcini, giacenza };
+                                                            });
+
+                                                            // Ordine di default: prodotto (fisso), nome, origine, capannone
+                                                            const defaultSorted = [...rows].sort((ra, rb) => {
+                                                                const a = ra.batch, b = rb.batch;
                                                                 const p = PRODUCT_ORDER.indexOf(a.prodotto) - PRODUCT_ORDER.indexOf(b.prodotto);
                                                                 if (p !== 0) return p;
                                                                 const n = (a.nome || '').localeCompare(b.nome || '', 'it', { sensitivity: 'base' });
@@ -549,20 +600,26 @@ export default function TrasferimentoTable() {
                                                                 const o = (a.origine || '').localeCompare(b.origine || '', 'it', { sensitivity: 'base' });
                                                                 if (o !== 0) return o;
                                                                 return (a.capannone || '').localeCompare(b.capannone || '', 'it', { numeric: true, sensitivity: 'base' });
-                                                            })
-                                                            .map(batch => {
-                                                            const uoveIncubate = batch.uova_utilizzate || batch.uova_partita;
-                                                            const localVal = editRows[incId]?.[batch.id];
-                                                            const existingRec = trasfByBatch[batch.id];
-                                                            const displayVal = localVal !== undefined
-                                                                ? localVal
-                                                                : (existingRec ? String(existingRec.n_uova_trasferite) : '');
+                                                            });
 
-                                                            const uoveTrasf = displayVal !== '' ? Number(displayVal) : null;
-                                                            const chiaro = uoveTrasf !== null ? Math.max(0, uoveIncubate - uoveTrasf) : null;
-                                                            const pct = uoveTrasf !== null && uoveIncubate > 0
-                                                                ? (uoveTrasf / uoveIncubate * 100).toFixed(1)
-                                                                : null;
+                                                            const sortedRows = batchSort.sortKey
+                                                                ? sortRows(rows, batchSort.sortKey, batchSort.sortDir, {
+                                                                    prodotto: r => r.batch.prodotto,
+                                                                    nome: r => r.batch.nome,
+                                                                    origine: r => r.batch.origine,
+                                                                    capannone: r => r.batch.capannone,
+                                                                    uova_incubate: r => r.uoveIncubate,
+                                                                    giacenza: r => r.giacenza,
+                                                                    uova_trasferite: r => r.uoveTrasf,
+                                                                    chiaro: r => r.chiaro,
+                                                                    pct: r => r.pctNum,
+                                                                    nato_sf: r => r.effNum,
+                                                                    pulcini: r => r.pulcini,
+                                                                })
+                                                                : defaultSorted;
+
+                                                            return sortedRows.map(({ batch, uoveIncubate, displayVal, chiaro, pctNum, editing, hasRealValue, effective, pulcini, giacenza }) => {
+                                                            const pct = pctNum !== null ? pctNum.toFixed(1) : null;
 
                                                             return (
                                                                 <tr key={batch.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -575,6 +632,7 @@ export default function TrasferimentoTable() {
                                                                     <td className="px-3 py-2 text-gray-500">{batch.origine}</td>
                                                                     <td className="px-3 py-2 text-gray-500">{batch.capannone || "—"}</td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(uoveIncubate)}</td>
+                                                                    <td className="px-3 py-2 text-center font-mono">{giacenza !== null ? `${giacenza} gg` : '—'}</td>
                                                                     <td className="px-3 py-2 text-right">
                                                                         <input
                                                                             type="number"
@@ -597,23 +655,11 @@ export default function TrasferimentoTable() {
                                                                         {pct !== null ? `${pct}%` : '—'}
                                                                     </td>
                                                                     {(() => {
-                                                                        const effective = natoSfEffective(batch);
-                                                                        const editing = natoSfEdit[batch.id];
-                                                                        const hasRealValue = effective !== undefined;
                                                                         // Quando non c'è un valore reale mostriamo il default (93) in grigio.
                                                                         const isDefaultShown = !hasRealValue && editing === undefined;
                                                                         const inputValue = editing !== undefined
                                                                             ? editing
-                                                                            : (hasRealValue ? effective.toFixed(2) : DEFAULT_NATO_SF.toFixed(2));
-                                                                        const parsedEdit = editing !== undefined
-                                                                            ? parseFloat(editing.replace(',', '.'))
-                                                                            : NaN;
-                                                                        const effNum = !isNaN(parsedEdit)
-                                                                            ? parsedEdit
-                                                                            : (hasRealValue ? effective : DEFAULT_NATO_SF);
-                                                                        const pulcini = (uoveTrasf !== null && effNum !== undefined)
-                                                                            ? Math.round(uoveTrasf * effNum / 100)
-                                                                            : null;
+                                                                            : (hasRealValue && effective !== undefined ? effective.toFixed(2) : DEFAULT_NATO_SF.toFixed(2));
                                                                         const st = natoSfStatus[batch.id];
                                                                         return (
                                                                             <>
@@ -642,7 +688,8 @@ export default function TrasferimentoTable() {
                                                                     })()}
                                                                 </tr>
                                                             );
-                                                        })}
+                                                            });
+                                                        })()}
 
                                                         {/* Totals row (only if >1 batch) */}
                                                         {inc.batches.length > 1 && (() => {
@@ -667,6 +714,7 @@ export default function TrasferimentoTable() {
                                                                 <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
                                                                     <td colSpan={4} className="px-3 py-2 text-right text-gray-600">Totale:</td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(totInc)}</td>
+                                                                    <td className="px-3 py-2"></td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(totTrasf)}</td>
                                                                     <td className="px-3 py-2 text-right font-mono text-red-500">{formatNumber(totCh)}</td>
                                                                     <td className="px-3 py-2 text-right font-mono text-blue-600">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 import { Plus, Calendar, ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { useTableSort, sortRows, SortableTh } from '@/lib/tableSort';
 
 interface IncubationBatch {
     id: number;
@@ -11,6 +12,7 @@ interface IncubationBatch {
     capannone: string;
     uova_partita: number;
     uova_utilizzate: number;
+    data_arrivo?: string;
 }
 
 interface Incubation {
@@ -62,6 +64,15 @@ const formatDateDisplay = (dateStr: string): string => {
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
+// Giorni di giacenza in magazzino: da data arrivo uova a data incubazione
+const giacenzaDays = (dataArrivo: string | undefined, dataIncubazione: string): number | null => {
+    if (!dataArrivo) return null;
+    const start = new Date(dataArrivo);
+    const end = new Date(dataIncubazione);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+    return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+};
+
 export default function SchiusaPulciniTable() {
     const [incubazioni, setIncubazioni] = useState<Incubation[]>([]);
     const [trasferimenti, setTrasferimenti] = useState<Trasferimento[]>([]);
@@ -79,6 +90,9 @@ export default function SchiusaPulciniTable() {
     const [editDate, setEditDate] = useState<Record<number, string>>({});
     const [editRows, setEditRows] = useState<Record<number, Record<number, string>>>({});
     const [saving, setSaving] = useState<number | null>(null);
+
+    // Ordinamento tabella partite
+    const batchSort = useTableSort();
 
     const load = async () => {
         try {
@@ -395,36 +409,59 @@ export default function SchiusaPulciniTable() {
                                                 <table className="w-full text-sm">
                                                     <thead>
                                                         <tr className="bg-gray-100">
-                                                            <th className="px-3 py-2 text-left">Prodotto</th>
-                                                            <th className="px-3 py-2 text-left">Nome</th>
-                                                            <th className="px-3 py-2 text-left">Origine</th>
-                                                            <th className="px-3 py-2 text-left">Capannone</th>
-                                                            <th className="px-3 py-2 text-right">Uova Trasferite</th>
-                                                            <th className="px-3 py-2 text-right">Pulcini nati</th>
-                                                            <th className="px-3 py-2 text-right">Nato su Incubato</th>
-                                                            <th className="px-3 py-2 text-right">Nato su Fertile</th>
+                                                            <SortableTh label="Prodotto" sortKey="prodotto" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Nome" sortKey="nome" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Origine" sortKey="origine" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Capannone" sortKey="capannone" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Uova Trasferite" sortKey="uova_trasferite" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Giacenza" sortKey="giacenza" align="center" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Pulcini nati" sortKey="pulcini" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Nato su Incubato" sortKey="nato_inc" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
+                                                            <SortableTh label="Nato su Fertile" sortKey="nato_fert" align="right" currentKey={batchSort.sortKey} dir={batchSort.sortDir} onSort={batchSort.toggleSort} className="px-3 py-2" />
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {trasfRecords.map(trasfRec => {
-                                                            if (trasfRec.batch_id === null) return null;
-                                                            const batch = inc.batches.find(b => b.id === trasfRec.batch_id);
-                                                            const uovaTrasf = trasfRec.n_uova_trasferite;
-                                                            const uovaIncubate = uovaTrasf + (trasfRec.n_uova_scartate || 0);
+                                                        {(() => {
+                                                            const rows = trasfRecords
+                                                                .filter(t => t.batch_id !== null)
+                                                                .map(trasfRec => {
+                                                                    const batch = inc.batches.find(b => b.id === trasfRec.batch_id);
+                                                                    const uovaTrasf = trasfRec.n_uova_trasferite;
+                                                                    const uovaIncubate = uovaTrasf + (trasfRec.n_uova_scartate || 0);
 
-                                                            const localVal = editRows[incId]?.[trasfRec.batch_id];
-                                                            const existingRec = schiusaByBatch[trasfRec.batch_id];
-                                                            const displayVal = localVal !== undefined
-                                                                ? localVal
-                                                                : (existingRec ? String(existingRec.n_pulcini_nati) : '');
+                                                                    const localVal = editRows[incId]?.[trasfRec.batch_id!];
+                                                                    const existingRec = schiusaByBatch[trasfRec.batch_id!];
+                                                                    const displayVal = localVal !== undefined
+                                                                        ? localVal
+                                                                        : (existingRec ? String(existingRec.n_pulcini_nati) : '');
 
-                                                            const pulcini = displayVal !== '' ? Number(displayVal) : null;
-                                                            const natoSuInc = pulcini !== null && uovaIncubate > 0
-                                                                ? (pulcini / uovaIncubate * 100).toFixed(1)
-                                                                : null;
-                                                            const natoSuFert = pulcini !== null && uovaTrasf > 0
-                                                                ? (pulcini / uovaTrasf * 100).toFixed(1)
-                                                                : null;
+                                                                    const pulcini = displayVal !== '' ? Number(displayVal) : null;
+                                                                    const natoSuIncNum = pulcini !== null && uovaIncubate > 0
+                                                                        ? pulcini / uovaIncubate * 100
+                                                                        : null;
+                                                                    const natoSuFertNum = pulcini !== null && uovaTrasf > 0
+                                                                        ? pulcini / uovaTrasf * 100
+                                                                        : null;
+                                                                    const giacenza = giacenzaDays(batch?.data_arrivo, inc.data_incubazione);
+
+                                                                    return { trasfRec, batch, uovaTrasf, displayVal, pulcini, natoSuIncNum, natoSuFertNum, giacenza };
+                                                                });
+
+                                                            const sortedRows = sortRows(rows, batchSort.sortKey, batchSort.sortDir, {
+                                                                prodotto: r => r.batch?.prodotto,
+                                                                nome: r => r.batch?.nome,
+                                                                origine: r => r.batch?.origine,
+                                                                capannone: r => r.batch?.capannone,
+                                                                uova_trasferite: r => r.uovaTrasf,
+                                                                giacenza: r => r.giacenza,
+                                                                pulcini: r => r.pulcini,
+                                                                nato_inc: r => r.natoSuIncNum,
+                                                                nato_fert: r => r.natoSuFertNum,
+                                                            });
+
+                                                            return sortedRows.map(({ trasfRec, batch, uovaTrasf, displayVal, natoSuIncNum, natoSuFertNum, giacenza }) => {
+                                                            const natoSuInc = natoSuIncNum !== null ? natoSuIncNum.toFixed(1) : null;
+                                                            const natoSuFert = natoSuFertNum !== null ? natoSuFertNum.toFixed(1) : null;
 
                                                             return (
                                                                 <tr key={trasfRec.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -437,6 +474,7 @@ export default function SchiusaPulciniTable() {
                                                                     <td className="px-3 py-2 text-gray-500">{batch?.origine || '—'}</td>
                                                                     <td className="px-3 py-2 text-gray-500">{batch?.capannone || '—'}</td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(uovaTrasf)}</td>
+                                                                    <td className="px-3 py-2 text-center font-mono">{giacenza !== null ? `${giacenza} gg` : '—'}</td>
                                                                     <td className="px-3 py-2 text-right">
                                                                         <input
                                                                             type="number"
@@ -459,7 +497,8 @@ export default function SchiusaPulciniTable() {
                                                                     </td>
                                                                 </tr>
                                                             );
-                                                        })}
+                                                            });
+                                                        })()}
 
                                                         {/* Totals row (only if >1 batch with batch_id) */}
                                                         {trasfRecords.filter(t => t.batch_id !== null).length > 1 && (() => {
@@ -479,6 +518,7 @@ export default function SchiusaPulciniTable() {
                                                                 <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
                                                                     <td colSpan={4} className="px-3 py-2 text-right text-gray-600">Totale:</td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(totTrasf)}</td>
+                                                                    <td className="px-3 py-2"></td>
                                                                     <td className="px-3 py-2 text-right font-mono">{formatNumber(totPulcini)}</td>
                                                                     <td className="px-3 py-2 text-right font-mono text-blue-600">
                                                                         {pctIncTot ? `${pctIncTot}%` : '—'}
