@@ -5,7 +5,7 @@ from typing import Optional, List, Any
 from datetime import datetime
 import json
 
-from database import get_db, SchedaSettimanaleRecord
+from database import get_db, SchedaSettimanaleRecord, Lotto, invalidate_cache_by_lotto
 
 router = APIRouter(prefix="/api/allevamenti/scheda", tags=["scheda_settimanale"])
 
@@ -67,6 +67,25 @@ def save_scheda(data: SchedaSaveRequest, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(record)
+
+    # Le galline presenti entrano nel calcolo uova: invalida la cache
+    # produzione dei lotti interessati per forzare il ricalcolo.
+    try:
+        lotto_ids = set()
+        if data.lotto_id:
+            lotto_ids.add(data.lotto_id)
+        else:
+            matching = db.query(Lotto).filter(
+                Lotto.allevamento == data.allevamento,
+                Lotto.capannone == data.capannone,
+                Lotto.attivo == True,
+            ).all()
+            lotto_ids.update(l.id for l in matching)
+        for lid in lotto_ids:
+            invalidate_cache_by_lotto(lid)
+    except Exception as e:
+        print(f"⚠️ Invalidazione cache dopo scheda settimanale fallita: {e}")
+
     return record.to_dict()
 
 

@@ -129,10 +129,19 @@ def search_lotto_by_code(codice: str):
 
 @router.get("/farms")
 def get_farm_structure():
-    """Returns the farm structure with shed numbers, derived dynamically from lotti in T001."""
+    """Returns the farm structure with shed numbers.
+
+    La fonte primaria è la tabella production_farms (configurabile da
+    Impostazioni Accasamenti); i capannoni trovati nei lotti T001 vengono
+    uniti per non perdere mai struttura esistente.
+    """
     import re
-    all_lotti = get_lotti()
+    from database import seed_production_farms, get_production_farms
+    seed_production_farms()
     structure = {}
+    for f in get_production_farms():
+        structure[f["nome"]] = set(range(1, (f["n_capannoni"] or 1) + 1))
+    all_lotti = get_lotti()
     for lotto in all_lotti:
         # Gli allevamenti in fase pollastra sono gestiti separatamente:
         # non devono comparire nella struttura degli allevamenti normali.
@@ -225,19 +234,23 @@ def create_lotto_weekly_data(lotto_id: int, data: WeeklyDataCreate):
         "accensione_luce": data.accensione_luce,
         "spegnimento_luce": data.spegnimento_luce
     })
-    
+
+    # La mortalità entra nel calcolo uova (galline effettive): ricalcolo necessario
+    invalidate_cache_by_lotto(lotto_id)
+
     return {"status": "ok", "data": new_data}
 
 @router.put("/lotti/{lotto_id}/weekly-data/{data_id}")
 def update_lotto_weekly_data(lotto_id: int, data_id: int, data: WeeklyDataUpdate):
     """Updates an existing weekly data row."""
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
-    
+
     if updates:
         result = update_cycle_weekly_data(data_id, updates)
         if result:
+            invalidate_cache_by_lotto(lotto_id)
             return {"status": "ok", "data": result}
-    
+
     raise HTTPException(status_code=404, detail="Dati non trovati")
 
 @router.delete("/lotti/{lotto_id}/weekly-data/{data_id}")
@@ -245,6 +258,7 @@ def delete_lotto_weekly_data(lotto_id: int, data_id: int):
     """Deletes a weekly data row."""
     success = delete_cycle_weekly_data(data_id)
     if success:
+        invalidate_cache_by_lotto(lotto_id)
         return {"status": "ok", "message": "Dati eliminati"}
     raise HTTPException(status_code=404, detail="Dati non trovati")
 

@@ -210,6 +210,31 @@ export const PollastraFarmsAPI = {
     },
 };
 
+// Production Farms Service Wrapper (allevamenti accasamenti configurabili)
+export interface ProductionFarm {
+    id: number;
+    nome: string;
+    n_capannoni: number;
+}
+export const ProductionFarmsAPI = {
+    getAll: async (): Promise<{ farms: ProductionFarm[]; structure: Record<string, number[]> }> => {
+        const res = await api.get("/production-farms");
+        return res.data;
+    },
+    add: async (nome: string, n_capannoni: number) => {
+        const res = await api.post("/production-farms", { nome, n_capannoni });
+        return res.data;
+    },
+    update: async (id: number, payload: { nome?: string; n_capannoni?: number }) => {
+        const res = await api.put(`/production-farms/${id}`, payload);
+        return res.data;
+    },
+    remove: async (id: number) => {
+        const res = await api.delete(`/production-farms/${id}`);
+        return res.data;
+    },
+};
+
 // Manual Production Adjustments Service Wrapper
 export const ManualAdjustmentsAPI = {
     create: async (payload: { anno: number; settimana: number; prodotto?: string; descrizione?: string; quantita: number }) => {

@@ -8,6 +8,7 @@ import { AccasamentiTable } from "@/components/AccasamentiTable";
 import { GeneticsSettingsTable } from "@/components/GeneticsSettingsTable";
 import { SchedaSettimanale } from "@/components/SchedaSettimanale";
 import PollastraFarmsSettings from "@/components/PollastraFarmsSettings";
+import ProductionFarmsSettings from "@/components/ProductionFarmsSettings";
 import { PollastraFarmsAPI } from "@/lib/api";
 import ResponsiveSidebar from "@/components/ResponsiveSidebar";
 
@@ -51,6 +52,15 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
             setPollastraStructure(data.structure);
         } catch (error) {
             console.error("Failed to refresh pollastra farms", error);
+        }
+    };
+
+    const refreshProductionFarms = async () => {
+        try {
+            const farmsData = await AllevamentiAPI.getFarmStructure();
+            setFarmStructure(farmsData);
+        } catch (error) {
+            console.error("Failed to refresh production farms", error);
         }
     };
 
@@ -143,11 +153,14 @@ export default function AllevamentiPage({ onNavigate }: AllevamentiPageProps) {
                             />
                         )}
                         {section === "accasamenti" && (
-                            <AccasamentiTable
-                                lotti={normalLotti}
-                                farmStructure={farmStructure}
-                                onUpdate={refreshData}
-                            />
+                            <div>
+                                <ProductionFarmsSettings onChanged={refreshProductionFarms} />
+                                <AccasamentiTable
+                                    lotti={normalLotti}
+                                    farmStructure={farmStructure}
+                                    onUpdate={refreshData}
+                                />
+                            </div>
                         )}
                         {section === "pollastra_accasamenti" && (
                             <div>

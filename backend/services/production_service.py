@@ -6,6 +6,7 @@ Formula base: Uova Prodotte = [NumGalline] × [Produzione] × 7
 Formula completa: [TotaleUovaProdotto] = [UovaProdotte] + [UovaAcquisto] - [UovaVendita]
 """
 import datetime
+import bisect
 from typing import List, Dict, Optional
 from utils.helpers import carica_dati_v20, pulisci_percentuale
 from database import (
@@ -18,6 +19,8 @@ from database import (
     SessionLocal,
     Lotto,
     VenditaAssegnazione,
+    SchedaSettimanaleRecord,
+    CycleWeeklyData,
 )
 
 
@@ -46,6 +49,69 @@ class ProductionService:
         return (int(year), int(week))
     
     @staticmethod
+    def _effective_hens_timeline(lotto: dict):
+        """
+        Galline effettive per settimana solare, come lista ordinata di
+        (settimana_seriale, galline) dove settimana_seriale = anno*52 + (settimana-1).
+
+        Fonti, in ordine di priorità:
+        1. schede_settimanali.galline_presenti — conteggio diretto dell'allevatore.
+           Usate le righe con lotto_id del lotto; le righe senza lotto_id valgono
+           solo se il lotto è l'unico attivo su quel capannone (altrimenti ambigue).
+        2. cycle_weekly_data.galline_morte — capi accasati meno morte cumulate.
+
+        Se non c'è nessun dato compilato la lista è vuota e il calcolo
+        ricade sui capi accasati (numero base).
+        """
+        lotto_id = lotto.get('id')
+        capi = lotto.get('Capi') or 0
+        allevamento = lotto.get('Allevamento')
+        capannone = str(lotto.get('Capannone', ''))
+        db = SessionLocal()
+        try:
+            entries = {}
+
+            rows = db.query(SchedaSettimanaleRecord).filter(
+                SchedaSettimanaleRecord.allevamento == allevamento,
+                SchedaSettimanaleRecord.capannone == capannone,
+            ).all()
+            # Le schede senza lotto_id sono attribuibili solo se il capannone
+            # ospita un unico lotto attivo.
+            unico_sul_capannone = db.query(Lotto).filter(
+                Lotto.allevamento == allevamento,
+                Lotto.capannone == capannone,
+                Lotto.attivo == True,
+            ).count() == 1
+            for r in rows:
+                if not (r.anno and r.settimana):
+                    continue
+                if not (r.galline_presenti and r.galline_presenti > 0):
+                    continue
+                if r.lotto_id:
+                    if r.lotto_id != lotto_id:
+                        continue
+                elif not unico_sul_capannone:
+                    continue
+                entries[r.anno * 52 + (r.settimana - 1)] = int(r.galline_presenti)
+
+            if not entries and capi:
+                morti = [m for m in db.query(CycleWeeklyData).filter(
+                    CycleWeeklyData.lotto_id == lotto_id
+                ).all() if m.anno and m.settimana]
+                cum = 0
+                for m in sorted(morti, key=lambda x: (x.anno, x.settimana)):
+                    cum += (m.galline_morte or 0)
+                    if cum > 0:
+                        entries[m.anno * 52 + (m.settimana - 1)] = max(0, capi - cum)
+
+            return sorted(entries.items())
+        except Exception as e:
+            print(f"⚠️ Errore lettura galline effettive lotto {lotto_id}: {e}")
+            return []
+        finally:
+            db.close()
+
+    @staticmethod
     def _calculate_production_for_lotto(lotto: dict, df_curve, lifecycle_max: int = None) -> List[Dict]:
         """
         Calculates production for a single lotto across all weeks.
@@ -53,7 +119,9 @@ class ProductionService:
 
         Follows RULES.md formula:
         - [EtaGalline] = W value from curve
-        - [NumGalline] = lotto['Capi']
+        - [NumGalline] = galline effettive (scheda settimanale / mortalità) se
+          compilate, altrimenti lotto['Capi'] (capi accasati, numero base).
+          Il dato effettivo più recente vale anche per le settimane successive.
         - [Produzione] = percentage from T003 curve at row W
         - Uova = [NumGalline] × [Produzione] × 7 (rounded to nearest 100)
 
@@ -71,10 +139,15 @@ class ProductionService:
                 lifecycle_max = ProductionService.LIFECYCLE_MAX
 
         # --- Variables from RULES.md ---
-        num_galline = lotto['Capi']  # [NumGalline]
+        num_galline = lotto['Capi']  # [NumGalline] base: capi accasati
         curva_da_usare = lotto.get('Curva_Produzione')  # [GeneticaGalline] / Curve to use
         prodotto = lotto.get('Prodotto')  # Destination product
         lotto_id = lotto.get('id')
+
+        # Galline effettive compilate dall'allevatore (scheda settimanale / mortalità).
+        # Lista ordinata di (settimana_seriale, galline); vuota => si usano i capi accasati.
+        hens_timeline = ProductionService._effective_hens_timeline(lotto)
+        hens_serials = [s for s, _ in hens_timeline]
 
         # Parse Data_Fine_Prevista from T001 once per lotto
         fine_prod = lotto.get('Data_Fine_Prevista')
@@ -133,10 +206,19 @@ class ProductionService:
                     if year > fine_year or (year == fine_year and week > fine_week):
                         continue
                 
+                # [NumGalline] della settimana: ultimo dato effettivo compilato
+                # a quella data (carry-forward), altrimenti capi accasati.
+                galline_settimana = num_galline
+                if hens_serials:
+                    week_serial = year * 52 + (week - 1)
+                    idx = bisect.bisect_right(hens_serials, week_serial) - 1
+                    if idx >= 0:
+                        galline_settimana = hens_timeline[idx][1]
+
                 # --- RULES.md Formula ---
                 # Uova Prodotte = [NumGalline] × [Produzione] × 7
                 # Rounded to nearest 100
-                uova_esatte = round((num_galline * produzione * 7) / 100) * 100
+                uova_esatte = round((galline_settimana * produzione * 7) / 100) * 100
                 
                 results.append({
                     "anno": year,

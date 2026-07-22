@@ -1761,6 +1761,115 @@ def delete_pollastra_farm(farm_id: int):
         db.close()
 
 
+# --- PRODUCTION FARMS (allevamenti accasamenti configurabili) ---
+class ProductionFarm(Base):
+    __tablename__ = "production_farms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, unique=True, index=True)
+    n_capannoni = Column(Integer, default=1)
+
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome, "n_capannoni": self.n_capannoni}
+
+
+def seed_production_farms():
+    """Popola gli allevamenti accasamenti derivandoli dai lotti esistenti (non pollastra).
+
+    Idempotente: aggiunge solo gli allevamenti trovati nei lotti che non sono
+    ancora in tabella, senza mai toccare quelli configurati a mano.
+    """
+    import re
+    db = SessionLocal()
+    try:
+        Base.metadata.create_all(bind=engine)
+        existing = {f.nome for f in db.query(ProductionFarm).all()}
+        derived = {}
+        for l in db.query(Lotto).all():
+            if (l.fase or '') == 'pollastra':
+                continue
+            farm = (l.allevamento or '').strip()
+            if not farm:
+                continue
+            match = re.match(r'^(\d+)', str(l.capannone or ''))
+            shed = int(match.group(1)) if match else 1
+            derived[farm] = max(derived.get(farm, 1), shed)
+        added = 0
+        for nome, n in derived.items():
+            if nome not in existing:
+                db.add(ProductionFarm(nome=nome, n_capannoni=n))
+                added += 1
+        if added:
+            db.commit()
+            print(f"Seeded production farms: {added} allevamenti da lotti")
+    finally:
+        db.close()
+
+
+def get_production_farms():
+    """Restituisce gli allevamenti accasamenti ordinati per nome."""
+    db = SessionLocal()
+    try:
+        return [f.to_dict() for f in db.query(ProductionFarm).order_by(ProductionFarm.nome).all()]
+    finally:
+        db.close()
+
+
+def add_production_farm(nome: str, n_capannoni: int = 1):
+    db = SessionLocal()
+    try:
+        existing = db.query(ProductionFarm).filter(ProductionFarm.nome == nome).first()
+        if existing:
+            return None
+        record = ProductionFarm(nome=nome, n_capannoni=max(1, int(n_capannoni)))
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+def update_production_farm(farm_id: int, nome=None, n_capannoni=None):
+    db = SessionLocal()
+    try:
+        record = db.query(ProductionFarm).filter(ProductionFarm.id == farm_id).first()
+        if not record:
+            return None
+        if nome is not None and nome.strip():
+            old_nome = record.nome
+            new_nome = nome.strip()
+            record.nome = new_nome
+            # Mantiene i lotti agganciati al nuovo nome
+            if old_nome != new_nome:
+                db.query(Lotto).filter(Lotto.allevamento == old_nome).update(
+                    {Lotto.allevamento: new_nome}, synchronize_session=False
+                )
+        if n_capannoni is not None:
+            record.n_capannoni = max(1, int(n_capannoni))
+        db.commit()
+        db.refresh(record)
+        return record.to_dict()
+    finally:
+        db.close()
+
+
+def delete_production_farm(farm_id: int):
+    db = SessionLocal()
+    try:
+        record = db.query(ProductionFarm).filter(ProductionFarm.id == farm_id).first()
+        if not record:
+            return {"success": False, "error": "Allevamento non trovato"}
+        n_lotti = db.query(Lotto).filter(Lotto.allevamento == record.nome, Lotto.attivo == True).count()
+        if n_lotti:
+            return {"success": False, "error": f"L'allevamento ha {n_lotti} lotti attivi: disattivali prima di eliminarlo"}
+        db.delete(record)
+        db.commit()
+        return {"success": True}
+    finally:
+        db.close()
+
+
 # --- CHICK PLANNING MODEL (T010 - Pianificazione Nascite) ---
 class ChickPlanning(Base):
     __tablename__ = "chick_planning"
